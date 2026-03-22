@@ -1,604 +1,601 @@
-# DownDoor
+# SiteWhiteLabelDownload
 
-**Seu Portal para Vídeos e Downloads Gratuitos**
+Plataforma white-label de streaming e download de videos de alta performance, com painel administrativo completo, monetizacao via anuncios e design Dark Mode inspirado em Apple TV+ / Netflix.
 
-Plataforma de streaming e download de vídeos de alta performance, focada em conversão de anúncios e experiência premium. Design Dark Mode inspirado em Apple TV+ / Netflix.
+O nome, tagline e descricao do site sao 100% configuraveis via variaveis de ambiente — basta trocar as env vars para ter um site com sua propria marca.
+
+---
+
+## Indice
+
+- [Demonstracao](#demonstracao)
+- [Funcionalidades](#funcionalidades)
+- [Stack Tecnologica](#stack-tecnologica)
+- [Estrutura do Projeto](#estrutura-do-projeto)
+- [Configuracao Rapida](#configuracao-rapida)
+- [Variaveis de Ambiente](#variaveis-de-ambiente)
+- [Banco de Dados](#banco-de-dados)
+- [White-Label](#white-label)
+- [Monetizacao (Anuncios)](#monetizacao-anuncios)
+- [Seguranca](#seguranca)
+- [SEO](#seo)
+- [CI/CD](#cicd)
+- [Deploy em Producao](#deploy-em-producao)
+- [Comandos](#comandos)
+- [Arquitetura](#arquitetura)
+- [Solucao de Problemas](#solucao-de-problemas)
+- [Licenca](#licenca)
+
+---
+
+## Demonstracao
+
+| Pagina                  | Rota                     |
+| ----------------------- | ------------------------ |
+| Home (hero + categorias) | `/`                     |
+| Pagina da serie         | `/serie/[slug]`          |
+| Painel admin            | `/admin`                 |
+| Login admin             | `/admin/login`           |
+| Criar serie             | `/admin/series/new`      |
+| Editar serie            | `/admin/series/[id]/edit` |
+| Termos de Uso           | `/termos`                |
+| Politica de Privacidade | `/privacidade`           |
+| DMCA                    | `/dmca`                  |
 
 ---
 
 ## Funcionalidades
 
-### Interface Pública
+### Interface Publica
 
-- **Hero Carousel** — Carrossel automático de séries em destaque com transições suaves (Framer Motion), backdrop em tela cheia com gradiente e botões de navegação
-- **Grids por Categoria** — Séries organizadas por categoria com scroll horizontal, botões de navegação e efeitos de hover com zoom
-- **Live Search** — Busca inteligente em tempo real no header com debounce de 300ms, resultados com poster e metadados
-- **Página da Série** — Backdrop imersivo em tela cheia, poster, sinopse, metadados (ano, gênero, nota), abas de temporadas e lista de episódios
-- **Design Responsivo** — Mobile-First com breakpoints para sm, md e lg
-- **Micro-animações** — Fade-in de cards, transições de página e hover effects via Framer Motion
+- **Hero Carousel** — Carrossel automatico de series em destaque com transicoes suaves (Framer Motion), backdrop em tela cheia com gradiente e botoes de navegacao
+- **Grids por Categoria** — Series organizadas por categoria com scroll horizontal, botoes de navegacao e efeitos de hover com zoom
+- **Live Search** — Busca em tempo real no header (desktop e mobile) com debounce de 300ms, resultados com poster e metadados
+- **Pagina da Serie** — Backdrop imersivo, poster, sinopse, metadados (ano, genero, nota), abas de temporadas e lista de episodios com download
+- **Design Responsivo** — Mobile-first com breakpoints para sm, md e lg
+- **Micro-animacoes** — Fade-in de cards, transicoes de pagina e hover effects via Framer Motion
+- **Paginas Legais** — Termos de Uso, Politica de Privacidade e DMCA com conteudo completo
 
-### Monetização e Ad-Placement
+### Monetizacao
 
-- **Banner Topo (728x90)** — Fixo no header, visível apenas em desktop
-- **Native Ads** — Anúncios camuflados entre as fileiras de séries na Home
-- **Banner Lateral (300x600)** — Sidebar na página da série (desktop)
-- **Download Timer** — Botão de download com timer de 10 segundos e anúncio 300x250 durante a espera
-- **Anti-AdBlock** — Detecção de bloqueadores de anúncios com modal persistente que impede o uso do site
+- **Google AdSense** — Integracao real com AdSense configuravel via env vars (fallback para placeholder quando nao configurado)
+- **Banner Topo (728x90)** — Fixo no header, visivel apenas em desktop
+- **Native Ads** — Anuncios entre as fileiras de series na Home
+- **Banner Lateral (300x600)** — Sidebar na pagina da serie (desktop)
+- **Download Timer** — Botao de download com timer de 10 segundos e anuncio 300x250 durante a espera
+- **Anti-AdBlock** — Deteccao de bloqueadores com modal persistente
 
 ### Painel Administrativo (`/admin`)
 
-- **Login** — Autenticação via Supabase Auth com proteção por sessão
-- **Dashboard** — Estatísticas (total de séries, episódios e destaques) e listagem completa
-- **CRUD de Séries** — Título, slug (auto-gerado), sinopse, ano, gênero, nota, categoria e destaque
-- **Upload de Imagens** — Upload de poster e backdrop direto para Supabase Storage ou via URL externa
-- **Gestão de Temporadas** — Adicionar/remover temporadas com nome editável e accordion expansível
-- **Gestão de Episódios** — Número, título, URL de download, tamanho do arquivo e qualidade (480p–4K)
+- **Login** — Autenticacao via Supabase Auth com verificacao de role admin
+- **Dashboard** — Estatisticas (total de series, episodios e destaques) e listagem completa
+- **CRUD de Series** — Titulo, slug (auto-gerado), sinopse, ano, genero, nota, categoria e destaque
+- **Upload de Imagens** — Upload direto para Supabase Storage ou via URL externa
+- **Gestao de Temporadas** — Adicionar/remover temporadas com nome editavel e accordion
+- **Gestao de Episodios** — Numero, titulo, URL de download, tamanho do arquivo e qualidade (480p-4K)
+- **Upsert Inteligente** — Ao editar, atualiza registros existentes (preservando IDs) em vez de deletar e recriar
 
 ### SEO e Performance
 
-- **SEO Dinâmico** — Meta tags (OG:Image, Title, Description) geradas automaticamente para cada série
-- **Otimização de Imagens** — Formato WebP via Next.js Image, lazy loading e sizes responsivos
-- **SSR/SSG** — Páginas renderizadas no servidor para SEO e performance
+- **SEO Dinamico** — Meta tags (OG:Image, Title, Description) geradas automaticamente para cada serie
+- **Sitemap.xml** — Gerado dinamicamente com todas as series do banco
+- **robots.txt** — Gerado via App Router, bloqueia `/admin/` e `/api/`
+- **Favicon** — SVG com gradiente gerado automaticamente
+- **Otimizacao de Imagens** — Formato WebP via Next.js Image, lazy loading e sizes responsivos
+- **SSR/SSG** — Paginas renderizadas no servidor para SEO e performance
 
-### Segurança e Analytics
+### Seguranca
 
-- **Cloudflare Turnstile** — Verificação anti-bot antes de liberar o link de download
-- **Microsoft Clarity** — Heatmap e rastreamento de comportamento do usuário
-- **RLS (Row Level Security)** — Leitura pública, escrita restrita a usuários autenticados
+- **Roles de Admin** — Tabela `admin_users` + funcao `is_admin()` no PostgreSQL; apenas admins registrados podem acessar o painel e modificar dados
+- **RLS (Row Level Security)** — Leitura publica, escrita restrita a admins via `is_admin()`
+- **Cloudflare Turnstile** — Verificacao anti-bot antes de liberar o link de download (obrigatorio em producao)
+- **Validacao de Env** — Build falha se variaveis obrigatorias nao estiverem configuradas
+- **Hostnames Restritos** — Next.js Image aceita apenas imagens de `*.supabase.co` e `*.supabase.in`
+- **Clarity Sanitizado** — ID do Microsoft Clarity validado com regex antes de injetar no DOM
+- **Microsoft Clarity** — Heatmap e rastreamento de comportamento
 
 ---
 
-## Tecnologias
+## Stack Tecnologica
 
-| Camada | Tecnologia |
-|--------|-----------|
-| Framework | Next.js 14 (App Router) |
-| Linguagem | TypeScript |
-| Estilização | Tailwind CSS 3.4 |
-| Animações | Framer Motion |
-| Ícones | Lucide React |
-| Backend/Auth | Supabase (PostgreSQL + Auth + Storage) |
-| Anti-bot | Cloudflare Turnstile |
-| Analytics | Microsoft Clarity |
+| Camada       | Tecnologia                               | Versao |
+| ------------ | ---------------------------------------- | ------ |
+| Framework    | Next.js (App Router)                     | 14.2   |
+| Linguagem    | TypeScript                               | 5.5+   |
+| Estilizacao  | Tailwind CSS                             | 3.4    |
+| Animacoes    | Framer Motion                            | 11.3   |
+| Icones       | Lucide React                             | 0.400  |
+| Backend/Auth | Supabase (PostgreSQL + Auth + Storage)   | 2.45   |
+| Anti-bot     | Cloudflare Turnstile                     | -      |
+| Analytics    | Microsoft Clarity                        | -      |
+| Anuncios     | Google AdSense                           | -      |
+| CI/CD        | GitHub Actions                           | -      |
+| Hospedagem   | Vercel                                   | -      |
 
 ---
 
 ## Estrutura do Projeto
 
-```
+```text
 src/
 ├── app/
-│   ├── layout.tsx              # Layout global (Header, Footer, AdBlock, Clarity, Turnstile)
-│   ├── page.tsx                # Home (Hero + Categorias + Lançamentos)
-│   ├── loading.tsx             # Loading spinner global
-│   ├── not-found.tsx           # Página 404
-│   ├── globals.css             # Estilos globais e tema dark
-│   ├── serie/[slug]/page.tsx   # Página da série (SEO dinâmico)
+│   ├── layout.tsx                 # Layout global (Header, Footer, scripts)
+│   ├── page.tsx                   # Home (Hero + Categorias + Lancamentos)
+│   ├── loading.tsx                # Loading spinner global
+│   ├── not-found.tsx              # Pagina 404
+│   ├── globals.css                # Estilos globais e tema dark
+│   ├── robots.ts                  # robots.txt dinamico
+│   ├── sitemap.ts                 # sitemap.xml dinamico
+│   ├── serie/[slug]/page.tsx      # Pagina da serie (SEO dinamico)
+│   ├── termos/page.tsx            # Termos de Uso
+│   ├── privacidade/page.tsx       # Politica de Privacidade
+│   ├── dmca/page.tsx              # DMCA
 │   ├── admin/
-│   │   ├── layout.tsx          # Layout admin (noindex)
-│   │   ├── page.tsx            # Dashboard admin
-│   │   ├── login/page.tsx      # Login admin
-│   │   ├── series/new/page.tsx # Criar série
-│   │   └── series/[id]/edit/page.tsx # Editar série
+│   │   ├── layout.tsx             # Layout admin (noindex)
+│   │   ├── page.tsx               # Dashboard admin (requer admin)
+│   │   ├── login/page.tsx         # Login admin
+│   │   ├── series/new/page.tsx    # Criar serie (requer admin)
+│   │   └── series/[id]/edit/page.tsx # Editar serie (requer admin)
 │   └── api/
-│       └── verify-turnstile/route.ts # API de verificação Turnstile
+│       └── verify-turnstile/route.ts # API de verificacao Turnstile
 ├── components/
 │   ├── ui/
-│   │   ├── Header.tsx          # Header fixo com busca e navegação
-│   │   ├── Footer.tsx          # Footer com links
-│   │   ├── HeroCarousel.tsx    # Carrossel hero com auto-play
-│   │   ├── SeriesCard.tsx      # Card de série com hover animado
-│   │   ├── CategoryRow.tsx     # Linha horizontal de cards por categoria
-│   │   ├── SeriesDetail.tsx    # Página completa da série
-│   │   ├── ClarityScript.tsx   # Integração Microsoft Clarity
-│   │   └── TurnstileScript.tsx # Loader do Cloudflare Turnstile
+│   │   ├── Header.tsx             # Header fixo com busca e navegacao
+│   │   ├── Footer.tsx             # Footer com links legais
+│   │   ├── HeroCarousel.tsx       # Carrossel hero com auto-play
+│   │   ├── SeriesCard.tsx         # Card de serie com hover animado
+│   │   ├── CategoryRow.tsx        # Linha horizontal de cards por categoria
+│   │   ├── SeriesDetail.tsx       # Pagina completa da serie
+│   │   ├── ClarityScript.tsx      # Integracao Microsoft Clarity (sanitizado)
+│   │   └── TurnstileScript.tsx    # Loader do Cloudflare Turnstile
 │   ├── ads/
-│   │   ├── AdBlockDetector.tsx # Modal anti-adblock
-│   │   ├── AdSlot.tsx          # Componente genérico de espaço de anúncio
-│   │   ├── NativeAd.tsx        # Anúncio nativo entre cards
-│   │   └── DownloadTimer.tsx   # Timer 10s + Turnstile + download
+│   │   ├── AdBlockDetector.tsx    # Modal anti-adblock
+│   │   ├── AdSenseScript.tsx      # Loader do Google AdSense
+│   │   ├── AdSlot.tsx             # Componente de anuncio (AdSense ou placeholder)
+│   │   ├── NativeAd.tsx           # Anuncio nativo entre cards
+│   │   └── DownloadTimer.tsx      # Timer 10s + Turnstile + anuncio + download
 │   └── admin/
-│       ├── AdminDashboard.tsx  # Dashboard com stats e listagem
-│       └── SeriesForm.tsx      # Formulário CRUD completo
+│       ├── AdminDashboard.tsx     # Dashboard com stats e listagem
+│       └── SeriesForm.tsx         # Formulario CRUD com upsert inteligente
 ├── lib/
+│   ├── env.ts                     # Validacao de variaveis de ambiente
+│   ├── site-config.ts             # Configuracao white-label do site
+│   ├── brand.ts                   # Helper para split do nome no logo
 │   └── supabase/
-│       ├── client.ts           # Cliente Supabase (browser)
-│       ├── server.ts           # Cliente Supabase (server/SSR)
-│       └── schema.sql          # Schema SQL completo do banco
+│       ├── client.ts              # Cliente Supabase (browser)
+│       ├── server.ts              # Cliente Supabase (server/SSR)
+│       ├── admin.ts               # Helper requireAdmin() com verificacao de role
+│       └── schema.sql             # Schema SQL completo do banco
 ├── types/
-│   └── database.ts             # Tipos TypeScript (Series, Season, Episode)
-└── middleware.ts                # Refresh de sessão Supabase
+│   └── database.ts                # Tipos TypeScript (Series, Season, Episode)
+└── middleware.ts                   # Refresh de sessao Supabase
 ```
 
 ---
 
-## Guia Completo de Instalação do Zero (Windows)
+## Configuracao Rapida
 
-> Este guia assume que sua máquina está limpa, sem nenhum programa de desenvolvimento instalado.
-> Siga cada passo na ordem. Ao final, o site estará rodando na sua máquina.
+### Pre-requisitos
 
----
+| Software | Versao minima            | Download                              |
+| -------- | ------------------------ | ------------------------------------- |
+| Node.js  | 18 (recomendado 20 LTS) | [nodejs.org](https://nodejs.org)      |
+| npm      | 9+ (vem com Node.js)    | -                                     |
+| Git      | 2.x                     | [git-scm.com](https://git-scm.com)   |
 
-### PARTE 1 — Instalando os Programas Necessários
+### 1. Clonar o repositorio
 
----
-
-#### Passo 1: Instalar o Visual Studio Code (Editor de Código)
-
-O VS Code é o editor onde você vai abrir e editar os arquivos do projeto.
-
-1. Abra o navegador e acesse: https://code.visualstudio.com
-2. Clique no botão grande azul **"Download for Windows"**
-3. Quando o download terminar, abra o arquivo `VSCodeUserSetup-x64-X.XX.X.exe`
-4. Na tela de instalação:
-   - Aceite os termos de licença e clique em **Próximo**
-   - Na tela "Selecione Tarefas Adicionais", marque **todas** as opções:
-     - `Adicionar ação "Abrir com Code" ao menu de contexto de arquivo`
-     - `Adicionar ação "Abrir com Code" ao menu de contexto de diretório`
-     - `Registrar Code como um editor para tipos de arquivo suportados`
-     - `Adicionar ao PATH`
-   - Clique em **Próximo** e depois **Instalar**
-5. Ao finalizar, clique em **Concluir**
-
----
-
-#### Passo 2: Instalar o Node.js (Motor JavaScript)
-
-O Node.js é o que permite rodar JavaScript fora do navegador. Ele vem junto com o **npm**, que é o gerenciador de pacotes (como o Maven é para Java).
-
-1. Abra o navegador e acesse: https://nodejs.org
-2. Clique no botão **LTS** (versão recomendada) — é o botão da esquerda
-3. Quando o download terminar, abra o arquivo `node-vXX.XX.X-x64.msi`
-4. Na tela de instalação:
-   - Clique em **Next** em todas as telas
-   - Na tela "Tools for Native Modules", **NÃO marque** a checkbox (não precisa instalar Chocolatey)
-   - Clique em **Next** e depois **Install**
-   - Se pedir permissão de administrador, clique em **Sim**
-5. Ao finalizar, clique em **Finish**
-
-**Verificando a instalação:**
-
-1. Pressione `Win + R`, digite `cmd` e pressione Enter
-2. No prompt de comando que abrir, digite:
-
-```
-node --version
-```
-
-Deve aparecer algo como `v20.XX.X` ou `v22.XX.X`. Se aparecer, está instalado.
-
-3. Digite também:
-
-```
-npm --version
-```
-
-Deve aparecer algo como `10.X.X`. Se aparecer, está tudo certo.
-
-> **Se aparecer "não é reconhecido como comando":** Feche o prompt e abra novamente. Se ainda não funcionar, reinicie o computador e tente de novo.
-
----
-
-#### Passo 3: Instalar o Git (Controle de Versão)
-
-O Git é o programa que gerencia as versões do código e permite enviar/baixar o projeto do GitHub.
-
-1. Abra o navegador e acesse: https://git-scm.com/download/win
-2. O download deve iniciar automaticamente. Se não iniciar, clique em **"Click here to download manually"**
-3. Quando o download terminar, abra o arquivo `Git-X.XX.X-64-bit.exe`
-4. Na tela de instalação:
-   - Clique em **Next** em **todas** as telas (as configurações padrão estão ótimas)
-   - São cerca de 10 telas, apenas clique Next em todas
-   - Na última, clique em **Install**
-5. Ao finalizar, clique em **Finish**
-
-**Verificando a instalação:**
-
-1. Pressione `Win + R`, digite `cmd` e pressione Enter
-2. Digite:
-
-```
-git --version
-```
-
-Deve aparecer algo como `git version 2.XX.X.windows.X`.
-
-**Configurando seu nome e email no Git (obrigatório, faça apenas uma vez):**
-
-Ainda no prompt de comando, digite os dois comandos abaixo (substituindo pelos seus dados):
-
-```
-git config --global user.name "Seu Nome"
-git config --global user.email "seu-email@exemplo.com"
-```
-
-> Use o **mesmo email** da sua conta do GitHub.
-
----
-
-#### Passo 4: Criar uma conta no GitHub (se ainda não tem)
-
-O GitHub é onde o código do projeto fica armazenado na nuvem.
-
-1. Acesse: https://github.com
-2. Clique em **Sign up**
-3. Siga os passos: escolha um username, coloque seu email e crie uma senha
-4. Confirme o email que o GitHub vai enviar para você
-
----
-
-#### Passo 5: Criar uma conta no Supabase (Banco de Dados Gratuito)
-
-O Supabase é o banco de dados do projeto. Ele guarda todas as séries, temporadas e episódios.
-
-1. Acesse: https://supabase.com
-2. Clique em **Start your project** (ou "Sign Up")
-3. Clique em **Continue with GitHub** (mais fácil, usa a conta que você acabou de criar)
-4. Autorize o Supabase a acessar sua conta do GitHub
-
----
-
-### PARTE 2 — Baixando e Configurando o Projeto
-
----
-
-#### Passo 6: Clonar (baixar) o projeto do GitHub
-
-1. Abra o **Prompt de Comando** (Win + R → `cmd` → Enter)
-2. Navegue até a pasta onde quer salvar o projeto. Por exemplo, para ir até Documentos:
-
-```
-cd %USERPROFILE%\Documents\Projetos
-```
-
-> Se a pasta `Projetos` não existir, crie antes:
-> ```
-> mkdir %USERPROFILE%\Documents\Projetos
-> cd %USERPROFILE%\Documents\Projetos
-> ```
-
-3. Clone o repositório:
-
-```
+```bash
 git clone https://github.com/rodolfot/SiteWhiteLabelDownload.git
-```
-
-4. Entre na pasta do projeto:
-
-```
 cd SiteWhiteLabelDownload
 ```
 
----
+### 2. Instalar dependencias
 
-#### Passo 7: Instalar as dependências do projeto
-
-Ainda no prompt de comando, dentro da pasta do projeto, execute:
-
-```
+```bash
 npm install
 ```
 
-Aguarde terminar (pode levar 1-3 minutos). Vai aparecer uma mensagem como `added XXX packages`.
+### 3. Criar projeto no Supabase
 
-> **Se der erro:** Feche o prompt, abra novamente, navegue até a pasta do projeto e tente `npm install` de novo.
+1. Acesse [app.supabase.com](https://app.supabase.com) e crie um novo projeto
+1. Escolha nome, senha do banco e regiao (South America se disponivel)
+1. Aguarde a criacao (~2 minutos)
 
----
+### 4. Executar o schema SQL
 
-#### Passo 8: Criar o banco de dados no Supabase
+1. No painel Supabase, va em **SQL Editor** > **New query**
+1. Cole o conteudo de `src/lib/supabase/schema.sql`
+1. Clique em **Run**
+1. Deve aparecer "Success. No rows returned."
 
-##### 8.1 — Criar um novo projeto
+### 5. Criar usuario admin
 
-1. Acesse: https://app.supabase.com
-2. Clique em **New Project**
-3. Preencha:
-   - **Name:** `downdoor` (ou o nome que quiser)
-   - **Database Password:** Crie uma senha forte e **anote ela** (você vai precisar)
-   - **Region:** Escolha `South America (São Paulo)` se disponível, ou a mais próxima
-4. Clique em **Create new project**
-5. Aguarde 1-2 minutos até o projeto ser criado
+1. Va em **Authentication** > **Users** > **Add user** > **Create new user**
+1. Preencha email e senha, marque **Auto Confirm User**
+1. Clique em **Create user**
+1. Copie o **UUID** do usuario criado
+1. Va em **SQL Editor** e execute:
 
-##### 8.2 — Executar o SQL para criar as tabelas
+```sql
+INSERT INTO admin_users (id, email)
+VALUES ('COLE_O_UUID_AQUI', 'seu-email@exemplo.com');
+```
 
-1. No painel do Supabase, clique em **SQL Editor** no menu lateral esquerdo
-2. Clique em **New query**
-3. Abra o arquivo `src/lib/supabase/schema.sql` do projeto (pode abrir no VS Code ou Bloco de Notas)
-4. **Copie TODO o conteúdo** do arquivo
-5. **Cole** no editor SQL do Supabase
-6. Clique no botão **Run** (ou pressione `Ctrl + Enter`)
-7. Deve aparecer a mensagem **Success. No rows returned** — isso é normal e significa que funcionou
+### 6. Configurar variaveis de ambiente
 
-##### 8.3 — Pegar as chaves de API
+```bash
+cp .env.local.example .env.local
+```
 
-1. No painel do Supabase, clique em **Project Settings** (ícone de engrenagem no menu lateral)
-2. Clique em **API** no submenu
-3. Você verá:
-   - **Project URL** — Copie este valor (algo como `https://xyzxyz.supabase.co`)
-   - **anon public** — Copie este valor (é uma chave longa começando com `eyJ...`)
-   - **service_role** — Clique em **Reveal** e copie este valor
+Edite `.env.local` e preencha as **2 variaveis obrigatorias**:
 
-> **IMPORTANTE:** A chave `service_role` é secreta. Nunca compartilhe ou coloque em código público.
-
-##### 8.4 — Criar o usuário admin
-
-1. No painel do Supabase, clique em **Authentication** no menu lateral
-2. Clique na aba **Users**
-3. Clique em **Add user** → **Create new user**
-4. Preencha:
-   - **Email:** seu email (ex: `admin@downdoor.com`)
-   - **Password:** uma senha forte
-   - Marque **Auto Confirm User**
-5. Clique em **Create user**
-
-> Este email e senha serão usados para fazer login no painel admin do site.
-
----
-
-#### Passo 9: Configurar as variáveis de ambiente
-
-1. Na pasta do projeto, localize o arquivo `.env.local.example`
-2. **Copie** este arquivo e renomeie a cópia para `.env.local`
-
-   No prompt de comando (dentro da pasta do projeto):
-   ```
-   copy .env.local.example .env.local
-   ```
-
-3. Abra o arquivo `.env.local` no VS Code ou Bloco de Notas
-4. Substitua os valores com as chaves que você copiou do Supabase:
-
-```env
-# Supabase (obrigatório)
-NEXT_PUBLIC_SUPABASE_URL=https://xyzxyz.supabase.co
+```ini
+NEXT_PUBLIC_SUPABASE_URL=https://seu-projeto.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-
-# Cloudflare Turnstile (deixe assim por enquanto, configure depois)
-NEXT_PUBLIC_TURNSTILE_SITE_KEY=
-TURNSTILE_SECRET_KEY=
-
-# Microsoft Clarity (deixe assim por enquanto, configure depois)
-NEXT_PUBLIC_CLARITY_PROJECT_ID=
 ```
 
-5. **Salve** o arquivo (Ctrl + S)
+> As chaves estao em **Project Settings** > **API** no painel Supabase.
 
-> **IMPORTANTE:** O arquivo `.env.local` contém senhas. Ele **nunca** deve ser enviado para o GitHub. O `.gitignore` já está configurado para ignorar este arquivo.
+### 7. Rodar o projeto
 
----
-
-#### Passo 10: Rodar o projeto
-
-1. No prompt de comando, dentro da pasta do projeto, execute:
-
-```
+```bash
 npm run dev
 ```
 
-2. Aguarde aparecer a mensagem:
+Acesse:
 
-```
-▲ Next.js 14.2.5
-- Local:   http://localhost:3000
-```
-
-3. Abra o navegador e acesse: **http://localhost:3000**
-
-Pronto! O site está rodando na sua máquina.
-
-4. Para acessar o **painel admin**, vá em: **http://localhost:3000/admin**
-   - Use o email e senha que você criou no Passo 8.4
-
-> **Para parar o servidor:** Pressione `Ctrl + C` no prompt de comando.
+- **Site**: `http://localhost:3000`
+- **Admin**: `http://localhost:3000/admin` (use o email/senha criados no passo 5)
 
 ---
 
-### PARTE 3 — Configurações Opcionais
+## Variaveis de Ambiente
+
+### Obrigatorias
+
+| Variavel                         | Descricao               | Onde obter                                   |
+| -------------------------------- | ----------------------- | -------------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`       | URL do projeto Supabase | Supabase > Settings > API > Project URL      |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY`  | Chave publica anon      | Supabase > Settings > API > anon public      |
+
+> O build **falha** se essas variaveis nao estiverem configuradas.
+
+### Opcionais — Funcionalidade
+
+| Variavel                              | Descricao                                            | Padrao                            |
+| ------------------------------------- | ---------------------------------------------------- | --------------------------------- |
+| `SUPABASE_SERVICE_ROLE_KEY`           | Chave service_role (operacoes privilegiadas)          | -                                 |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY`      | Site key do Cloudflare Turnstile                     | - (skip no dev, erro 503 em prod) |
+| `TURNSTILE_SECRET_KEY`               | Secret key do Turnstile                              | -                                 |
+| `NEXT_PUBLIC_CLARITY_PROJECT_ID`      | ID do projeto Microsoft Clarity                      | -                                 |
+| `NEXT_PUBLIC_ADSENSE_CLIENT_ID`       | Client ID do Google AdSense (`ca-pub-xxx`)           | - (mostra placeholder)            |
+| `NEXT_PUBLIC_ADSENSE_SLOT_ID`         | Slot ID do anuncio padrao                            | -                                 |
+| `NEXT_PUBLIC_ADSENSE_NATIVE_SLOT_ID`  | Slot ID do anuncio nativo (entre cards)              | -                                 |
+
+### Opcionais — White-Label
+
+| Variavel                       | Descricao                    | Padrao                                              |
+| ------------------------------ | ---------------------------- | --------------------------------------------------- |
+| `NEXT_PUBLIC_SITE_NAME`        | Nome do site                 | `DownDoor`                                          |
+| `NEXT_PUBLIC_SITE_TAGLINE`     | Tagline/subtitulo            | `Seu Portal para Videos e Downloads Gratuitos`      |
+| `NEXT_PUBLIC_SITE_DESCRIPTION` | Descricao para SEO           | `Portal premium para streaming...`                  |
+| `NEXT_PUBLIC_SITE_URL`         | URL publica (para sitemap)   | `https://example.com`                               |
+| `NEXT_PUBLIC_CONTACT_EMAIL`    | Email exibido na pagina DMCA | `contato@exemplo.com`                               |
 
 ---
 
-#### Passo 11: (Opcional) Configurar Microsoft Clarity (Mapa de Calor)
+## Banco de Dados
 
-O Clarity mostra onde os usuários clicam e como navegam no seu site. É 100% gratuito.
+### Diagrama ER
 
-1. Acesse: https://clarity.microsoft.com
-2. Faça login com uma conta Microsoft (Hotmail, Outlook, etc.) ou crie uma
-3. Clique em **+ New project**
-4. Preencha:
-   - **Name:** `DownDoor`
-   - **Website URL:** a URL do seu site (pode ser `http://localhost:3000` para teste)
-5. Clique em **Add**
-6. Na tela seguinte, copie o **Project ID** (é um código alfanumérico tipo `j1k2l3m4n5`)
-7. Abra o arquivo `.env.local` e preencha:
+```text
+┌──────────────┐
+│ admin_users   │
+│──────────────│
+│ id (UUID/PK) │──→ auth.users
+│ email         │
+│ created_at    │
+└──────────────┘
 
-```env
-NEXT_PUBLIC_CLARITY_PROJECT_ID=j1k2l3m4n5
-```
-
-8. Salve o arquivo e reinicie o servidor (`Ctrl + C` e `npm run dev` novamente)
-
----
-
-#### Passo 12: (Opcional) Configurar Cloudflare Turnstile (Anti-Bot)
-
-O Turnstile verifica se quem está baixando é uma pessoa real, não um robô. É gratuito.
-
-1. Acesse: https://dash.cloudflare.com
-2. Crie uma conta ou faça login
-3. No menu lateral, clique em **Turnstile**
-4. Clique em **Add site**
-5. Preencha:
-   - **Site name:** `DownDoor`
-   - **Domain:** seu domínio (ex: `downdoor.com`) ou `localhost` para teste
-   - **Widget Type:** Managed
-6. Clique em **Create**
-7. Copie a **Site Key** e a **Secret Key**
-8. Abra o arquivo `.env.local` e preencha:
-
-```env
-NEXT_PUBLIC_TURNSTILE_SITE_KEY=0x4AAAAAAxxxxxxxxxxxxxx
-TURNSTILE_SECRET_KEY=0x4AAAAAAyyyyyyyyyyyyyy
-```
-
-9. Salve o arquivo e reinicie o servidor
-
----
-
-### PARTE 4 — Abrindo o Projeto no VS Code
-
----
-
-#### Passo 13: Abrir o projeto no VS Code
-
-Existem duas formas:
-
-**Forma 1 — Pelo explorador de arquivos:**
-1. Abra a pasta `C:\Users\SeuUsuario\Documents\Projetos\SiteWhiteLabelDownload`
-2. Clique com o botão direito em um espaço vazio
-3. Clique em **"Abrir com Code"**
-
-**Forma 2 — Pelo prompt de comando:**
-1. No prompt de comando, dentro da pasta do projeto, digite:
-```
-code .
+┌──────────────┐       ┌──────────────┐       ┌──────────────┐
+│  series       │──1:N──│  seasons      │──1:N──│  episodes     │
+│──────────────│       │──────────────│       │──────────────│
+│ id (UUID/PK) │       │ id (UUID/PK) │       │ id (UUID/PK) │
+│ title         │       │ series_id(FK)│       │ season_id(FK)│
+│ slug (unique) │       │ number       │       │ number       │
+│ synopsis      │       │ title        │       │ title        │
+│ poster_url    │       │ created_at   │       │ download_url │
+│ backdrop_url  │       └──────────────┘       │ file_size    │
+│ year          │                               │ quality      │
+│ genre         │                               │ created_at   │
+│ rating        │                               └──────────────┘
+│ category      │
+│ featured      │
+│ created_at    │
+│ updated_at    │
+└──────────────┘
 ```
 
-O VS Code abrirá com todos os arquivos do projeto no painel lateral.
+### Politicas RLS
+
+| Tabela                    | SELECT                   | INSERT/UPDATE/DELETE  |
+| ------------------------- | ------------------------ | -------------------- |
+| `series`                  | Publico                  | Apenas `is_admin()`  |
+| `seasons`                 | Publico                  | Apenas `is_admin()`  |
+| `episodes`                | Publico                  | Apenas `is_admin()`  |
+| `admin_users`             | Apenas o proprio admin   | -                    |
+| `storage.objects` (media) | Publico                  | Apenas `is_admin()`  |
+
+### Funcao is_admin()
+
+Funcao SQL `SECURITY DEFINER` que verifica se o `auth.uid()` atual existe na tabela `admin_users`. Usada em todas as policies RLS de escrita.
 
 ---
 
-#### Passo 14: Usar o Terminal integrado do VS Code
+## White-Label
 
-Em vez de usar o prompt de comando separado, você pode usar o terminal dentro do VS Code:
+O site e 100% white-label. Para usar com sua propria marca, basta definir as variaveis de ambiente:
 
-1. No VS Code, pressione `` Ctrl + ` `` (tecla acento grave, ao lado do 1)
-2. O terminal aparecerá na parte de baixo
-3. Aqui você pode executar todos os comandos: `npm run dev`, `npm install`, etc.
-
----
-
-### PARTE 5 — Publicando o Site na Internet
-
----
-
-#### Passo 15: Deploy no Vercel (Gratuito)
-
-O Vercel é a plataforma criada pelos mesmos criadores do Next.js. O plano gratuito é excelente.
-
-##### 15.1 — Criar conta no Vercel
-
-1. Acesse: https://vercel.com
-2. Clique em **Sign Up**
-3. Clique em **Continue with GitHub** (usa a mesma conta)
-4. Autorize o acesso
-
-##### 15.2 — Importar o projeto
-
-1. No dashboard do Vercel, clique em **Add New... → Project**
-2. Selecione o repositório `SiteWhiteLabelDownload`
-3. Clique em **Import**
-
-##### 15.3 — Configurar variáveis de ambiente
-
-1. Antes de fazer o deploy, clique em **Environment Variables**
-2. Adicione cada variável, uma por uma:
-
-| Name | Value |
-|------|-------|
-| `NEXT_PUBLIC_SUPABASE_URL` | sua URL do Supabase |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | sua anon key |
-| `SUPABASE_SERVICE_ROLE_KEY` | sua service role key |
-| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | sua site key (se tiver) |
-| `TURNSTILE_SECRET_KEY` | sua secret key (se tiver) |
-| `NEXT_PUBLIC_CLARITY_PROJECT_ID` | seu project ID (se tiver) |
-
-3. Clique em **Deploy**
-4. Aguarde 1-2 minutos
-5. Ao finalizar, o Vercel fornecerá uma URL como `https://seu-projeto.vercel.app`
-
-Pronto! Seu site está no ar!
-
----
-
-## Comandos Úteis (Referência Rápida)
-
-| Comando | O que faz |
-|---------|-----------|
-| `npm run dev` | Inicia o servidor de desenvolvimento (http://localhost:3000) |
-| `npm run build` | Compila o projeto para produção |
-| `npm start` | Inicia o servidor de produção (após o build) |
-| `npm run lint` | Verifica erros de código |
-| `git status` | Mostra arquivos modificados |
-| `git add .` | Prepara todos os arquivos para commit |
-| `git commit -m "mensagem"` | Salva as alterações com uma mensagem |
-| `git push` | Envia as alterações para o GitHub |
-
----
-
-## Estrutura do Banco de Dados
-
+```ini
+NEXT_PUBLIC_SITE_NAME=MeuSite
+NEXT_PUBLIC_SITE_TAGLINE=A melhor plataforma de downloads
+NEXT_PUBLIC_SITE_DESCRIPTION=Descricao para SEO e meta tags
+NEXT_PUBLIC_CONTACT_EMAIL=contato@meusite.com
+NEXT_PUBLIC_SITE_URL=https://meusite.com
 ```
-┌──────────┐       ┌──────────┐       ┌──────────┐
-│  series   │──1:N──│ seasons  │──1:N──│ episodes │
-└──────────┘       └──────────┘       └──────────┘
-│ id (UUID)        │ id (UUID)        │ id (UUID)
-│ title            │ series_id (FK)   │ season_id (FK)
-│ slug (unique)    │ number           │ number
-│ synopsis         │ title            │ title
-│ poster_url       │ created_at       │ download_url
-│ backdrop_url     └──────────┘       │ file_size
-│ year                                │ quality
-│ genre                               │ created_at
-│ rating                              └──────────┘
-│ category
-│ featured
-│ created_at
-│ updated_at
-└──────────┘
+
+O logo e gerado automaticamente dividindo o nome ao meio: a primeira metade fica branca e a segunda metade recebe o gradiente neon (azul para roxo). Exemplos:
+
+| NEXT_PUBLIC_SITE_NAME | Resultado              |
+| --------------------- | ---------------------- |
+| `DownDoor`            | **Down** + *Door*      |
+| `MegaFlix`            | **Mega** + *Flix*      |
+| `StreamHub`           | **Stre** + *amHub*     |
+
+---
+
+## Monetizacao (Anuncios)
+
+### Google AdSense
+
+Configure as 3 variaveis para ativar anuncios reais:
+
+```ini
+NEXT_PUBLIC_ADSENSE_CLIENT_ID=ca-pub-1234567890
+NEXT_PUBLIC_ADSENSE_SLOT_ID=1234567890
+NEXT_PUBLIC_ADSENSE_NATIVE_SLOT_ID=0987654321
+```
+
+Sem configurar, os espacos de anuncio mostram placeholders visuais.
+
+### Espacos de Anuncio
+
+| Local              | Tamanho       | Componente | Visibilidade |
+| ------------------ | ------------- | ---------- | ------------ |
+| Header             | 728x90        | `AdSlot`   | Desktop      |
+| Home (entre cards) | Nativo/Fluid  | `NativeAd` | Todos        |
+| Serie (sidebar)    | 300x600       | `AdSlot`   | Desktop      |
+| Modal de download  | 300x250       | `AdSlot`   | Todos        |
+
+### Outras Redes
+
+Para usar outra rede (PropellerAds, etc.), modifique os componentes em `src/components/ads/`.
+
+---
+
+## Seguranca
+
+### Checklist de Producao
+
+- [ ] Variavel `TURNSTILE_SECRET_KEY` configurada (obrigatoria em prod — retorna erro 503 sem ela)
+- [ ] Variavel `NEXT_PUBLIC_TURNSTILE_SITE_KEY` configurada
+- [ ] Usuario admin criado e registrado na tabela `admin_users`
+- [ ] `SUPABASE_SERVICE_ROLE_KEY` configurada (nunca no frontend)
+- [ ] Dominio adicionado ao Cloudflare Turnstile
+- [ ] `NEXT_PUBLIC_SITE_URL` definida com o dominio real (para sitemap)
+- [ ] Se usar imagens de CDN externo, adicionar hostname em `next.config.mjs`
+
+### Fluxo de Autenticacao Admin
+
+```text
+Browser → /admin → Server verifica auth.getUser()
+                  → Server verifica admin_users.id == user.id
+                  → Se nao: redirect /admin/login
+                  → Se sim: renderiza dashboard
 ```
 
 ---
 
-## Espaços de Anúncios
+## SEO
 
-| Local | Tamanho | Componente |
-|-------|---------|-----------|
-| Header (desktop) | 728x90 | Inline no `Header.tsx` |
-| Home (entre cards) | Native | `NativeAd.tsx` |
-| Série (sidebar desktop) | 300x600 | `AdSlot.tsx` |
-| Modal de download | 300x250 | Inline no `DownloadTimer.tsx` |
+### Gerado Automaticamente
 
-Para integrar sua rede de anúncios, substitua os placeholders nos componentes de anúncio pelo script da sua rede (Google AdSense, PropellerAds, etc.).
+| Recurso        | Rota            | Descricao                                        |
+| -------------- | --------------- | ------------------------------------------------ |
+| `robots.txt`   | `/robots.txt`   | Permite `/`, bloqueia `/admin/` e `/api/`        |
+| `sitemap.xml`  | `/sitemap.xml`  | Paginas estaticas + todas as series do banco     |
+| Favicon        | `/favicon.svg`  | SVG com gradiente e inicial do nome do site      |
+| Meta OG        | Cada pagina     | Title, description, og:image para cada serie     |
 
----
+### SEO por Serie
 
-## Solução de Problemas Comuns
+Cada pagina `/serie/[slug]` gera automaticamente:
 
-### "node não é reconhecido como comando"
-- Reinicie o computador após instalar o Node.js
-- Se ainda não funcionar, reinstale o Node.js marcando a opção "Add to PATH"
-
-### "npm install deu erro"
-- Feche o VS Code e qualquer terminal aberto
-- Abra um novo prompt de comando como **Administrador** (clique direito → "Executar como administrador")
-- Navegue até a pasta e tente novamente
-
-### "O site abre mas aparece em branco"
-- Verifique se o arquivo `.env.local` foi criado corretamente
-- Verifique se as chaves do Supabase estão corretas (sem espaços extras)
-- Reinicie o servidor (`Ctrl + C` e `npm run dev`)
-
-### "Não consigo fazer login no admin"
-- Verifique se criou o usuário no Supabase (Passo 8.4)
-- Verifique se marcou "Auto Confirm User" ao criar
-- O email e senha devem ser os mesmos que você definiu no Supabase
-
-### "As séries não aparecem na Home"
-- Faça login no admin (`/admin`) e cadastre pelo menos uma série
-- Marque a série como "Destaque" para aparecer no carrossel da Home
+- Title com o nome da serie
+- Meta description com a sinopse
+- og:image com o backdrop ou poster
+- og:type como `video.tv_show`
 
 ---
 
-## Licença
+## CI/CD
 
-Projeto proprietário. Todos os direitos reservados.
+O projeto inclui 3 workflows GitHub Actions em `.github/workflows/`:
+
+### 1. CI (ci.yml)
+
+Roda em **push** e **pull requests** para `main`/`master`:
+
+- Checkout + cache de dependencias
+- `npm ci` (install)
+- `npm run lint` (ESLint)
+- `npx tsc --noEmit` (type check)
+- `npm run build` (build de producao)
+
+### 2. Deploy Preview (deploy-preview.yml)
+
+Roda em **pull requests**:
+
+- Faz build e deploy preview no Vercel
+- Comenta na PR com a URL de preview
+- So roda se `VERCEL_PROJECT_ID` estiver configurado
+
+### 3. Deploy Production (deploy-production.yml)
+
+Roda em **push para main/master** (apos CI passar):
+
+- Faz build e deploy de producao no Vercel
+- So roda se `VERCEL_PROJECT_ID` estiver configurado
+
+### Configurar Vercel no GitHub Actions
+
+1. Instale o Vercel CLI: `npm i -g vercel`
+1. Rode `vercel link` na raiz do projeto para vincular
+1. No GitHub, va em **Settings** > **Secrets and variables** > **Actions**
+1. Adicione os seguintes **secrets**:
+
+| Secret           | Onde obter                                                         |
+| ---------------- | ------------------------------------------------------------------ |
+| `VERCEL_TOKEN`   | [vercel.com/account/tokens](https://vercel.com/account/tokens)     |
+| `VERCEL_ORG_ID`  | Arquivo `.vercel/project.json` apos `vercel link`                  |
+
+1. Adicione a seguinte **variable** (nao secret):
+
+| Variable            | Onde obter                                        |
+| ------------------- | ------------------------------------------------- |
+| `VERCEL_PROJECT_ID` | Arquivo `.vercel/project.json` apos `vercel link` |
+
+1. Configure as env vars do Supabase no painel do Vercel em **Settings** > **Environment Variables** — adicione todas as variaveis do `.env.local`
+
+> Se nao configurar `VERCEL_PROJECT_ID`, os workflows de deploy sao silenciosamente ignorados e apenas o CI (lint + build) roda.
+
+---
+
+## Deploy em Producao
+
+### Opcao 1 — Vercel (Recomendado)
+
+1. Acesse [vercel.com](https://vercel.com) e faca login com GitHub
+1. Clique em **Add New... > Project**
+1. Selecione o repositorio `SiteWhiteLabelDownload`
+1. Em **Environment Variables**, adicione:
+
+| Variavel                         | Valor                                       |
+| -------------------------------- | ------------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`       | sua URL do Supabase                         |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY`  | sua anon key                                |
+| `SUPABASE_SERVICE_ROLE_KEY`      | sua service role key                        |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | sua site key                                |
+| `TURNSTILE_SECRET_KEY`           | sua secret key                              |
+| `NEXT_PUBLIC_SITE_URL`           | URL final do site (ex: `https://meusite.com`) |
+
+1. Clique em **Deploy**
+1. Apos ~2 min, o site estara no ar em `https://seu-projeto.vercel.app`
+
+### Opcao 2 — Self-hosted
+
+```bash
+npm run build
+npm start
+```
+
+O servidor roda na porta 3000 por padrao. Use um reverse proxy (Nginx, Caddy) para HTTPS.
+
+---
+
+## Comandos
+
+| Comando            | Descricao                                      |
+| ------------------ | ---------------------------------------------- |
+| `npm run dev`      | Servidor de desenvolvimento (localhost:3000)    |
+| `npm run build`    | Compilar para producao                         |
+| `npm start`        | Iniciar servidor de producao (apos build)      |
+| `npm run lint`     | Verificar erros de codigo com ESLint           |
+| `npx tsc --noEmit` | Verificar tipos TypeScript sem compilar        |
+
+---
+
+## Arquitetura
+
+### Fluxo de Dados
+
+```text
+┌─────────────┐     ┌──────────────┐     ┌──────────────┐
+│   Browser    │────→│  Next.js SSR │────→│   Supabase   │
+│  (React)     │←────│  (Server)    │←────│ (PostgreSQL) │
+└─────────────┘     └──────────────┘     └──────────────┘
+       │                    │                     │
+       │                    │                     │
+  Framer Motion        Middleware            RLS Policies
+  Tailwind CSS      Session Refresh         is_admin()
+  AdSense/Clarity    Turnstile API          Storage (media)
+```
+
+### Paginas Server vs Client
+
+| Tipo                 | Paginas                                                                       | Motivo                              |
+| -------------------- | ----------------------------------------------------------------------------- | ----------------------------------- |
+| **Server Component** | Home, Serie, Admin (page), Termos, Privacidade, DMCA                          | Fetch de dados no servidor, SEO     |
+| **Client Component** | Header, Footer, HeroCarousel, SeriesDetail, SeriesForm, AdminDashboard, Ads   | Interatividade, estado, animacoes   |
+
+### Middleware
+
+O `middleware.ts` roda em todas as rotas (exceto assets estaticos) e faz refresh da sessao Supabase para manter o usuario logado.
+
+---
+
+## Solucao de Problemas
+
+### Missing required environment variables
+
+O build falha se `NEXT_PUBLIC_SUPABASE_URL` ou `NEXT_PUBLIC_SUPABASE_ANON_KEY` nao estiverem definidas. Verifique seu `.env.local`.
+
+### O site abre mas aparece em branco
+
+- Verifique se o `.env.local` foi criado (nao e `.env.local.example`)
+- Verifique se as chaves do Supabase estao corretas (sem espacos extras)
+- Reinicie o servidor (`Ctrl+C` e `npm run dev`)
+
+### Nao consigo fazer login no admin
+
+- Verifique se criou o usuario no Supabase Auth e marcou "Auto Confirm User"
+- Verifique se inseriu o UUID na tabela `admin_users` (passo 5 da configuracao)
+- O email e senha devem ser os mesmos do Supabase Auth
+
+### As series nao aparecem na Home
+
+- Faca login no admin e cadastre pelo menos uma serie
+- Marque a serie como "Destaque" para aparecer no carrossel
+
+### Imagens nao carregam
+
+- Por seguranca, apenas imagens de `*.supabase.co` e `*.supabase.in` sao permitidas
+- Para usar outro CDN, adicione o hostname em `next.config.mjs` > `remotePatterns`
+
+### Erro 503 no download (producao)
+
+- O Cloudflare Turnstile e **obrigatorio** em producao
+- Configure `NEXT_PUBLIC_TURNSTILE_SITE_KEY` e `TURNSTILE_SECRET_KEY`
+- Em desenvolvimento, o Turnstile e automaticamente ignorado
+
+### CI falha no GitHub Actions
+
+- O workflow CI usa variaveis placeholder para build — nao precisa de secrets
+- Verifique se `npm run lint` e `npx tsc --noEmit` passam localmente
+
+---
+
+## Licenca
+
+Projeto proprietario. Todos os direitos reservados.

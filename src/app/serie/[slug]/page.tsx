@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { siteConfig } from '@/lib/site-config';
 import { SeriesDetail } from '@/components/ui/SeriesDetail';
 import { Series, SeasonWithEpisodes } from '@/types/database';
 
@@ -37,14 +38,14 @@ async function getSeriesData(slug: string) {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const data = await getSeriesData(params.slug);
-  if (!data) return { title: 'Série não encontrada - DownDoor' };
+  if (!data) return { title: `Serie nao encontrada - ${siteConfig.name}` };
 
   const { series } = data;
   return {
-    title: `${series.title} - Download Grátis | DownDoor`,
-    description: series.synopsis || `Baixe ${series.title} gratuitamente no DownDoor.`,
+    title: `${series.title} - Download Gratis | ${siteConfig.name}`,
+    description: series.synopsis || `Baixe ${series.title} gratuitamente no ${siteConfig.name}.`,
     openGraph: {
-      title: `${series.title} - DownDoor`,
+      title: `${series.title} - ${siteConfig.name}`,
       description: series.synopsis || `Baixe ${series.title} gratuitamente.`,
       images: [{ url: series.backdrop_url || series.poster_url || '' }],
       type: 'video.tv_show',

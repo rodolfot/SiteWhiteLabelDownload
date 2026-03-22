@@ -2,10 +2,14 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Menu, X } from 'lucide-react';
 import { Series } from '@/types/database';
 import { createClient } from '@/lib/supabase/client';
+import { siteConfig } from '@/lib/site-config';
+import { getBrandParts } from '@/lib/brand';
+import { AdSlot } from '@/components/ads/AdSlot';
 
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -14,6 +18,7 @@ export function Header() {
   const [searchResults, setSearchResults] = useState<Series[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
+  const [brandFirst, brandSecond] = getBrandParts();
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -64,9 +69,7 @@ export function Header() {
     >
       {/* Ad Banner Top 728x90 */}
       <div className="hidden lg:flex justify-center py-2 bg-surface-900/50">
-        <div className="ad-slot w-[728px] h-[90px]">
-          <span>Anúncio 728x90</span>
-        </div>
+        <AdSlot width={728} height={90} format="horizontal" />
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -74,8 +77,8 @@ export function Header() {
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2 shrink-0">
             <span className="text-2xl font-extrabold">
-              <span className="text-white">Down</span>
-              <span className="text-gradient">Door</span>
+              <span className="text-white">{brandFirst}</span>
+              <span className="text-gradient">{brandSecond}</span>
             </span>
           </Link>
 
@@ -120,7 +123,7 @@ export function Header() {
                       className="flex items-center gap-3 p-3 hover:bg-surface-700 transition-colors"
                     >
                       {series.poster_url && (
-                        <img src={series.poster_url} alt={series.title} className="w-10 h-14 object-cover rounded" />
+                        <Image src={series.poster_url} alt={series.title} width={40} height={56} className="object-cover rounded" />
                       )}
                       <div>
                         <p className="text-sm font-medium text-white">{series.title}</p>
@@ -162,15 +165,40 @@ export function Header() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Buscar séries..."
+                  placeholder="Buscar series..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full bg-surface-700 border border-surface-500 rounded-full py-2 pl-10 pr-4 text-sm text-white placeholder-gray-400 focus:outline-none focus:border-neon-blue"
                 />
+                {isSearching && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <div className="w-4 h-4 border-2 border-neon-blue/30 border-t-neon-blue rounded-full animate-spin" />
+                  </div>
+                )}
               </div>
+              {searchResults.length > 0 && (
+                <div className="bg-surface-700 border border-surface-600 rounded-xl overflow-hidden">
+                  {searchResults.map((series) => (
+                    <Link
+                      key={series.id}
+                      href={`/serie/${series.slug}`}
+                      onClick={() => { setSearchQuery(''); setSearchResults([]); setIsMobileMenuOpen(false); }}
+                      className="flex items-center gap-3 p-3 hover:bg-surface-600 transition-colors"
+                    >
+                      {series.poster_url && (
+                        <Image src={series.poster_url} alt={series.title} width={32} height={44} className="object-cover rounded" />
+                      )}
+                      <div>
+                        <p className="text-sm font-medium text-white">{series.title}</p>
+                        <p className="text-xs text-gray-400">{series.year} - {series.genre}</p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
               <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-gray-300 hover:text-white">Home</Link>
               <Link href="/#categorias" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-gray-300 hover:text-white">Categorias</Link>
-              <Link href="/#lancamentos" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-gray-300 hover:text-white">Lançamentos</Link>
+              <Link href="/#lancamentos" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-gray-300 hover:text-white">Lancamentos</Link>
             </div>
           </motion.div>
         )}

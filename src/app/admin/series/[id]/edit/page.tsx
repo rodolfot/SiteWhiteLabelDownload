@@ -1,5 +1,6 @@
 import { redirect, notFound } from 'next/navigation';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { requireAdmin } from '@/lib/supabase/admin';
 import { SeriesForm } from '@/components/admin/SeriesForm';
 
 interface PageProps {
@@ -7,10 +8,10 @@ interface PageProps {
 }
 
 export default async function EditSeriesPage({ params }: PageProps) {
-  const supabase = createServerSupabaseClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const admin = await requireAdmin();
+  if (!admin) redirect('/admin/login');
 
-  if (!user) redirect('/admin/login');
+  const supabase = createServerSupabaseClient();
 
   const { data: series } = await supabase
     .from('series')

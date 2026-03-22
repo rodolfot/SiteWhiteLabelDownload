@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShieldAlert } from 'lucide-react';
+import { siteConfig } from '@/lib/site-config';
 
 export function AdBlockDetector() {
   const [adBlockDetected, setAdBlockDetected] = useState(false);
@@ -60,7 +61,7 @@ export function AdBlockDetector() {
               Bloqueador de Anúncios Detectado
             </h2>
             <p className="text-gray-400 text-sm leading-relaxed mb-6">
-              O DownDoor é um serviço gratuito mantido por anúncios. Para continuar
+              O {siteConfig.name} e um servico gratuito mantido por anuncios. Para continuar
               utilizando nosso site, por favor desative seu bloqueador de anúncios e
               recarregue a página.
             </p>

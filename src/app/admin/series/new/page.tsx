@@ -1,12 +1,10 @@
 import { redirect } from 'next/navigation';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { requireAdmin } from '@/lib/supabase/admin';
 import { SeriesForm } from '@/components/admin/SeriesForm';
 
 export default async function NewSeriesPage() {
-  const supabase = createServerSupabaseClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) redirect('/admin/login');
+  const admin = await requireAdmin();
+  if (!admin) redirect('/admin/login');
 
   return <SeriesForm />;
 }

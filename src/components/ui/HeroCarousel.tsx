@@ -6,6 +6,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Play, Info, ChevronLeft, ChevronRight, Star } from 'lucide-react';
 import { Series } from '@/types/database';
+import { siteConfig } from '@/lib/site-config';
+import { getBrandParts } from '@/lib/brand';
 
 interface HeroCarouselProps {
   series: Series[];
@@ -23,14 +25,15 @@ export function HeroCarousel({ series }: HeroCarouselProps) {
   }, [series.length]);
 
   if (series.length === 0) {
+    const [brandFirst, brandSecond] = getBrandParts();
     return (
       <div className="relative h-[70vh] min-h-[500px] bg-surface-800 flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-4xl md:text-6xl font-extrabold mb-4">
-            <span className="text-white">Down</span>
-            <span className="text-gradient">Door</span>
+            <span className="text-white">{brandFirst}</span>
+            <span className="text-gradient">{brandSecond}</span>
           </h1>
-          <p className="text-gray-400 text-lg">Seu portal para vídeos e downloads gratuitos</p>
+          <p className="text-gray-400 text-lg">{siteConfig.tagline}</p>
         </div>
       </div>
     );

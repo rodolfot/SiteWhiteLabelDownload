@@ -2,9 +2,11 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Plus, Edit, Trash2, LogOut, Tv, Film, BarChart3 } from 'lucide-react';
+import { siteConfig } from '@/lib/site-config';
 
 interface SeriesWithRelations {
   id: string;
@@ -38,12 +40,21 @@ export function AdminDashboard({ series }: AdminDashboardProps) {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Tem certeza que deseja excluir esta série e todo seu conteúdo?')) return;
+    if (!confirm('Tem certeza que deseja excluir esta serie e todo seu conteudo?')) return;
     setDeleting(id);
-    const supabase = createClient();
-    await supabase.from('series').delete().eq('id', id);
-    router.refresh();
-    setDeleting(null);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.from('series').delete().eq('id', id);
+      if (error) {
+        alert(`Erro ao excluir: ${error.message}`);
+      } else {
+        router.refresh();
+      }
+    } catch {
+      alert('Erro inesperado ao excluir a serie. Tente novamente.');
+    } finally {
+      setDeleting(null);
+    }
   };
 
   return (
@@ -52,7 +63,7 @@ export function AdminDashboard({ series }: AdminDashboardProps) {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-white">Painel Admin</h1>
-          <p className="text-gray-400 text-sm mt-1">Gerencie o conteúdo do DownDoor</p>
+          <p className="text-gray-400 text-sm mt-1">Gerencie o conteudo do {siteConfig.name}</p>
         </div>
         <div className="flex items-center gap-3">
           <Link href="/admin/series/new" className="btn-primary flex items-center gap-2 text-sm">
@@ -126,7 +137,7 @@ export function AdminDashboard({ series }: AdminDashboardProps) {
                 className="flex items-center gap-4 p-4 hover:bg-surface-700/50 transition-colors"
               >
                 {s.poster_url ? (
-                  <img src={s.poster_url} alt={s.title} className="w-12 h-16 object-cover rounded-lg shrink-0" />
+                  <Image src={s.poster_url} alt={s.title} width={48} height={64} className="object-cover rounded-lg shrink-0" />
                 ) : (
                   <div className="w-12 h-16 bg-surface-600 rounded-lg shrink-0" />
                 )}

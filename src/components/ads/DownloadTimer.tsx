@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useId } from 'react';
 import { motion } from 'framer-motion';
 import { Download, Clock, Shield } from 'lucide-react';
+import { AdSlot } from './AdSlot';
 
 interface DownloadTimerProps {
   downloadUrl: string;
@@ -96,8 +97,8 @@ export function DownloadTimer({ downloadUrl, episodeTitle }: DownloadTimerProps)
             <p className="text-gray-400 text-sm mb-6">{episodeTitle}</p>
 
             {/* Ad space during countdown */}
-            <div className="ad-slot w-full h-[250px] mb-6">
-              <span>Anúncio 300x250</span>
+            <div className="flex justify-center mb-6">
+              <AdSlot width={300} height={250} format="rectangle" />
             </div>
 
             {!isReady ? (

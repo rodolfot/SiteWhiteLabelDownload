@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Lock, Mail, LogIn } from 'lucide-react';
+import { getBrandParts } from '@/lib/brand';
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState('');
@@ -11,6 +12,7 @@ export default function AdminLoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const [brandFirst, brandSecond] = getBrandParts();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,8 +45,8 @@ export default function AdminLoginPage() {
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-white mb-2">
-            <span className="text-white">Down</span>
-            <span className="text-gradient">Door</span>
+            <span className="text-white">{brandFirst}</span>
+            <span className="text-gradient">{brandSecond}</span>
             {' '}
             <span className="text-gray-400 font-normal text-lg">Admin</span>
           </h1>

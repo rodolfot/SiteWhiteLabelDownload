@@ -10,7 +10,13 @@ export async function POST(request: NextRequest) {
 
     const secretKey = process.env.TURNSTILE_SECRET_KEY;
     if (!secretKey) {
-      // If no key configured, skip verification
+      if (process.env.NODE_ENV === 'production') {
+        return NextResponse.json(
+          { success: false, error: 'Turnstile not configured' },
+          { status: 503 }
+        );
+      }
+      // Skip verification in development
       return NextResponse.json({ success: true });
     }
 

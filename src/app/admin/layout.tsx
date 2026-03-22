@@ -1,9 +1,12 @@
 import { Metadata } from 'next';
+import { siteConfig } from '@/lib/site-config';
 
-export const metadata: Metadata = {
-  title: 'Admin - DownDoor',
-  robots: 'noindex, nofollow',
-};
+export function generateMetadata(): Metadata {
+  return {
+    title: `Admin - ${siteConfig.name}`,
+    robots: 'noindex, nofollow',
+  };
+}
 
 export default function AdminLayout({
   children,

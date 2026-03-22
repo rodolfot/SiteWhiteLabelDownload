@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Save, Plus, Trash2, Upload, ArrowLeft, ChevronDown, ChevronUp } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 interface Episode {
   id?: string;
@@ -151,28 +152,82 @@ export function SeriesForm({ initialData, initialSeasons }: SeriesFormProps) {
           .eq('id', initialData.id);
         if (updateError) throw updateError;
 
-        // Delete old seasons and re-create
-        await supabase.from('seasons').delete().eq('series_id', initialData.id);
+        // Collect IDs of seasons/episodes that still exist in the form
+        const existingSeasonIds = seasons.filter((s) => s.id).map((s) => s.id!);
+        const existingEpisodeIds = seasons
+          .flatMap((s) => s.episodes)
+          .filter((ep) => ep.id)
+          .map((ep) => ep.id!);
+
+        // Delete seasons that were removed from the form
+        if (existingSeasonIds.length > 0) {
+          await supabase
+            .from('seasons')
+            .delete()
+            .eq('series_id', initialData.id)
+            .not('id', 'in', `(${existingSeasonIds.join(',')})`);
+        } else {
+          await supabase.from('seasons').delete().eq('series_id', initialData.id);
+        }
 
         for (const season of seasons) {
-          const { data: newSeason, error: seasonError } = await supabase
-            .from('seasons')
-            .insert({ series_id: initialData.id, number: season.number, title: season.title })
-            .select()
-            .single();
-          if (seasonError) throw seasonError;
+          let seasonId = season.id;
 
-          if (season.episodes.length > 0) {
-            const episodes = season.episodes.map((ep) => ({
-              season_id: newSeason.id,
-              number: ep.number,
-              title: ep.title,
-              download_url: ep.download_url,
-              file_size: ep.file_size,
-              quality: ep.quality,
-            }));
-            const { error: epError } = await supabase.from('episodes').insert(episodes);
-            if (epError) throw epError;
+          if (seasonId) {
+            // Update existing season
+            const { error: seasonError } = await supabase
+              .from('seasons')
+              .update({ number: season.number, title: season.title })
+              .eq('id', seasonId);
+            if (seasonError) throw seasonError;
+
+            // Delete episodes that were removed from this season
+            const keepEpIds = season.episodes.filter((ep) => ep.id).map((ep) => ep.id!);
+            if (keepEpIds.length > 0) {
+              await supabase
+                .from('episodes')
+                .delete()
+                .eq('season_id', seasonId)
+                .not('id', 'in', `(${keepEpIds.join(',')})`);
+            } else {
+              await supabase.from('episodes').delete().eq('season_id', seasonId);
+            }
+          } else {
+            // Insert new season
+            const { data: newSeason, error: seasonError } = await supabase
+              .from('seasons')
+              .insert({ series_id: initialData.id, number: season.number, title: season.title })
+              .select()
+              .single();
+            if (seasonError) throw seasonError;
+            seasonId = newSeason.id;
+          }
+
+          // Upsert episodes
+          for (const ep of season.episodes) {
+            if (ep.id) {
+              const { error: epError } = await supabase
+                .from('episodes')
+                .update({
+                  number: ep.number,
+                  title: ep.title,
+                  download_url: ep.download_url,
+                  file_size: ep.file_size,
+                  quality: ep.quality,
+                })
+                .eq('id', ep.id);
+              if (epError) throw epError;
+            } else {
+              const { error: epError } = await supabase.from('episodes').insert({
+                season_id: seasonId,
+                number: ep.number,
+                title: ep.title,
+                download_url: ep.download_url,
+                file_size: ep.file_size,
+                quality: ep.quality,
+              });
+              if (epError) throw epError;
+            }
           }
         }
       } else {
@@ -355,7 +410,7 @@ export function SeriesForm({ initialData, initialSeasons }: SeriesFormProps) {
                 </label>
               </div>
               {form.poster_url && (
-                <img src={form.poster_url} alt="Poster" className="mt-2 w-24 h-36 object-cover rounded-lg" />
+                <Image src={form.poster_url} alt="Poster" width={96} height={144} className="mt-2 object-cover rounded-lg" />
               )}
             </div>
 
@@ -381,7 +436,7 @@ export function SeriesForm({ initialData, initialSeasons }: SeriesFormProps) {
                 </label>
               </div>
               {form.backdrop_url && (
-                <img src={form.backdrop_url} alt="Backdrop" className="mt-2 w-full h-24 object-cover rounded-lg" />
+                <Image src={form.backdrop_url} alt="Backdrop" width={400} height={96} className="mt-2 w-full h-24 object-cover rounded-lg" />
               )}
             </div>
           </div>

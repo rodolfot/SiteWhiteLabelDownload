@@ -1,15 +1,16 @@
 import { redirect } from 'next/navigation';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { requireAdmin } from '@/lib/supabase/admin';
 import { AdminDashboard } from '@/components/admin/AdminDashboard';
 
 export default async function AdminPage() {
-  const supabase = createServerSupabaseClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const admin = await requireAdmin();
 
-  if (!user) {
+  if (!admin) {
     redirect('/admin/login');
   }
 
+  const supabase = createServerSupabaseClient();
   const { data: series } = await supabase
     .from('series')
     .select('*, seasons(id, number, episodes(id))')
