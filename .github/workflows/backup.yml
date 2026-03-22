@@ -1,0 +1,38 @@
+name: Backup Supabase
+
+on:
+  schedule:
+    # Roda todo dia às 03:00 UTC (00:00 BRT)
+    - cron: '0 3 * * *'
+  workflow_dispatch: # Permite rodar manualmente
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    if: ${{ vars.ENABLE_BACKUP == 'true' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run backup
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: npx tsx scripts/backup-supabase.ts
+
+      - name: Upload backup artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: supabase-backup-${{ github.run_number }}
+          path: backups/
+          retention-days: 30
