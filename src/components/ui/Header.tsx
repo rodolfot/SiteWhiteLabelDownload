@@ -52,7 +52,8 @@ export function Header() {
           .ilike('title', `%${searchQuery}%`)
           .limit(5);
         setSearchResults(data || []);
-      } catch {
+      } catch (err) {
+        console.error('[Search] Falha na busca:', err);
         setSearchResults([]);
       }
       setIsSearching(false);

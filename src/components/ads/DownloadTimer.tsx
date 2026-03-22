@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useId } from 'react';
 import { motion } from 'framer-motion';
 import { Download, Clock, Shield } from 'lucide-react';
 import { AdSlot } from './AdSlot';
+import { isValidDownloadUrl } from '@/lib/validation';
 
 interface DownloadTimerProps {
   downloadUrl: string;
@@ -80,6 +81,7 @@ export function DownloadTimer({ downloadUrl, episodeTitle }: DownloadTimerProps)
   }, [isOpen, isReady, handleTurnstileCallback, uniqueId]);
 
   const canDownload = isReady && turnstileVerified;
+  const safeUrl = isValidDownloadUrl(downloadUrl) ? downloadUrl : null;
 
   return (
     <>
@@ -149,9 +151,9 @@ export function DownloadTimer({ downloadUrl, episodeTitle }: DownloadTimerProps)
               <div className="space-y-4">
                 <div id={`turnstile-${uniqueId.replace(/:/g, '')}`} className="flex justify-center" />
 
-                {canDownload ? (
+                {canDownload && safeUrl ? (
                   <a
-                    href={downloadUrl}
+                    href={safeUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="btn-primary w-full flex items-center justify-center gap-2 text-center"
@@ -160,6 +162,8 @@ export function DownloadTimer({ downloadUrl, episodeTitle }: DownloadTimerProps)
                     <Download className="h-5 w-5" />
                     Baixar Agora
                   </a>
+                ) : canDownload && !safeUrl ? (
+                  <p className="text-red-400 text-sm text-center py-3">URL de download inválida.</p>
                 ) : (
                   <div className="flex items-center justify-center gap-2 text-gray-400 text-sm py-3">
                     <Shield className="h-4 w-4" />

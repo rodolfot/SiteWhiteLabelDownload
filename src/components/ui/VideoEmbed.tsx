@@ -9,9 +9,27 @@ interface VideoEmbedProps {
   posterUrl?: string;
 }
 
+const ALLOWED_EMBED_HOSTS = [
+  'youtube.com', 'www.youtube.com', 'youtu.be',
+  'player.twitch.tv', 'twitch.tv', 'www.twitch.tv',
+  'kick.com', 'www.kick.com', 'player.kick.com',
+] as const;
+
+function isAllowedHost(hostname: string): boolean {
+  return ALLOWED_EMBED_HOSTS.some(
+    host => hostname === host || hostname.endsWith(`.${host}`)
+  );
+}
+
 function getEmbedUrl(url: string): string | null {
   try {
     const u = new URL(url);
+
+    // Rejeitar protocolos inseguros
+    if (u.protocol !== 'https:' && u.protocol !== 'http:') return null;
+
+    // Whitelist de domínios permitidos
+    if (!isAllowedHost(u.hostname)) return null;
 
     // YouTube: youtube.com/watch?v=ID, youtu.be/ID, youtube.com/embed/ID
     if (u.hostname.includes('youtube.com') || u.hostname.includes('youtu.be')) {
@@ -23,17 +41,18 @@ function getEmbedUrl(url: string): string | null {
       } else {
         videoId = u.searchParams.get('v') || '';
       }
-      if (videoId) return `https://www.youtube.com/embed/${videoId}`;
+      if (videoId) return `https://www.youtube.com/embed/${encodeURIComponent(videoId)}`;
     }
 
     // Twitch: twitch.tv/videos/ID or twitch.tv/CHANNEL
     if (u.hostname.includes('twitch.tv')) {
       const parts = u.pathname.split('/').filter(Boolean);
+      const parent = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
       if (parts[0] === 'videos' && parts[1]) {
-        return `https://player.twitch.tv/?video=${parts[1]}&parent=${typeof window !== 'undefined' ? window.location.hostname : 'localhost'}&autoplay=false`;
+        return `https://player.twitch.tv/?video=${encodeURIComponent(parts[1])}&parent=${encodeURIComponent(parent)}&autoplay=false`;
       }
       if (parts[0]) {
-        return `https://player.twitch.tv/?channel=${parts[0]}&parent=${typeof window !== 'undefined' ? window.location.hostname : 'localhost'}&autoplay=false`;
+        return `https://player.twitch.tv/?channel=${encodeURIComponent(parts[0])}&parent=${encodeURIComponent(parent)}&autoplay=false`;
       }
     }
 
@@ -42,8 +61,7 @@ function getEmbedUrl(url: string): string | null {
       return url;
     }
 
-    // Generic embed (user already provides embed URL)
-    return url;
+    return null;
   } catch {
     return null;
   }
@@ -85,6 +103,7 @@ export function VideoEmbed({ url, title, posterUrl }: VideoEmbedProps) {
         className="absolute inset-0 w-full h-full"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowFullScreen
+        sandbox="allow-scripts allow-same-origin allow-presentation allow-popups"
       />
     </div>
   );

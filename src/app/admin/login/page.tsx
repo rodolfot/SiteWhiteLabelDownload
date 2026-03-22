@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Lock, Mail, LogIn } from 'lucide-react';
 import { getBrandParts } from '@/lib/brand';
+import { logAdminAction } from '@/lib/audit-log';
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState('');
@@ -27,14 +28,18 @@ export default function AdminLoginPage() {
       });
 
       if (authError) {
+        setPassword('');
         setError('Credenciais inválidas. Tente novamente.');
         setLoading(false);
         return;
       }
 
+      logAdminAction({ action: 'login', entity: 'auth' });
       router.push('/admin');
       router.refresh();
-    } catch {
+    } catch (err) {
+      console.error('[Login Error]', err);
+      setPassword('');
       setError('Erro ao fazer login. Tente novamente.');
       setLoading(false);
     }

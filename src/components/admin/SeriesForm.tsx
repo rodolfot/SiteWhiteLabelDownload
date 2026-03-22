@@ -6,6 +6,8 @@ import { createClient } from '@/lib/supabase/client';
 import { Save, Plus, Trash2, Upload, ArrowLeft, ChevronDown, ChevronUp } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { validateImageFile, isValidDownloadUrl, isValidTrailerUrl } from '@/lib/validation';
+import { logAdminAction } from '@/lib/audit-log';
 
 interface Episode {
   id?: string;
@@ -123,11 +125,18 @@ export function SeriesForm({ initialData, initialSeasons }: SeriesFormProps) {
   };
 
   const handleImageUpload = async (file: File, field: 'poster_url' | 'backdrop_url') => {
-    const supabase = createClient();
-    const ext = file.name.split('.').pop();
-    const path = `${field === 'poster_url' ? 'posters' : 'backdrops'}/${Date.now()}.${ext}`;
+    const validation = await validateImageFile(file);
+    if (!validation.valid) {
+      setError(validation.error!);
+      return;
+    }
 
-    const { error: uploadError } = await supabase.storage.from('media').upload(path, file);
+    const supabase = createClient();
+    const path = `${field === 'poster_url' ? 'posters' : 'backdrops'}/${Date.now()}.${validation.ext}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('media')
+      .upload(path, file, { contentType: file.type });
     if (uploadError) {
       setError('Erro ao fazer upload da imagem.');
       return;
@@ -141,6 +150,22 @@ export function SeriesForm({ initialData, initialSeasons }: SeriesFormProps) {
     e.preventDefault();
     setSaving(true);
     setError('');
+
+    // Validar trailer e download URLs antes de salvar
+    for (const season of seasons) {
+      if (season.trailer_url && !isValidTrailerUrl(season.trailer_url)) {
+        setError(`URL de trailer inválida em "${season.title}". Use YouTube, Twitch ou Kick.`);
+        setSaving(false);
+        return;
+      }
+      for (const ep of season.episodes) {
+        if (ep.download_url && !isValidDownloadUrl(ep.download_url)) {
+          setError(`URL de download inválida no episódio "${ep.title}". Use http:// ou https://.`);
+          setSaving(false);
+          return;
+        }
+      }
+    }
 
     try {
       const supabase = createClient();
@@ -262,6 +287,14 @@ export function SeriesForm({ initialData, initialSeasons }: SeriesFormProps) {
           }
         }
       }
+
+      const isEdit = !!initialData;
+      logAdminAction({
+        action: isEdit ? 'update' : 'create',
+        entity: 'series',
+        entity_id: isEdit ? initialData.id : undefined,
+        details: form.title,
+      });
 
       router.push('/admin');
       router.refresh();
