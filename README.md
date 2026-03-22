@@ -12,7 +12,8 @@ O nome, tagline e descricao do site sao 100% configuraveis via variaveis de ambi
 - [Funcionalidades](#funcionalidades)
 - [Stack Tecnologica](#stack-tecnologica)
 - [Estrutura do Projeto](#estrutura-do-projeto)
-- [Configuracao Rapida](#configuracao-rapida)
+- [Guia Completo para Testar o Site](#guia-completo-para-testar-o-site-passo-a-passo-para-iniciantes)
+- [Configuracao Rapida (referencia tecnica)](#configuracao-rapida-referencia-tecnica)
 - [Variaveis de Ambiente](#variaveis-de-ambiente)
 - [Banco de Dados](#banco-de-dados)
 - [White-Label](#white-label)
@@ -202,7 +203,219 @@ src/
 
 ---
 
-## Configuracao Rapida
+## Guia Completo para Testar o Site (passo a passo para iniciantes)
+
+Este guia assume que voce **nunca programou** e quer testar o site no seu computador. Siga cada passo na ordem — ao final, o site estara rodando no seu navegador.
+
+### Passo 1 — Instalar o Node.js (programa que roda o site)
+
+1. Abra o navegador e acesse: **https://nodejs.org**
+2. Clique no botao verde **"LTS"** (versao recomendada) para baixar o instalador
+3. Abra o arquivo baixado (ex: `node-v20.x.x.msi` no Windows)
+4. Clique em **Next** em todas as telas e depois em **Install**
+5. Aguarde a instalacao terminar e clique em **Finish**
+
+**Como verificar se deu certo:**
+- Abra o **Prompt de Comando** (no Windows: tecle `Win + R`, digite `cmd` e aperte Enter)
+- Digite `node --version` e aperte Enter
+- Deve aparecer algo como `v20.12.0` — se apareceu, esta instalado
+
+### Passo 2 — Instalar o Git (programa que baixa o codigo)
+
+1. Acesse: **https://git-scm.com**
+2. Clique em **"Download for Windows"** (ou Mac/Linux conforme seu sistema)
+3. Abra o instalador e clique **Next** em todas as telas, depois **Install**
+4. Aguarde e clique em **Finish**
+
+**Como verificar:**
+- No Prompt de Comando, digite `git --version` e aperte Enter
+- Deve aparecer algo como `git version 2.44.0`
+
+### Passo 3 — Baixar o codigo do projeto
+
+1. Abra o **Prompt de Comando**
+2. Escolha onde quer salvar o projeto. Por exemplo, para salvar na pasta Documentos:
+   ```
+   cd %USERPROFILE%\Documents
+   ```
+3. Baixe o projeto com este comando (copie e cole):
+   ```
+   git clone https://github.com/rodolfot/SiteWhiteLabelDownload.git
+   ```
+4. Entre na pasta do projeto:
+   ```
+   cd SiteWhiteLabelDownload
+   ```
+
+### Passo 4 — Instalar as dependencias do projeto
+
+Ainda no Prompt de Comando (dentro da pasta do projeto), digite:
+
+```
+npm install
+```
+
+Vai aparecer muita coisa na tela — e normal. Aguarde ate voltar a aparecer o cursor piscando (pode levar 1-2 minutos).
+
+### Passo 5 — Criar o banco de dados no Supabase (gratuito)
+
+O Supabase e o banco de dados do site. Voce precisa criar uma conta gratuita:
+
+1. Abra o navegador e acesse: **https://supabase.com**
+2. Clique em **"Start your project"** (botao verde)
+3. Faca login com sua conta do **GitHub** ou crie uma conta com email
+4. Apos o login, clique em **"New Project"**
+5. Preencha:
+   - **Name**: qualquer nome (ex: `meu-site-teste`)
+   - **Database Password**: crie uma senha forte e **anote ela** (voce nao vai precisar dela depois, mas e bom guardar)
+   - **Region**: escolha **South America (Sao Paulo)** se disponivel
+6. Clique em **"Create new project"**
+7. **Aguarde 2-3 minutos** ate o projeto ficar pronto (a tela vai mostrar o progresso)
+
+### Passo 6 — Copiar as chaves do Supabase
+
+Quando o projeto estiver pronto:
+
+1. No painel do Supabase, clique em **"Project Settings"** (icone de engrenagem no menu lateral esquerdo, la embaixo)
+2. Clique em **"API"** no submenu
+3. Voce vai ver duas informacoes importantes:
+   - **Project URL**: algo como `https://abcdefgh.supabase.co` — **copie e guarde**
+   - **anon public** (em "Project API keys"): uma chave longa comecando com `eyJ...` — **copie e guarde**
+
+> Dica: abra um Bloco de Notas e cole as duas informacoes la para nao perder.
+
+### Passo 7 — Criar as tabelas do banco de dados
+
+1. No painel do Supabase, clique em **"SQL Editor"** no menu lateral esquerdo
+2. Clique em **"New query"** (botao verde no canto superior)
+3. Agora voce precisa colar o conteudo de um arquivo do projeto. Para abrir o arquivo:
+   - Volte ao **Prompt de Comando** e digite:
+     ```
+     notepad src\lib\supabase\schema.sql
+     ```
+   - Isso abre o arquivo no Bloco de Notas
+   - Selecione **todo o conteudo** (`Ctrl + A`) e copie (`Ctrl + C`)
+4. Volte ao Supabase, cole o conteudo na area de texto (`Ctrl + V`)
+5. Clique no botao **"Run"** (botao verde, ou `Ctrl + Enter`)
+6. Deve aparecer **"Success"** embaixo
+
+Agora repita o processo para a tabela de auditoria:
+
+7. Clique em **"New query"** novamente
+8. No Prompt de Comando, digite:
+   ```
+   notepad src\lib\supabase\audit-log-migration.sql
+   ```
+9. Copie todo o conteudo, cole no Supabase e clique em **"Run"**
+10. Deve aparecer **"Success"** novamente
+
+### Passo 8 — Criar seu usuario administrador
+
+1. No painel do Supabase, clique em **"Authentication"** no menu lateral
+2. Clique na aba **"Users"**
+3. Clique em **"Add user"** > **"Create new user"**
+4. Preencha:
+   - **Email**: coloque um email qualquer (ex: `admin@teste.com`)
+   - **Password**: crie uma senha com **pelo menos 12 caracteres** (ex: `MinhaSenha123!`)
+   - Marque a opcao **"Auto Confirm User"**
+5. Clique em **"Create user"**
+6. O usuario vai aparecer na lista. **Copie o UUID** dele — e o codigo longo na primeira coluna (algo como `a1b2c3d4-e5f6-7890-abcd-ef1234567890`)
+
+Agora registre esse usuario como admin:
+
+7. Va em **"SQL Editor"** > **"New query"**
+8. Cole este comando, **substituindo os valores**:
+   ```sql
+   INSERT INTO admin_users (id, email)
+   VALUES ('COLE_O_UUID_AQUI', 'admin@teste.com');
+   ```
+   - Substitua `COLE_O_UUID_AQUI` pelo UUID que voce copiou (mantenha as aspas simples)
+   - Substitua `admin@teste.com` pelo email que voce usou
+9. Clique em **"Run"**
+10. Deve aparecer **"Success"**
+
+### Passo 9 — Configurar o arquivo de ambiente
+
+1. Volte ao **Prompt de Comando** (na pasta do projeto)
+2. Crie o arquivo de configuracao copiando o exemplo:
+   ```
+   copy .env.local.example .env.local
+   ```
+3. Abra o arquivo para editar:
+   ```
+   notepad .env.local
+   ```
+4. Encontre estas duas linhas e substitua pelos valores que voce copiou no **Passo 6**:
+   ```
+   NEXT_PUBLIC_SUPABASE_URL=https://seu-projeto.supabase.co
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+   ```
+   - Na primeira linha, cole a **Project URL** do Supabase
+   - Na segunda linha, cole a **chave anon public** do Supabase
+5. Salve o arquivo (`Ctrl + S`) e feche o Bloco de Notas
+
+### Passo 10 — Rodar o site
+
+1. No Prompt de Comando (na pasta do projeto), digite:
+   ```
+   npm run dev -- -p 3002
+   ```
+2. Aguarde ate aparecer algo como:
+   ```
+   ✓ Ready in 3.2s
+   - Local: http://localhost:3002
+   ```
+3. **Nao feche o Prompt de Comando** — ele precisa ficar aberto enquanto o site estiver rodando
+
+### Passo 11 — Abrir o site no navegador
+
+1. Abra o navegador (Chrome, Edge, Firefox, etc.)
+2. Na barra de endereco, digite: **http://localhost:3002** e aperte Enter
+3. O site vai abrir! Na primeira vez vai estar vazio porque nao tem series cadastradas ainda
+
+### Passo 12 — Cadastrar sua primeira serie (testar o admin)
+
+1. No navegador, acesse: **http://localhost:3002/admin**
+2. Voce sera redirecionado para a tela de login
+3. Digite o **email** e **senha** que voce criou no Passo 8
+4. Clique em **Entrar**
+5. Voce esta no painel admin! Clique em **"Nova Serie"** para cadastrar
+6. Preencha os campos:
+   - **Titulo**: nome da serie (ex: `Breaking Bad`)
+   - **Sinopse**: uma descricao qualquer
+   - **Ano**: `2008`
+   - **Genero**: `Drama`
+   - **Categoria**: escolha uma (ex: `Lancamentos`)
+   - **Destaque**: marque para aparecer no carrossel da home
+   - **Poster**: cole a URL de uma imagem (ex: busque "breaking bad poster" no Google Images, clique com botao direito na imagem > "Copiar endereco da imagem")
+7. Clique em **"Salvar"**
+8. Volte para **http://localhost:3002** — sua serie deve aparecer na home!
+
+### Passo 13 — Parar o site
+
+Quando terminar de testar:
+
+1. Va no Prompt de Comando onde o site esta rodando
+2. Aperte **Ctrl + C**
+3. Se perguntar algo, digite **S** e aperte Enter
+
+Para rodar o site novamente mais tarde, basta repetir o **Passo 10**.
+
+---
+
+### Resumo rapido (para quem ja sabe o que esta fazendo)
+
+```bash
+git clone https://github.com/rodolfot/SiteWhiteLabelDownload.git
+cd SiteWhiteLabelDownload
+npm install
+cp .env.local.example .env.local    # editar com URL e chave do Supabase
+npm run dev -- -p 3002              # abrir http://localhost:3002
+```
+
+---
+
+## Configuracao Rapida (referencia tecnica)
 
 ### Pre-requisitos
 
@@ -211,71 +424,6 @@ src/
 | Node.js  | 18 (recomendado 20 LTS) | [nodejs.org](https://nodejs.org)    |
 | npm      | 9+ (vem com Node.js)    | -                                   |
 | Git      | 2.x                     | [git-scm.com](https://git-scm.com) |
-
-### 1. Clonar o repositorio
-
-```bash
-git clone https://github.com/rodolfot/SiteWhiteLabelDownload.git
-cd SiteWhiteLabelDownload
-```
-
-### 2. Instalar dependencias
-
-```bash
-npm install
-```
-
-### 3. Criar projeto no Supabase
-
-1. Acesse [app.supabase.com](https://app.supabase.com) e crie um novo projeto
-1. Escolha nome, senha do banco e regiao (South America se disponivel)
-1. Aguarde a criacao (~2 minutos)
-
-### 4. Executar o schema SQL
-
-1. No painel Supabase, va em **SQL Editor** > **New query**
-1. Cole o conteudo de `src/lib/supabase/schema.sql`
-1. Clique em **Run**
-1. Repita com `src/lib/supabase/audit-log-migration.sql` para criar a tabela de audit log
-
-### 5. Criar usuario admin
-
-1. Va em **Authentication** > **Users** > **Add user** > **Create new user**
-1. Preencha email e senha (minimo 12 caracteres), marque **Auto Confirm User**
-1. Clique em **Create user**
-1. Copie o **UUID** do usuario criado
-1. Va em **SQL Editor** e execute:
-
-```sql
-INSERT INTO admin_users (id, email)
-VALUES ('COLE_O_UUID_AQUI', 'seu-email@exemplo.com');
-```
-
-### 6. Configurar variaveis de ambiente
-
-```bash
-cp .env.local.example .env.local
-```
-
-Edite `.env.local` e preencha as **2 variaveis obrigatorias**:
-
-```ini
-NEXT_PUBLIC_SUPABASE_URL=https://seu-projeto.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-```
-
-> As chaves estao em **Project Settings** > **API** no painel Supabase.
-
-### 7. Rodar o projeto
-
-```bash
-npm run dev -- -p 3002
-```
-
-Acesse:
-
-- **Site**: `http://localhost:3002`
-- **Admin**: `http://localhost:3002/admin` (use o email/senha criados no passo 5)
 
 ---
 
