@@ -72,8 +72,14 @@ export function Comments({ seriesId }: CommentsProps) {
       });
 
       if (insertError) {
-        setError('Erro ao enviar comentário. Tente novamente.');
         console.error('Comment insert error:', insertError);
+        if (insertError.code === '42501') {
+          setError('Permissão negada. Execute a migration de correção: src/lib/supabase/comments-fix.sql');
+        } else if (insertError.code === '42P01') {
+          setError('Tabela de comentários não encontrada. Execute a migration: src/lib/supabase/comments-migration.sql');
+        } else {
+          setError(`Erro ao enviar comentário: ${insertError.message}`);
+        }
       } else {
         localStorage.setItem('comment_nickname', trimmedNick);
         setContent('');

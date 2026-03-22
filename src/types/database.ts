@@ -34,8 +34,22 @@ export interface Episode {
   created_at: string;
 }
 
+export interface EpisodeLink {
+  id: string;
+  episode_id: string;
+  language: string;
+  download_url: string;
+  file_size: string;
+  quality: string;
+  created_at: string;
+}
+
+export interface EpisodeWithLinks extends Episode {
+  episode_links: EpisodeLink[];
+}
+
 export interface SeasonWithEpisodes extends Season {
-  episodes: Episode[];
+  episodes: (Episode | EpisodeWithLinks)[];
 }
 
 export interface SeriesWithSeasons extends Series {

@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import { Star, Calendar, Film, Download } from 'lucide-react';
-import { Series, SeasonWithEpisodes } from '@/types/database';
+import { Star, Calendar, Film, Download, Globe, ChevronDown } from 'lucide-react';
+import { Series, SeasonWithEpisodes, EpisodeLink } from '@/types/database';
 import { DownloadTimer } from '@/components/ads/DownloadTimer';
 import { AdSlot } from '@/components/ads/AdSlot';
 import { VideoEmbed } from './VideoEmbed';
@@ -13,6 +13,95 @@ import { Comments } from './Comments';
 interface SeriesDetailProps {
   series: Series;
   seasons: SeasonWithEpisodes[];
+}
+
+function EpisodeRow({ episode, series, seasonLabel }: {
+  episode: SeasonWithEpisodes['episodes'][number];
+  series: Series;
+  seasonLabel: string;
+}) {
+  const [showLinks, setShowLinks] = useState(false);
+  const links: EpisodeLink[] = ('episode_links' in episode && Array.isArray(episode.episode_links))
+    ? episode.episode_links
+    : [];
+  const hasLinks = links.length > 0;
+  const episodeTitle = `${series.title} - ${seasonLabel} E${String(episode.number).padStart(2, '0')} - ${episode.title}`;
+
+  return (
+    <div className="bg-surface-700/50 border border-surface-600 rounded-lg hover:bg-surface-700 transition-colors group">
+      <div className="flex items-center justify-between p-4">
+        <div className="flex items-center gap-4 min-w-0">
+          <span className="text-neon-blue font-bold text-lg w-8 text-center shrink-0">
+            {String(episode.number).padStart(2, '0')}
+          </span>
+          <div className="min-w-0">
+            <h4 className="text-white text-sm font-medium truncate">
+              {episode.title}
+            </h4>
+            <div className="flex items-center gap-2 mt-0.5">
+              {episode.quality && (
+                <span className="text-xs text-neon-blue bg-neon-blue/10 px-1.5 py-0.5 rounded">
+                  {episode.quality}
+                </span>
+              )}
+              {episode.file_size && (
+                <span className="text-xs text-gray-500">{episode.file_size}</span>
+              )}
+              {hasLinks && (
+                <span className="text-xs text-gray-500">
+                  {links.length} {links.length === 1 ? 'idioma' : 'idiomas'}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {hasLinks ? (
+          <button
+            onClick={() => setShowLinks(!showLinks)}
+            className="flex items-center gap-2 bg-surface-700 hover:bg-surface-600 border border-surface-500 rounded-lg px-4 py-2.5 text-sm text-white transition-all hover:border-neon-blue group"
+          >
+            <Globe className="h-4 w-4 text-neon-blue" />
+            Download
+            <ChevronDown className={`h-3 w-3 text-gray-400 transition-transform ${showLinks ? 'rotate-180' : ''}`} />
+          </button>
+        ) : (
+          <DownloadTimer
+            downloadUrl={episode.download_url}
+            episodeTitle={episodeTitle}
+          />
+        )}
+      </div>
+
+      {/* Language links dropdown */}
+      {hasLinks && showLinks && (
+        <div className="px-4 pb-4 pt-1 border-t border-surface-600/50">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {links.map((link) => (
+              <div key={link.id} className="flex items-center justify-between bg-surface-800/70 rounded-lg px-3 py-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <Globe className="h-3.5 w-3.5 text-neon-purple shrink-0" />
+                  <span className="text-sm text-white truncate">{link.language}</span>
+                  {link.quality && (
+                    <span className="text-xs text-neon-blue bg-neon-blue/10 px-1.5 py-0.5 rounded shrink-0">
+                      {link.quality}
+                    </span>
+                  )}
+                  {link.file_size && (
+                    <span className="text-xs text-gray-500 shrink-0">{link.file_size}</span>
+                  )}
+                </div>
+                <DownloadTimer
+                  downloadUrl={link.download_url}
+                  episodeTitle={`${episodeTitle} [${link.language}]`}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 export function SeriesDetail({ series, seasons }: SeriesDetailProps) {
@@ -145,36 +234,12 @@ export function SeriesDetail({ series, seasons }: SeriesDetailProps) {
                   className="space-y-2"
                 >
                   {seasons[activeSeason].episodes.map((episode) => (
-                    <div
+                    <EpisodeRow
                       key={episode.id}
-                      className="flex items-center justify-between bg-surface-700/50 border border-surface-600 rounded-lg p-4 hover:bg-surface-700 transition-colors group"
-                    >
-                      <div className="flex items-center gap-4 min-w-0">
-                        <span className="text-neon-blue font-bold text-lg w-8 text-center shrink-0">
-                          {String(episode.number).padStart(2, '0')}
-                        </span>
-                        <div className="min-w-0">
-                          <h4 className="text-white text-sm font-medium truncate">
-                            {episode.title}
-                          </h4>
-                          <div className="flex items-center gap-2 mt-0.5">
-                            {episode.quality && (
-                              <span className="text-xs text-neon-blue bg-neon-blue/10 px-1.5 py-0.5 rounded">
-                                {episode.quality}
-                              </span>
-                            )}
-                            {episode.file_size && (
-                              <span className="text-xs text-gray-500">{episode.file_size}</span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      <DownloadTimer
-                        downloadUrl={episode.download_url}
-                        episodeTitle={`${series.title} - ${seasons[activeSeason].title || `T${seasons[activeSeason].number}`} E${String(episode.number).padStart(2, '0')} - ${episode.title}`}
-                      />
-                    </div>
+                      episode={episode}
+                      series={series}
+                      seasonLabel={seasons[activeSeason].title || `T${seasons[activeSeason].number}`}
+                    />
                   ))}
                 </motion.div>
               )}

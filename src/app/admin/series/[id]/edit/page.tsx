@@ -24,7 +24,7 @@ export default async function EditSeriesPage({ params }: PageProps) {
 
   const { data: seasons } = await supabase
     .from('seasons')
-    .select('*, episodes(*)')
+    .select('*, episodes(*, episode_links(*))')
     .eq('series_id', series.id)
     .order('number', { ascending: true });
 
@@ -35,13 +35,20 @@ export default async function EditSeriesPage({ params }: PageProps) {
     trailer_url: s.trailer_url || '',
     episodes: (s.episodes || [])
       .sort((a: { number: number }, b: { number: number }) => a.number - b.number)
-      .map((ep: Record<string, string | number>) => ({
-        id: ep.id,
-        number: ep.number,
-        title: ep.title,
-        download_url: ep.download_url,
-        file_size: ep.file_size || '',
-        quality: ep.quality || '1080p',
+      .map((ep: Record<string, unknown>) => ({
+        id: ep.id as string,
+        number: ep.number as number,
+        title: ep.title as string,
+        download_url: (ep.download_url as string) || '',
+        file_size: (ep.file_size as string) || '',
+        quality: (ep.quality as string) || '1080p',
+        links: ((ep.episode_links as Record<string, string>[]) || []).map((link) => ({
+          id: link.id,
+          language: link.language || 'Dublado',
+          download_url: link.download_url || '',
+          file_size: link.file_size || '',
+          quality: link.quality || '1080p',
+        })),
       })),
   }));
 

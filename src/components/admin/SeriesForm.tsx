@@ -9,6 +9,14 @@ import Image from 'next/image';
 import { validateImageFile, isValidDownloadUrl, isValidTrailerUrl } from '@/lib/validation';
 import { logAdminAction } from '@/lib/audit-log';
 
+interface EpisodeLinkForm {
+  id?: string;
+  language: string;
+  download_url: string;
+  file_size: string;
+  quality: string;
+}
+
 interface Episode {
   id?: string;
   number: number;
@@ -16,6 +24,7 @@ interface Episode {
   download_url: string;
   file_size: string;
   quality: string;
+  links: EpisodeLinkForm[];
 }
 
 interface Season {
@@ -24,6 +33,17 @@ interface Season {
   title: string;
   trailer_url: string;
   episodes: Episode[];
+}
+
+// Helper to ensure episodes have links array
+function normalizeSeasons(seasons: Season[]): Season[] {
+  return seasons.map((s) => ({
+    ...s,
+    episodes: s.episodes.map((ep) => ({
+      ...ep,
+      links: ep.links || [],
+    })),
+  }));
 }
 
 interface SeriesFormProps {
@@ -45,6 +65,7 @@ interface SeriesFormProps {
 
 const CATEGORIES = ['Ação', 'Aventura', 'Comédia', 'Drama', 'Ficção Científica', 'Terror', 'Romance', 'Anime', 'Documentário', 'Geral'];
 const QUALITIES = ['480p', '720p', '1080p', '4K'];
+const LANGUAGES = ['Dublado', 'Legendado', 'Dual Audio', 'Nacional', 'Inglês', 'Espanhol', 'Japonês', 'Coreano'];
 
 function slugify(text: string): string {
   return text
@@ -74,7 +95,7 @@ export function SeriesForm({ initialData, initialSeasons }: SeriesFormProps) {
   });
 
   const [seasons, setSeasons] = useState<Season[]>(
-    initialSeasons || []
+    normalizeSeasons(initialSeasons || [])
   );
 
   const [expandedSeasons, setExpandedSeasons] = useState<Set<number>>(new Set([0]));
@@ -108,7 +129,31 @@ export function SeriesForm({ initialData, initialSeasons }: SeriesFormProps) {
       download_url: '',
       file_size: '',
       quality: '1080p',
+      links: [],
     });
+    setSeasons(updated);
+  };
+
+  const addEpisodeLink = (seasonIndex: number, epIndex: number) => {
+    const updated = [...seasons];
+    updated[seasonIndex].episodes[epIndex].links.push({
+      language: 'Dublado',
+      download_url: '',
+      file_size: '',
+      quality: '1080p',
+    });
+    setSeasons(updated);
+  };
+
+  const removeEpisodeLink = (seasonIndex: number, epIndex: number, linkIndex: number) => {
+    const updated = [...seasons];
+    updated[seasonIndex].episodes[epIndex].links = updated[seasonIndex].episodes[epIndex].links.filter((_, i) => i !== linkIndex);
+    setSeasons(updated);
+  };
+
+  const updateEpisodeLink = (seasonIndex: number, epIndex: number, linkIndex: number, field: string, value: string) => {
+    const updated = [...seasons];
+    (updated[seasonIndex].episodes[epIndex].links[linkIndex] as unknown as Record<string, string>)[field] = value;
     setSeasons(updated);
   };
 
@@ -163,6 +208,13 @@ export function SeriesForm({ initialData, initialSeasons }: SeriesFormProps) {
           setError(`URL de download inválida no episódio "${ep.title}". Use http:// ou https://.`);
           setSaving(false);
           return;
+        }
+        for (const link of ep.links) {
+          if (link.download_url && !isValidDownloadUrl(link.download_url)) {
+            setError(`URL de download inválida no link "${link.language}" do episódio "${ep.title}". Use http:// ou https://.`);
+            setSaving(false);
+            return;
+          }
         }
       }
     }
@@ -229,9 +281,10 @@ export function SeriesForm({ initialData, initialSeasons }: SeriesFormProps) {
             seasonId = newSeason.id;
           }
 
-          // Upsert episodes
+          // Upsert episodes + links
           for (const ep of season.episodes) {
-            if (ep.id) {
+            let epId = ep.id;
+            if (epId) {
               const { error: epError } = await supabase
                 .from('episodes')
                 .update({
@@ -241,18 +294,50 @@ export function SeriesForm({ initialData, initialSeasons }: SeriesFormProps) {
                   file_size: ep.file_size,
                   quality: ep.quality,
                 })
-                .eq('id', ep.id);
+                .eq('id', epId);
               if (epError) throw epError;
             } else {
-              const { error: epError } = await supabase.from('episodes').insert({
+              const { data: newEp, error: epError } = await supabase.from('episodes').insert({
                 season_id: seasonId,
                 number: ep.number,
                 title: ep.title,
                 download_url: ep.download_url,
                 file_size: ep.file_size,
                 quality: ep.quality,
-              });
+              }).select().single();
               if (epError) throw epError;
+              epId = newEp.id;
+            }
+
+            // Sync episode_links
+            if (ep.links.length > 0) {
+              const keepLinkIds = ep.links.filter((l) => l.id).map((l) => l.id!);
+              if (keepLinkIds.length > 0) {
+                await supabase.from('episode_links').delete().eq('episode_id', epId).not('id', 'in', `(${keepLinkIds.join(',')})`);
+              } else {
+                await supabase.from('episode_links').delete().eq('episode_id', epId);
+              }
+              for (const link of ep.links) {
+                if (link.id) {
+                  await supabase.from('episode_links').update({
+                    language: link.language,
+                    download_url: link.download_url,
+                    file_size: link.file_size,
+                    quality: link.quality,
+                  }).eq('id', link.id);
+                } else {
+                  await supabase.from('episode_links').insert({
+                    episode_id: epId,
+                    language: link.language,
+                    download_url: link.download_url,
+                    file_size: link.file_size,
+                    quality: link.quality,
+                  });
+                }
+              }
+            } else {
+              // No links in form — delete all existing
+              await supabase.from('episode_links').delete().eq('episode_id', epId);
             }
           }
         }
@@ -273,17 +358,28 @@ export function SeriesForm({ initialData, initialSeasons }: SeriesFormProps) {
             .single();
           if (seasonError) throw seasonError;
 
-          if (season.episodes.length > 0) {
-            const episodes = season.episodes.map((ep) => ({
+          for (const ep of season.episodes) {
+            const { data: newEp, error: epError } = await supabase.from('episodes').insert({
               season_id: newSeason.id,
               number: ep.number,
               title: ep.title,
               download_url: ep.download_url,
               file_size: ep.file_size,
               quality: ep.quality,
-            }));
-            const { error: epError } = await supabase.from('episodes').insert(episodes);
+            }).select().single();
             if (epError) throw epError;
+
+            if (ep.links.length > 0) {
+              const links = ep.links.map((link) => ({
+                episode_id: newEp.id,
+                language: link.language,
+                download_url: link.download_url,
+                file_size: link.file_size,
+                quality: link.quality,
+              }));
+              const { error: linkError } = await supabase.from('episode_links').insert(links);
+              if (linkError) throw linkError;
+            }
           }
         }
       }
@@ -554,63 +650,127 @@ export function SeriesForm({ initialData, initialSeasons }: SeriesFormProps) {
               {expandedSeasons.has(si) && (
                 <div className="p-3 space-y-2">
                   {season.episodes.map((ep, ei) => (
-                    <div key={ei} className="grid grid-cols-12 gap-2 items-center">
-                      <div className="col-span-1">
-                        <input
-                          type="number"
-                          value={ep.number}
-                          onChange={(e) => updateEpisode(si, ei, 'number', parseInt(e.target.value))}
-                          className="w-full bg-surface-600 border border-surface-500 rounded py-1.5 px-2 text-xs text-center text-white focus:outline-none focus:border-neon-blue"
-                          placeholder="#"
-                        />
+                    <div key={ei} className="space-y-1">
+                      <div className="grid grid-cols-12 gap-2 items-center">
+                        <div className="col-span-1">
+                          <input
+                            type="number"
+                            value={ep.number}
+                            onChange={(e) => updateEpisode(si, ei, 'number', parseInt(e.target.value))}
+                            className="w-full bg-surface-600 border border-surface-500 rounded py-1.5 px-2 text-xs text-center text-white focus:outline-none focus:border-neon-blue"
+                            placeholder="#"
+                          />
+                        </div>
+                        <div className="col-span-3">
+                          <input
+                            type="text"
+                            value={ep.title}
+                            onChange={(e) => updateEpisode(si, ei, 'title', e.target.value)}
+                            className="w-full bg-surface-600 border border-surface-500 rounded py-1.5 px-2 text-xs text-white focus:outline-none focus:border-neon-blue"
+                            placeholder="Título"
+                          />
+                        </div>
+                        <div className="col-span-4">
+                          <input
+                            type="text"
+                            value={ep.download_url}
+                            onChange={(e) => updateEpisode(si, ei, 'download_url', e.target.value)}
+                            className="w-full bg-surface-600 border border-surface-500 rounded py-1.5 px-2 text-xs text-white focus:outline-none focus:border-neon-blue"
+                            placeholder="URL de Download (fallback)"
+                          />
+                        </div>
+                        <div className="col-span-1">
+                          <input
+                            type="text"
+                            value={ep.file_size}
+                            onChange={(e) => updateEpisode(si, ei, 'file_size', e.target.value)}
+                            className="w-full bg-surface-600 border border-surface-500 rounded py-1.5 px-2 text-xs text-white focus:outline-none focus:border-neon-blue"
+                            placeholder="Size"
+                          />
+                        </div>
+                        <div className="col-span-2">
+                          <select
+                            value={ep.quality}
+                            onChange={(e) => updateEpisode(si, ei, 'quality', e.target.value)}
+                            className="w-full bg-surface-600 border border-surface-500 rounded py-1.5 px-2 text-xs text-white focus:outline-none focus:border-neon-blue"
+                          >
+                            {QUALITIES.map((q) => (
+                              <option key={q} value={q}>{q}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="col-span-1 flex justify-center">
+                          <button
+                            type="button"
+                            onClick={() => removeEpisode(si, ei)}
+                            className="text-gray-500 hover:text-red-400 transition-colors"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
                       </div>
-                      <div className="col-span-3">
-                        <input
-                          type="text"
-                          value={ep.title}
-                          onChange={(e) => updateEpisode(si, ei, 'title', e.target.value)}
-                          className="w-full bg-surface-600 border border-surface-500 rounded py-1.5 px-2 text-xs text-white focus:outline-none focus:border-neon-blue"
-                          placeholder="Título"
-                        />
-                      </div>
-                      <div className="col-span-4">
-                        <input
-                          type="text"
-                          value={ep.download_url}
-                          onChange={(e) => updateEpisode(si, ei, 'download_url', e.target.value)}
-                          className="w-full bg-surface-600 border border-surface-500 rounded py-1.5 px-2 text-xs text-white focus:outline-none focus:border-neon-blue"
-                          placeholder="URL de Download"
-                        />
-                      </div>
-                      <div className="col-span-1">
-                        <input
-                          type="text"
-                          value={ep.file_size}
-                          onChange={(e) => updateEpisode(si, ei, 'file_size', e.target.value)}
-                          className="w-full bg-surface-600 border border-surface-500 rounded py-1.5 px-2 text-xs text-white focus:outline-none focus:border-neon-blue"
-                          placeholder="Size"
-                        />
-                      </div>
-                      <div className="col-span-2">
-                        <select
-                          value={ep.quality}
-                          onChange={(e) => updateEpisode(si, ei, 'quality', e.target.value)}
-                          className="w-full bg-surface-600 border border-surface-500 rounded py-1.5 px-2 text-xs text-white focus:outline-none focus:border-neon-blue"
-                        >
-                          {QUALITIES.map((q) => (
-                            <option key={q} value={q}>{q}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div className="col-span-1 flex justify-center">
-                        <button
-                          type="button"
-                          onClick={() => removeEpisode(si, ei)}
-                          className="text-gray-500 hover:text-red-400 transition-colors"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
+
+                      {/* Episode Links (idiomas) */}
+                      {ep.links.map((link, li) => (
+                        <div key={li} className="grid grid-cols-12 gap-2 items-center ml-8 pl-2 border-l-2 border-neon-purple/30">
+                          <div className="col-span-2">
+                            <select
+                              value={link.language}
+                              onChange={(e) => updateEpisodeLink(si, ei, li, 'language', e.target.value)}
+                              className="w-full bg-surface-600 border border-surface-500 rounded py-1.5 px-2 text-xs text-white focus:outline-none focus:border-neon-purple"
+                            >
+                              {LANGUAGES.map((l) => (
+                                <option key={l} value={l}>{l}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="col-span-4">
+                            <input
+                              type="text"
+                              value={link.download_url}
+                              onChange={(e) => updateEpisodeLink(si, ei, li, 'download_url', e.target.value)}
+                              className="w-full bg-surface-600 border border-surface-500 rounded py-1.5 px-2 text-xs text-white focus:outline-none focus:border-neon-purple"
+                              placeholder="URL do idioma"
+                            />
+                          </div>
+                          <div className="col-span-2">
+                            <input
+                              type="text"
+                              value={link.file_size}
+                              onChange={(e) => updateEpisodeLink(si, ei, li, 'file_size', e.target.value)}
+                              className="w-full bg-surface-600 border border-surface-500 rounded py-1.5 px-2 text-xs text-white focus:outline-none focus:border-neon-purple"
+                              placeholder="Size"
+                            />
+                          </div>
+                          <div className="col-span-2">
+                            <select
+                              value={link.quality}
+                              onChange={(e) => updateEpisodeLink(si, ei, li, 'quality', e.target.value)}
+                              className="w-full bg-surface-600 border border-surface-500 rounded py-1.5 px-2 text-xs text-white focus:outline-none focus:border-neon-purple"
+                            >
+                              {QUALITIES.map((q) => (
+                                <option key={q} value={q}>{q}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="col-span-2 flex justify-center">
+                            <button
+                              type="button"
+                              onClick={() => removeEpisodeLink(si, ei, li)}
+                              className="text-gray-500 hover:text-red-400 transition-colors text-xs"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => addEpisodeLink(si, ei)}
+                        className="ml-8 text-xs text-neon-purple hover:underline"
+                      >
+                        + Idioma/Link
+                      </button>
                     </div>
                   ))}
 

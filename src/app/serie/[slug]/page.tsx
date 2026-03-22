@@ -26,7 +26,7 @@ async function getSeriesData(slug: string) {
 
   const { data: seasons } = await supabase
     .from('seasons')
-    .select('*, episodes(*)')
+    .select('*, episodes(*, episode_links(*))')
     .eq('series_id', series.id)
     .order('number', { ascending: true });
 
