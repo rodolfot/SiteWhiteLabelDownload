@@ -5,17 +5,19 @@ import { useState, useEffect, useCallback, useSyncExternalStore } from 'react';
 const STORAGE_KEY = 'downdoor_favorites';
 
 function getSnapshot(): string[] {
-  if (typeof window === 'undefined') return [];
+  if (typeof window === 'undefined') return EMPTY;
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    return stored ? JSON.parse(stored) : [];
+    return stored ? JSON.parse(stored) : EMPTY;
   } catch {
-    return [];
+    return EMPTY;
   }
 }
 
+const EMPTY: string[] = [];
+
 function getServerSnapshot(): string[] {
-  return [];
+  return EMPTY;
 }
 
 // Global listeners para sincronizar entre componentes
