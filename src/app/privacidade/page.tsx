@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import { siteConfig } from '@/lib/site-config';
+import { SiteShell } from '@/components/ui/SiteShell';
 
 export function generateMetadata(): Metadata {
   return {
@@ -9,7 +10,8 @@ export function generateMetadata(): Metadata {
 
 export default function PrivacidadePage() {
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+    <SiteShell>
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       <h1 className="text-3xl font-bold text-white mb-8">Politica de Privacidade</h1>
 
       <div className="prose prose-invert prose-sm max-w-none space-y-6 text-gray-300">
@@ -99,5 +101,6 @@ export default function PrivacidadePage() {
         </section>
       </div>
     </div>
+    </SiteShell>
   );
 }

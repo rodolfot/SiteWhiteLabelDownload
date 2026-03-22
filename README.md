@@ -32,15 +32,16 @@ O nome, tagline e descricao do site sao 100% configuraveis via variaveis de ambi
 
 | Pagina                  | Rota                     |
 | ----------------------- | ------------------------ |
-| Home (hero + categorias) | `/`                     |
-| Pagina da serie         | `/serie/[slug]`          |
-| Painel admin            | `/admin`                 |
-| Login admin             | `/admin/login`           |
-| Criar serie             | `/admin/series/new`      |
-| Editar serie            | `/admin/series/[id]/edit` |
-| Termos de Uso           | `/termos`                |
-| Politica de Privacidade | `/privacidade`           |
-| DMCA                    | `/dmca`                  |
+| Home (hero + lancamentos) | `/`                      |
+| Categorias (filtro)       | `/categorias`            |
+| Pagina da serie           | `/serie/[slug]`          |
+| Painel admin              | `/admin`                 |
+| Login admin               | `/admin/login`           |
+| Criar serie               | `/admin/series/new`      |
+| Editar serie              | `/admin/series/[id]/edit` |
+| Termos de Uso             | `/termos`                |
+| Politica de Privacidade   | `/privacidade`           |
+| DMCA                      | `/dmca`                  |
 
 ---
 
@@ -50,6 +51,7 @@ O nome, tagline e descricao do site sao 100% configuraveis via variaveis de ambi
 
 - **Hero Carousel** — Carrossel automatico de series em destaque com transicoes suaves (Framer Motion), backdrop em tela cheia com gradiente e botoes de navegacao
 - **Grids por Categoria** — Series organizadas por categoria com scroll horizontal, botoes de navegacao e efeitos de hover com zoom
+- **Pagina de Categorias** — Tela dedicada (`/categorias`) com grid de cards, pills de filtro por categoria, busca por titulo/genero e contagem de resultados
 - **Live Search** — Busca em tempo real no header (desktop e mobile) com debounce de 300ms, resultados com poster e metadados
 - **Pagina da Serie** — Backdrop imersivo, poster, sinopse, metadados (ano, genero, nota), abas de temporadas e lista de episodios com download
 - **Design Responsivo** — Mobile-first com breakpoints para sm, md e lg
@@ -58,10 +60,12 @@ O nome, tagline e descricao do site sao 100% configuraveis via variaveis de ambi
 
 ### Monetizacao
 
-- **Google AdSense** — Integracao real com AdSense configuravel via env vars (fallback para placeholder quando nao configurado)
-- **Banner Topo (728x90)** — Fixo no header, visivel apenas em desktop
+- **Google AdSense** — Integracao real com AdSense configuravel via env vars (placeholder visual em dev, anuncios reais em producao)
+- **Banner Topo (2x 728x90)** — Dois banners lado a lado fixos no header, visiveis em desktop
+- **Banners Laterais (160x600)** — Fixos nas laterais esquerda e direita da tela, visiveis em telas xl+ (1280px+)
+- **Banners Rodape (2x 728x90)** — Fixos na parte inferior da tela (sticky bottom), sempre visiveis ao scrollar
 - **Native Ads** — Anuncios entre as fileiras de series na Home
-- **Banner Lateral (300x600)** — Sidebar na pagina da serie (desktop)
+- **Banner Sidebar (300x600)** — Sidebar na pagina da serie (desktop)
 - **Download Timer** — Botao de download com timer de 10 segundos e anuncio 300x250 durante a espera
 - **Anti-AdBlock** — Deteccao de bloqueadores com modal persistente
 
@@ -119,8 +123,9 @@ O nome, tagline e descricao do site sao 100% configuraveis via variaveis de ambi
 ```text
 src/
 ├── app/
-│   ├── layout.tsx                 # Layout global (Header, Footer, scripts)
-│   ├── page.tsx                   # Home (Hero + Categorias + Lancamentos)
+│   ├── layout.tsx                 # Layout global (scripts de terceiros)
+│   ├── page.tsx                   # Home (Hero + Lancamentos + Categorias)
+│   ├── categorias/page.tsx        # Pagina de categorias com filtro
 │   ├── loading.tsx                # Loading spinner global
 │   ├── not-found.tsx              # Pagina 404
 │   ├── globals.css                # Estilos globais e tema dark
@@ -140,8 +145,10 @@ src/
 │       └── verify-turnstile/route.ts # API de verificacao Turnstile
 ├── components/
 │   ├── ui/
-│   │   ├── Header.tsx             # Header fixo com busca e navegacao
-│   │   ├── Footer.tsx             # Footer com links legais
+│   │   ├── SiteShell.tsx           # Shell publico (Header + Footer + anuncios fixos)
+│   │   ├── Header.tsx             # Header fixo com busca, navegacao e banners
+│   │   ├── Footer.tsx             # Footer compacto com links
+│   │   ├── CategoryBrowser.tsx    # Grid de categorias com filtro e busca
 │   │   ├── HeroCarousel.tsx       # Carrossel hero com auto-play
 │   │   ├── SeriesCard.tsx         # Card de serie com hover animado
 │   │   ├── CategoryRow.tsx        # Linha horizontal de cards por categoria
@@ -270,7 +277,10 @@ Acesse:
 | `TURNSTILE_SECRET_KEY`               | Secret key do Turnstile                              | -                                 |
 | `NEXT_PUBLIC_CLARITY_PROJECT_ID`      | ID do projeto Microsoft Clarity                      | -                                 |
 | `NEXT_PUBLIC_ADSENSE_CLIENT_ID`       | Client ID do Google AdSense (`ca-pub-xxx`)           | - (mostra placeholder)            |
-| `NEXT_PUBLIC_ADSENSE_SLOT_ID`         | Slot ID do anuncio padrao                            | -                                 |
+| `NEXT_PUBLIC_ADSENSE_SLOT_ID`         | Slot ID do anuncio padrao (fallback)                 | -                                 |
+| `NEXT_PUBLIC_ADSENSE_SLOT_DOWNLOAD`   | Slot ID do modal de download (300x250)               | -                                 |
+| `NEXT_PUBLIC_ADSENSE_SLOT_SIDEBAR`    | Slot ID da sidebar/laterais (300x600, 160x600)       | -                                 |
+| `NEXT_PUBLIC_ADSENSE_SLOT_HEADER`     | Slot ID do header/rodape (728x90)                    | -                                 |
 | `NEXT_PUBLIC_ADSENSE_NATIVE_SLOT_ID`  | Slot ID do anuncio nativo (entre cards)              | -                                 |
 
 ### Opcionais — White-Label
@@ -359,24 +369,30 @@ O logo e gerado automaticamente dividindo o nome ao meio: a primeira metade fica
 
 ### Google AdSense
 
-Configure as 3 variaveis para ativar anuncios reais:
+Configure as variaveis para ativar anuncios reais:
 
 ```ini
 NEXT_PUBLIC_ADSENSE_CLIENT_ID=ca-pub-1234567890
 NEXT_PUBLIC_ADSENSE_SLOT_ID=1234567890
-NEXT_PUBLIC_ADSENSE_NATIVE_SLOT_ID=0987654321
+NEXT_PUBLIC_ADSENSE_SLOT_DOWNLOAD=1111111111
+NEXT_PUBLIC_ADSENSE_SLOT_SIDEBAR=2222222222
+NEXT_PUBLIC_ADSENSE_SLOT_HEADER=3333333333
+NEXT_PUBLIC_ADSENSE_NATIVE_SLOT_ID=4444444444
 ```
 
-Sem configurar, os espacos de anuncio mostram placeholders visuais.
+Sem configurar, os espacos de anuncio mostram placeholders visuais em dev. Em producao no dominio aprovado pelo AdSense, os anuncios reais sao exibidos.
 
 ### Espacos de Anuncio
 
-| Local              | Tamanho       | Componente | Visibilidade |
-| ------------------ | ------------- | ---------- | ------------ |
-| Header             | 728x90        | `AdSlot`   | Desktop      |
-| Home (entre cards) | Nativo/Fluid  | `NativeAd` | Todos        |
-| Serie (sidebar)    | 300x600       | `AdSlot`   | Desktop      |
-| Modal de download  | 300x250       | `AdSlot`   | Todos        |
+| Local                    | Tamanho       | Env var                    | Visibilidade  |
+| ------------------------ | ------------- | -------------------------- | ------------- |
+| Header (2 banners)       | 728x90        | `ADSENSE_SLOT_HEADER`      | Desktop (lg+) |
+| Lateral esquerda         | 160x600       | `ADSENSE_SLOT_SIDEBAR`     | Desktop (xl+) |
+| Lateral direita          | 160x600       | `ADSENSE_SLOT_SIDEBAR`     | Desktop (xl+) |
+| Rodape fixo (2 banners)  | 728x90        | `ADSENSE_SLOT_HEADER`      | Sempre        |
+| Home (entre cards)       | Nativo/Fluid  | `ADSENSE_NATIVE_SLOT_ID`   | Todos         |
+| Serie (sidebar)          | 300x600       | `ADSENSE_SLOT_SIDEBAR`     | Desktop (lg+) |
+| Modal de download        | 300x250       | `ADSENSE_SLOT_DOWNLOAD`    | Todos         |
 
 ### Outras Redes
 
@@ -546,8 +562,8 @@ O servidor roda na porta 3000 por padrao. Use um reverse proxy (Nginx, Caddy) pa
 
 | Tipo                 | Paginas                                                                       | Motivo                              |
 | -------------------- | ----------------------------------------------------------------------------- | ----------------------------------- |
-| **Server Component** | Home, Serie, Admin (page), Termos, Privacidade, DMCA                          | Fetch de dados no servidor, SEO     |
-| **Client Component** | Header, Footer, HeroCarousel, SeriesDetail, SeriesForm, AdminDashboard, Ads   | Interatividade, estado, animacoes   |
+| **Server Component** | Home, Categorias, Serie, Admin (page), Termos, Privacidade, DMCA              | Fetch de dados no servidor, SEO     |
+| **Client Component** | Header, Footer, SiteShell, CategoryBrowser, HeroCarousel, SeriesDetail, SeriesForm, AdminDashboard, Ads | Interatividade, estado, animacoes   |
 
 ### Middleware
 

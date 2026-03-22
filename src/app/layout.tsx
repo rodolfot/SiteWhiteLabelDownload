@@ -3,9 +3,6 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import '@/lib/env';
 import { siteConfig } from '@/lib/site-config';
-import { Header } from '@/components/ui/Header';
-import { Footer } from '@/components/ui/Footer';
-import { AdBlockDetector } from '@/components/ads/AdBlockDetector';
 import { AdSenseScript } from '@/components/ads/AdSenseScript';
 import { ClarityScript } from '@/components/ui/ClarityScript';
 import { TurnstileScript } from '@/components/ui/TurnstileScript';
@@ -39,10 +36,7 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body className={inter.className}>
-        <AdBlockDetector />
-        <Header />
-        <main className="min-h-screen">{children}</main>
-        <Footer />
+        {children}
         <AdSenseScript />
         <ClarityScript />
         <TurnstileScript />

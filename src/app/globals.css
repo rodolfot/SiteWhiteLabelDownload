@@ -11,6 +11,10 @@
     @apply bg-surface-900 text-white antialiased;
   }
 
+  [id] {
+    scroll-margin-top: 180px;
+  }
+
   ::-webkit-scrollbar {
     width: 8px;
   }

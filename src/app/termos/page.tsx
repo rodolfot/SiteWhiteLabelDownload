@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import { siteConfig } from '@/lib/site-config';
+import { SiteShell } from '@/components/ui/SiteShell';
 import Link from 'next/link';
 
 export function generateMetadata(): Metadata {
@@ -10,7 +11,8 @@ export function generateMetadata(): Metadata {
 
 export default function TermosPage() {
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+    <SiteShell>
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       <h1 className="text-3xl font-bold text-white mb-8">Termos de Uso</h1>
 
       <div className="prose prose-invert prose-sm max-w-none space-y-6 text-gray-300">
@@ -87,5 +89,6 @@ export default function TermosPage() {
         </section>
       </div>
     </div>
+    </SiteShell>
   );
 }

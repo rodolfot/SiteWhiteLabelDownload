@@ -14,17 +14,22 @@ export function NativeAd() {
   const adClient = process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID;
   const adSlotNative = process.env.NEXT_PUBLIC_ADSENSE_NATIVE_SLOT_ID;
 
-  useEffect(() => {
-    if (!adClient || !adSlotNative || adPushed.current) return;
-    try {
-      (window.adsbygoogle = window.adsbygoogle || []).push({});
-      adPushed.current = true;
-    } catch {
-      // AdSense not loaded yet
-    }
-  }, [adClient, adSlotNative]);
+  const isDev = process.env.NODE_ENV === 'development';
 
-  if (!adClient || !adSlotNative) {
+  useEffect(() => {
+    if (!adClient || !adSlotNative || adPushed.current || isDev) return;
+    const timer = setTimeout(() => {
+      try {
+        (window.adsbygoogle = window.adsbygoogle || []).push({});
+        adPushed.current = true;
+      } catch {
+        // AdSense not loaded yet
+      }
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [adClient, adSlotNative, isDev]);
+
+  if (!adClient || !adSlotNative || isDev) {
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}

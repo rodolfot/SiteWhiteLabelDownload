@@ -163,8 +163,8 @@ export function SeriesDetail({ series, seasons }: SeriesDetailProps) {
 
           {/* Sidebar Ad */}
           <div className="hidden lg:block lg:w-1/3">
-            <div className="sticky top-28 space-y-6">
-              <AdSlot width={300} height={600} />
+            <div className="sticky top-[180px] space-y-6">
+              <AdSlot width={300} height={600} slotId={process.env.NEXT_PUBLIC_ADSENSE_SLOT_SIDEBAR} />
             </div>
           </div>
         </div>

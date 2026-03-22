@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { siteConfig } from '@/lib/site-config';
+import { SiteShell } from '@/components/ui/SiteShell';
 import { SeriesDetail } from '@/components/ui/SeriesDetail';
 import { Series, SeasonWithEpisodes } from '@/types/database';
 
@@ -57,5 +58,9 @@ export default async function SeriePage({ params }: PageProps) {
   const data = await getSeriesData(params.slug);
   if (!data) notFound();
 
-  return <SeriesDetail series={data.series} seasons={data.seasons} />;
+  return (
+    <SiteShell>
+      <SeriesDetail series={data.series} seasons={data.seasons} />
+    </SiteShell>
+  );
 }

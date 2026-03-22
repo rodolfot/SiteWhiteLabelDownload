@@ -1,6 +1,7 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { HeroCarousel } from '@/components/ui/HeroCarousel';
 import { CategoryRow } from '@/components/ui/CategoryRow';
+import { SiteShell } from '@/components/ui/SiteShell';
 import { Series } from '@/types/database';
 
 async function getFeaturedSeries(): Promise<Series[]> {
@@ -62,7 +63,7 @@ export default async function HomePage() {
   ]);
 
   return (
-    <>
+    <SiteShell>
       {/* Hero Section */}
       <HeroCarousel series={featured} />
 
@@ -85,6 +86,6 @@ export default async function HomePage() {
           ))}
         </section>
       </div>
-    </>
+    </SiteShell>
   );
 }

@@ -44,29 +44,40 @@ export function DownloadTimer({ downloadUrl, episodeTitle }: DownloadTimerProps)
     setTurnstileVerified(true);
   }, []);
 
-  // Load Turnstile widget when timer opens
+  // Load Turnstile widget when timer opens (with retry until script loads)
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || !isReady) return;
     const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
     if (!siteKey) {
-      setTurnstileVerified(true); // Skip if no key configured
+      setTurnstileVerified(true);
       return;
     }
 
     const turnstileId = `turnstile-${uniqueId.replace(/:/g, '')}`;
-    const container = document.getElementById(turnstileId);
-    if (!container) return;
 
-    // @ts-expect-error — Turnstile global
-    if (window.turnstile) {
+    const tryRender = () => {
+      const container = document.getElementById(turnstileId);
+      if (!container) return false;
+      // @ts-expect-error — Turnstile global
+      if (!window.turnstile) return false;
       // @ts-expect-error — Turnstile global
       window.turnstile.render(`#${turnstileId}`, {
         sitekey: siteKey,
         callback: handleTurnstileCallback,
         theme: 'dark',
       });
-    }
-  }, [isOpen, handleTurnstileCallback, uniqueId]);
+      return true;
+    };
+
+    if (tryRender()) return;
+
+    // Retry every 500ms until turnstile script is loaded
+    const interval = setInterval(() => {
+      if (tryRender()) clearInterval(interval);
+    }, 500);
+
+    return () => clearInterval(interval);
+  }, [isOpen, isReady, handleTurnstileCallback, uniqueId]);
 
   const canDownload = isReady && turnstileVerified;
 
@@ -98,7 +109,7 @@ export function DownloadTimer({ downloadUrl, episodeTitle }: DownloadTimerProps)
 
             {/* Ad space during countdown */}
             <div className="flex justify-center mb-6">
-              <AdSlot width={300} height={250} format="rectangle" />
+              <AdSlot width={300} height={250} format="rectangle" slotId={process.env.NEXT_PUBLIC_ADSENSE_SLOT_DOWNLOAD} />
             </div>
 
             {!isReady ? (
