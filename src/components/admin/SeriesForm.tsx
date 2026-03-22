@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Save, Plus, Trash2, Upload, ArrowLeft, ChevronDown, ChevronUp } from 'lucide-react';
@@ -63,7 +63,7 @@ interface SeriesFormProps {
   initialSeasons?: Season[];
 }
 
-const CATEGORIES = ['Ação', 'Aventura', 'Comédia', 'Drama', 'Ficção Científica', 'Terror', 'Romance', 'Anime', 'Documentário', 'Geral'];
+const DEFAULT_CATEGORIES = ['Ação', 'Aventura', 'Comédia', 'Drama', 'Ficção Científica', 'Terror', 'Romance', 'Anime', 'Documentário', 'Geral'];
 const QUALITIES = ['480p', '720p', '1080p', '4K'];
 const LANGUAGES = ['Dublado', 'Legendado', 'Dual Audio', 'Nacional', 'Inglês', 'Espanhol', 'Japonês', 'Coreano'];
 
@@ -99,6 +99,21 @@ export function SeriesForm({ initialData, initialSeasons }: SeriesFormProps) {
   );
 
   const [expandedSeasons, setExpandedSeasons] = useState<Set<number>>(new Set([0]));
+  const [dynamicCategories, setDynamicCategories] = useState<string[]>(DEFAULT_CATEGORIES);
+
+  useEffect(() => {
+    const loadCategories = async () => {
+      const supabase = createClient();
+      const { data } = await supabase
+        .from('categories')
+        .select('name')
+        .order('sort_order', { ascending: true });
+      if (data && data.length > 0) {
+        setDynamicCategories(data.map((c) => c.name));
+      }
+    };
+    loadCategories();
+  }, []);
 
   const updateForm = (field: string, value: string | number | boolean) => {
     setForm((prev) => {
@@ -495,7 +510,7 @@ export function SeriesForm({ initialData, initialSeasons }: SeriesFormProps) {
                 onChange={(e) => updateForm('category', e.target.value)}
                 className="w-full bg-surface-700 border border-surface-500 rounded-lg py-2.5 px-4 text-sm text-white focus:outline-none focus:border-neon-blue"
               >
-                {CATEGORIES.map((cat) => (
+                {dynamicCategories.map((cat) => (
                   <option key={cat} value={cat}>{cat}</option>
                 ))}
               </select>
