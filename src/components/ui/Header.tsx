@@ -91,7 +91,7 @@ export function Header() {
             <Link href="/" className="text-gray-300 hover:text-neon-blue transition-colors text-sm font-medium">
               Home
             </Link>
-            <Link href="/categorias" className="text-gray-300 hover:text-neon-blue transition-colors text-sm font-medium">
+            <Link href="/#categorias" className="text-gray-300 hover:text-neon-blue transition-colors text-sm font-medium">
               Categorias
             </Link>
             <Link href="/#lancamentos" className="text-gray-300 hover:text-neon-blue transition-colors text-sm font-medium">
@@ -206,7 +206,7 @@ export function Header() {
                 </div>
               )}
               <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-gray-300 hover:text-white">Home</Link>
-              <Link href="/categorias" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-gray-300 hover:text-white">Categorias</Link>
+              <Link href="/#categorias" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-gray-300 hover:text-white">Categorias</Link>
               <Link href="/#lancamentos" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-gray-300 hover:text-white">Lancamentos</Link>
             </div>
           </motion.div>
