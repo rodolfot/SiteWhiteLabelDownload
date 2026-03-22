@@ -49,12 +49,12 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://pagead2.googlesyndication.com https://adservice.google.com https://www.googletagservices.com https://tpc.googlesyndication.com https://challenges.cloudflare.com https://www.clarity.ms",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://pagead2.googlesyndication.com https://adservice.google.com https://www.googletagservices.com https://tpc.googlesyndication.com https://challenges.cloudflare.com https://www.clarity.ms https://www.googletagmanager.com https://*.sentry.io",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "img-src 'self' data: blob: https://*.supabase.co https://*.supabase.in https://pagead2.googlesyndication.com https://www.googletagservices.com",
               "font-src 'self' https://fonts.gstatic.com",
               "frame-src https://www.youtube.com https://player.twitch.tv https://kick.com https://www.kick.com https://pagead2.googlesyndication.com https://challenges.cloudflare.com https://tpc.googlesyndication.com https://googleads.g.doubleclick.net",
-              "connect-src 'self' https://*.supabase.co https://*.supabase.in https://pagead2.googlesyndication.com https://challenges.cloudflare.com https://www.clarity.ms https://*.clarity.ms",
+              "connect-src 'self' https://*.supabase.co https://*.supabase.in https://pagead2.googlesyndication.com https://challenges.cloudflare.com https://www.clarity.ms https://*.clarity.ms https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://*.sentry.io",
               "object-src 'none'",
               "base-uri 'self'",
               "form-action 'self'",
@@ -72,5 +72,4 @@ export default withSentryConfig(nextConfig, {
   project: process.env.SENTRY_PROJECT,
   silent: !process.env.CI,
   widenClientFileUpload: true,
-  disableLogger: true,
 });

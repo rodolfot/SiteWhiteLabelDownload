@@ -11,3 +11,5 @@ if (SENTRY_DSN) {
     environment: process.env.NODE_ENV,
   });
 }
+
+export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
