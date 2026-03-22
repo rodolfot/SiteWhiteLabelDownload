@@ -77,25 +77,27 @@ function EpisodeRow({ episode, series, seasonLabel }: {
       {/* Language links dropdown */}
       {hasLinks && showLinks && (
         <div className="px-4 pb-4 pt-1 border-t border-surface-600/50">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div className="flex flex-col gap-2">
             {links.map((link) => (
-              <div key={link.id} className="flex items-center justify-between bg-surface-800/70 rounded-lg px-3 py-2">
-                <div className="flex items-center gap-2 min-w-0">
+              <div key={link.id} className="flex items-center justify-between bg-surface-800/70 rounded-lg px-3 py-2 gap-3">
+                <div className="flex items-center gap-2 flex-wrap">
                   <Globe className="h-3.5 w-3.5 text-neon-purple shrink-0" />
-                  <span className="text-sm text-white truncate">{link.language}</span>
+                  <span className="text-sm text-white">{link.language}</span>
                   {link.quality && (
-                    <span className="text-xs text-neon-blue bg-neon-blue/10 px-1.5 py-0.5 rounded shrink-0">
+                    <span className="text-xs text-neon-blue bg-neon-blue/10 px-1.5 py-0.5 rounded">
                       {link.quality}
                     </span>
                   )}
                   {link.file_size && (
-                    <span className="text-xs text-gray-500 shrink-0">{link.file_size}</span>
+                    <span className="text-xs text-gray-500">{link.file_size}</span>
                   )}
                 </div>
-                <DownloadTimer
-                  downloadUrl={link.download_url}
-                  episodeTitle={`${episodeTitle} [${link.language}]`}
-                />
+                <div className="shrink-0">
+                  <DownloadTimer
+                    downloadUrl={link.download_url}
+                    episodeTitle={`${episodeTitle} [${link.language}]`}
+                  />
+                </div>
               </div>
             ))}
           </div>
