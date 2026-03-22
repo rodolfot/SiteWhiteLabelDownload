@@ -14,15 +14,20 @@ export default async function AnalyticsPage() {
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
   const [
-    { data: recentViews },
+    { data: allViews },
     { data: topPages },
     { data: topSeries },
     { data: totalViews },
     { data: recentComments },
     { data: recentRequests },
   ] = await Promise.all([
-    // Views por dia (últimos 30 dias)
-    supabase.rpc('get_daily_views', { days_ago: 30 }).select('*'),
+    // All views últimos 30 dias (para agregar por dia)
+    supabase
+      .from('page_views')
+      .select('created_at')
+      .gte('created_at', thirtyDaysAgo.toISOString())
+      .order('created_at', { ascending: true })
+      .limit(5000),
     // Top páginas
     supabase
       .from('page_views')
@@ -81,10 +86,25 @@ export default async function AnalyticsPage() {
     .sort((a, b) => b.count - a.count)
     .slice(0, 10);
 
+  // Agregar views por dia
+  const dailyCount: Record<string, number> = {};
+  (allViews || []).forEach((v) => {
+    const day = v.created_at.split('T')[0];
+    dailyCount[day] = (dailyCount[day] || 0) + 1;
+  });
+  // Fill missing days with 0
+  const dailyViews: { date: string; count: number }[] = [];
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const key = d.toISOString().split('T')[0];
+    dailyViews.push({ date: key, count: dailyCount[key] || 0 });
+  }
+
   return (
     <AnalyticsDashboard
       totalViews={totalViews?.length ?? 0}
-      dailyViews={recentViews || []}
+      dailyViews={dailyViews}
       topPages={topPagesAgg}
       topSeries={topSeriesAgg}
       recentComments={recentComments || []}

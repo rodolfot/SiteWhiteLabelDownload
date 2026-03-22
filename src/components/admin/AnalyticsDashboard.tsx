@@ -8,6 +8,10 @@ import {
   ArrowLeft, Eye, TrendingUp, MessageCircle, FileQuestion,
   Check, X, Trash2, ExternalLink
 } from 'lucide-react';
+import {
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, BarChart, Bar
+} from 'recharts';
 import { Comment, SeriesRequest } from '@/types/database';
 
 interface AnalyticsDashboardProps {
@@ -21,6 +25,7 @@ interface AnalyticsDashboardProps {
 
 export function AnalyticsDashboard({
   totalViews,
+  dailyViews,
   topPages,
   topSeries,
   recentComments,
@@ -158,7 +163,100 @@ export function AnalyticsDashboard({
 
       {/* Overview Tab */}
       {activeTab === 'overview' && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="space-y-6">
+          {/* Views Chart */}
+          {dailyViews.length > 0 && (
+            <div className="bg-surface-800 border border-surface-600 rounded-xl p-5">
+              <h3 className="text-white font-semibold flex items-center gap-2 mb-4">
+                <TrendingUp className="h-4 w-4 text-neon-blue" />
+                Visualizações por Dia (30 dias)
+              </h3>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={dailyViews}>
+                    <defs>
+                      <linearGradient id="viewsGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#00d4ff" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="#00d4ff" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#2a2a3e" />
+                    <XAxis
+                      dataKey="date"
+                      stroke="#6b7280"
+                      fontSize={12}
+                      tickFormatter={(v) => {
+                        const d = new Date(v);
+                        return `${d.getDate()}/${d.getMonth() + 1}`;
+                      }}
+                    />
+                    <YAxis stroke="#6b7280" fontSize={12} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: '#1e1e2e',
+                        border: '1px solid #374151',
+                        borderRadius: '8px',
+                        color: '#fff',
+                        fontSize: '12px',
+                      }}
+                      labelFormatter={(v) => new Date(v).toLocaleDateString('pt-BR')}
+                      formatter={(value: unknown) => [String(value), 'Views']}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="count"
+                      stroke="#00d4ff"
+                      strokeWidth={2}
+                      fill="url(#viewsGradient)"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
+
+          {/* Top Series Bar Chart */}
+          {topSeries.length > 0 && (
+            <div className="bg-surface-800 border border-surface-600 rounded-xl p-5">
+              <h3 className="text-white font-semibold flex items-center gap-2 mb-4">
+                <Eye className="h-4 w-4 text-neon-purple" />
+                Top Séries por Views
+              </h3>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={topSeries.slice(0, 10)} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" stroke="#2a2a3e" />
+                    <XAxis type="number" stroke="#6b7280" fontSize={12} />
+                    <YAxis
+                      type="category"
+                      dataKey="title"
+                      stroke="#6b7280"
+                      fontSize={11}
+                      width={120}
+                      tickFormatter={(v) => v.length > 18 ? v.slice(0, 18) + '...' : v}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: '#1e1e2e',
+                        border: '1px solid #374151',
+                        borderRadius: '8px',
+                        color: '#fff',
+                        fontSize: '12px',
+                      }}
+                      formatter={(value: unknown) => [String(value), 'Views']}
+                    />
+                    <Bar
+                      dataKey="count"
+                      fill="#a855f7"
+                      radius={[0, 4, 4, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Top Páginas */}
           <div className="bg-surface-800 border border-surface-600 rounded-xl overflow-hidden">
             <div className="p-4 border-b border-surface-600">
@@ -210,6 +308,7 @@ export function AnalyticsDashboard({
               )}
             </div>
           </div>
+        </div>
         </div>
       )}
 
