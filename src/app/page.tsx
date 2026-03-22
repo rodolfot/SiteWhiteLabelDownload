@@ -4,17 +4,23 @@ import { CategoryRow } from '@/components/ui/CategoryRow';
 import { SiteShell } from '@/components/ui/SiteShell';
 import { Series } from '@/types/database';
 
+export const revalidate = 300; // ISR: regenera a cada 5 minutos
+
+const SERIES_LIST_FIELDS = 'id,title,slug,poster_url,backdrop_url,year,genre,rating,category,featured,synopsis,created_at,updated_at' as const;
+
 async function getFeaturedSeries(): Promise<Series[]> {
   try {
     const supabase = createServerSupabaseClient();
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('series')
-      .select('*')
+      .select(SERIES_LIST_FIELDS)
       .eq('featured', true)
       .order('updated_at', { ascending: false })
       .limit(5);
+    if (error) console.error('[Home] Erro ao buscar featured:', error.message);
     return data || [];
-  } catch {
+  } catch (err) {
+    console.error('[Home] Falha ao buscar featured:', err);
     return [];
   }
 }
@@ -22,11 +28,12 @@ async function getFeaturedSeries(): Promise<Series[]> {
 async function getSeriesByCategory(): Promise<Record<string, Series[]>> {
   try {
     const supabase = createServerSupabaseClient();
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('series')
-      .select('*')
+      .select(SERIES_LIST_FIELDS)
       .order('updated_at', { ascending: false });
 
+    if (error) console.error('[Home] Erro ao buscar categorias:', error.message);
     if (!data) return {};
 
     const grouped: Record<string, Series[]> = {};
@@ -36,7 +43,8 @@ async function getSeriesByCategory(): Promise<Record<string, Series[]>> {
       grouped[cat].push(series);
     });
     return grouped;
-  } catch {
+  } catch (err) {
+    console.error('[Home] Falha ao buscar categorias:', err);
     return {};
   }
 }
@@ -44,13 +52,15 @@ async function getSeriesByCategory(): Promise<Record<string, Series[]>> {
 async function getLatestSeries(): Promise<Series[]> {
   try {
     const supabase = createServerSupabaseClient();
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('series')
-      .select('*')
+      .select(SERIES_LIST_FIELDS)
       .order('created_at', { ascending: false })
       .limit(15);
+    if (error) console.error('[Home] Erro ao buscar lançamentos:', error.message);
     return data || [];
-  } catch {
+  } catch (err) {
+    console.error('[Home] Falha ao buscar lançamentos:', err);
     return [];
   }
 }
