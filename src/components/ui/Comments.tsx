@@ -17,6 +17,8 @@ export function Comments({ seriesId }: CommentsProps) {
   const [content, setContent] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [showAll, setShowAll] = useState(false);
+  const INITIAL_LIMIT = 3;
 
   const loadComments = useCallback(async () => {
     const supabase = createClient();
@@ -176,7 +178,7 @@ export function Comments({ seriesId }: CommentsProps) {
         </div>
       ) : (
         <div className="space-y-3">
-          {comments.map((comment) => (
+          {(showAll ? comments : comments.slice(0, INITIAL_LIMIT)).map((comment) => (
             <div key={comment.id} className="bg-surface-700/30 border border-surface-600 rounded-lg p-4">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-neon-blue text-sm font-medium flex items-center gap-1.5">
@@ -190,6 +192,22 @@ export function Comments({ seriesId }: CommentsProps) {
               </p>
             </div>
           ))}
+          {!showAll && comments.length > INITIAL_LIMIT && (
+            <button
+              onClick={() => setShowAll(true)}
+              className="w-full py-2 text-sm text-neon-blue hover:text-white border border-surface-600 hover:border-neon-blue/50 rounded-lg transition-colors"
+            >
+              Ver mais ({comments.length - INITIAL_LIMIT} comentários)
+            </button>
+          )}
+          {showAll && comments.length > INITIAL_LIMIT && (
+            <button
+              onClick={() => setShowAll(false)}
+              className="w-full py-2 text-sm text-gray-400 hover:text-white border border-surface-600 rounded-lg transition-colors"
+            >
+              Ver menos
+            </button>
+          )}
         </div>
       )}
     </div>
