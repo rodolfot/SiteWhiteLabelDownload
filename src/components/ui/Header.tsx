@@ -11,6 +11,7 @@ import { siteConfig } from '@/lib/site-config';
 import { getBrandParts } from '@/lib/brand';
 import { AdSlot } from '@/components/ads/AdSlot';
 import { ThemeToggle } from './ThemeToggle';
+import { LanguageSwitcher } from './LanguageSwitcher';
 
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -144,8 +145,9 @@ export function Header() {
             )}
           </div>
 
-          {/* Theme Toggle + Mobile Menu */}
+          {/* Language + Theme Toggle + Mobile Menu */}
           <div className="flex items-center gap-1">
+            <LanguageSwitcher />
             <ThemeToggle />
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}

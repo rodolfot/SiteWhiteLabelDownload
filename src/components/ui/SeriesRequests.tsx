@@ -1,0 +1,224 @@
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import { FileQuestion, Send, ThumbsUp, User } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
+import { SeriesRequest } from '@/types/database';
+
+export function SeriesRequests() {
+  const [requests, setRequests] = useState<SeriesRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [nickname, setNickname] = useState('');
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [votedIds, setVotedIds] = useState<Set<string>>(new Set());
+
+  const loadRequests = useCallback(async () => {
+    const supabase = createClient();
+    const { data } = await supabase
+      .from('series_requests')
+      .select('*')
+      .order('votes', { ascending: false })
+      .limit(50);
+    setRequests(data || []);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    loadRequests();
+    // Restaurar nickname e votos
+    const saved = localStorage.getItem('comment_nickname');
+    if (saved) setNickname(saved);
+    const voted = localStorage.getItem('voted_requests');
+    if (voted) setVotedIds(new Set(JSON.parse(voted)));
+  }, [loadRequests]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+
+    const trimmedTitle = title.trim();
+    const trimmedNick = nickname.trim();
+
+    if (!trimmedTitle) {
+      setError('O nome da série é obrigatório.');
+      return;
+    }
+    if (!trimmedNick || trimmedNick.length < 2) {
+      setError('O apelido deve ter pelo menos 2 caracteres.');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const supabase = createClient();
+      const { error: insertError } = await supabase.from('series_requests').insert({
+        title: trimmedTitle,
+        description: description.trim() || null,
+        nickname: trimmedNick,
+      });
+
+      if (insertError) {
+        setError('Erro ao enviar pedido. Tente novamente.');
+      } else {
+        localStorage.setItem('comment_nickname', trimmedNick);
+        setTitle('');
+        setDescription('');
+        setSuccess('Pedido enviado com sucesso!');
+        loadRequests();
+        setTimeout(() => setSuccess(''), 3000);
+      }
+    } catch {
+      setError('Erro inesperado. Tente novamente.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleVote = async (id: string) => {
+    if (votedIds.has(id)) return;
+
+    const supabase = createClient();
+    const req = requests.find((r) => r.id === id);
+    if (!req) return;
+
+    const { error } = await supabase
+      .from('series_requests')
+      .update({ votes: req.votes + 1 })
+      .eq('id', id);
+
+    if (!error) {
+      const newVoted = new Set(votedIds);
+      newVoted.add(id);
+      setVotedIds(newVoted);
+      localStorage.setItem('voted_requests', JSON.stringify(Array.from(newVoted)));
+      setRequests((prev) =>
+        prev.map((r) => (r.id === id ? { ...r, votes: r.votes + 1 } : r))
+          .sort((a, b) => b.votes - a.votes)
+      );
+    }
+  };
+
+  const statusColors: Record<string, string> = {
+    pending: 'text-yellow-400 bg-yellow-400/10',
+    approved: 'text-green-400 bg-green-400/10',
+    rejected: 'text-red-400 bg-red-400/10',
+    completed: 'text-neon-blue bg-neon-blue/10',
+  };
+
+  const statusLabels: Record<string, string> = {
+    pending: 'Pendente',
+    approved: 'Aprovada',
+    rejected: 'Rejeitada',
+    completed: 'Concluída',
+  };
+
+  return (
+    <div>
+      <h3 className="text-lg font-semibold text-white flex items-center gap-2 mb-2">
+        <FileQuestion className="h-5 w-5 text-neon-purple" />
+        Pedir uma Série
+      </h3>
+      <p className="text-gray-400 text-sm mb-4">
+        Não encontrou o que procura? Peça aqui e vote nas requisições de outros!
+      </p>
+
+      {/* Form */}
+      <form onSubmit={handleSubmit} className="bg-surface-700/50 border border-surface-600 rounded-lg p-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Nome da série"
+            maxLength={255}
+            className="bg-surface-800 border border-surface-600 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-neon-blue"
+          />
+          <div className="relative">
+            <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+            <input
+              type="text"
+              value={nickname}
+              onChange={(e) => setNickname(e.target.value)}
+              placeholder="Seu apelido"
+              maxLength={50}
+              className="w-full bg-surface-800 border border-surface-600 rounded-lg pl-10 pr-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-neon-blue"
+            />
+          </div>
+        </div>
+        <textarea
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="Descrição ou detalhes (opcional)"
+          maxLength={500}
+          rows={2}
+          className="w-full bg-surface-800 border border-surface-600 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-neon-blue resize-none mb-3"
+        />
+
+        {error && <p className="text-red-400 text-xs mb-2">{error}</p>}
+        {success && <p className="text-green-400 text-xs mb-2">{success}</p>}
+
+        <button
+          type="submit"
+          disabled={submitting}
+          className="btn-primary flex items-center gap-2 text-sm disabled:opacity-50"
+        >
+          <Send className="h-4 w-4" />
+          {submitting ? 'Enviando...' : 'Enviar pedido'}
+        </button>
+      </form>
+
+      {/* Requests list */}
+      {loading ? (
+        <div className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="bg-surface-700/30 rounded-lg p-4 animate-pulse">
+              <div className="h-4 bg-surface-600 rounded w-48 mb-2" />
+              <div className="h-3 bg-surface-600 rounded w-24" />
+            </div>
+          ))}
+        </div>
+      ) : requests.length === 0 ? (
+        <div className="bg-surface-700/30 border border-surface-600 rounded-lg p-6 text-center">
+          <FileQuestion className="h-6 w-6 text-gray-500 mx-auto mb-2" />
+          <p className="text-gray-500 text-sm">Nenhuma requisição ainda. Seja o primeiro a pedir!</p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {requests.map((req) => (
+            <div key={req.id} className="flex items-center gap-3 bg-surface-700/30 border border-surface-600 rounded-lg p-3">
+              <button
+                onClick={() => handleVote(req.id)}
+                disabled={votedIds.has(req.id)}
+                className={`flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg transition-all shrink-0 ${
+                  votedIds.has(req.id)
+                    ? 'text-neon-blue bg-neon-blue/10'
+                    : 'text-gray-400 hover:text-neon-blue hover:bg-neon-blue/5'
+                }`}
+              >
+                <ThumbsUp className="h-4 w-4" />
+                <span className="text-xs font-bold">{req.votes}</span>
+              </button>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <h4 className="text-white text-sm font-medium truncate">{req.title}</h4>
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded ${statusColors[req.status]}`}>
+                    {statusLabels[req.status]}
+                  </span>
+                </div>
+                {req.description && (
+                  <p className="text-gray-500 text-xs mt-0.5 truncate">{req.description}</p>
+                )}
+                <span className="text-gray-600 text-xs">por {req.nickname}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}

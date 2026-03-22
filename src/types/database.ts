@@ -41,3 +41,33 @@ export interface SeasonWithEpisodes extends Season {
 export interface SeriesWithSeasons extends Series {
   seasons: SeasonWithEpisodes[];
 }
+
+export interface Comment {
+  id: string;
+  series_id: string;
+  nickname: string;
+  content: string;
+  approved: boolean;
+  created_at: string;
+}
+
+export interface SeriesRequest {
+  id: string;
+  title: string;
+  description: string;
+  nickname: string;
+  status: 'pending' | 'approved' | 'rejected' | 'completed';
+  admin_notes: string;
+  votes: number;
+  created_at: string;
+}
+
+export interface PageView {
+  id: string;
+  page_path: string;
+  series_id: string | null;
+  referrer: string;
+  user_agent: string;
+  ip_hash: string;
+  created_at: string;
+}

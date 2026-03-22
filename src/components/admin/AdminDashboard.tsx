@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { Plus, Edit, Trash2, LogOut, Tv, Film, BarChart3 } from 'lucide-react';
+import { Plus, Edit, Trash2, LogOut, Tv, Film, BarChart3, MessageCircle } from 'lucide-react';
 import { siteConfig } from '@/lib/site-config';
 import { logAdminAction } from '@/lib/audit-log';
 
@@ -70,6 +70,10 @@ export function AdminDashboard({ series }: AdminDashboardProps) {
           <p className="text-gray-400 text-sm mt-1">Gerencie o conteudo do {siteConfig.name}</p>
         </div>
         <div className="flex items-center gap-3">
+          <Link href="/admin/analytics" className="btn-secondary flex items-center gap-2 text-sm">
+            <BarChart3 className="h-4 w-4" />
+            Analytics
+          </Link>
           <Link href="/admin/series/new" className="btn-primary flex items-center gap-2 text-sm">
             <Plus className="h-4 w-4" />
             Nova Série

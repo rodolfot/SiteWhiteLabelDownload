@@ -8,6 +8,7 @@ import { Series, SeasonWithEpisodes } from '@/types/database';
 import { DownloadTimer } from '@/components/ads/DownloadTimer';
 import { AdSlot } from '@/components/ads/AdSlot';
 import { VideoEmbed } from './VideoEmbed';
+import { Comments } from './Comments';
 
 interface SeriesDetailProps {
   series: Series;
@@ -184,6 +185,9 @@ export function SeriesDetail({ series, seasons }: SeriesDetailProps) {
                   <p className="text-gray-400">Nenhum episódio disponível ainda.</p>
                 </div>
               )}
+
+              {/* Comentários */}
+              <Comments seriesId={series.id} />
             </motion.div>
           </div>
 

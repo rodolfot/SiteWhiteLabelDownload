@@ -37,8 +37,10 @@ O nome, tagline e descricao do site sao 100% configuraveis via variaveis de ambi
 | Home (hero + lancamentos) | `/`                        |
 | Categorias (filtros)      | `/categorias`              |
 | Pagina da serie           | `/serie/[slug]`            |
+| Pedir uma serie           | `/requisicoes`             |
 | Painel admin              | `/admin`                   |
 | Login admin               | `/admin/login`             |
+| Analytics admin           | `/admin/analytics`         |
 | Criar serie               | `/admin/series/new`        |
 | Editar serie              | `/admin/series/[id]/edit`  |
 | Termos de Uso             | `/termos`                  |
@@ -60,6 +62,9 @@ O nome, tagline e descricao do site sao 100% configuraveis via variaveis de ambi
 - **Video Embed** — Suporte a YouTube, Twitch e Kick com lazy loading, poster e sandbox de seguranca
 - **Tema Claro/Escuro** — Toggle no header com persistencia em localStorage via CSS variables
 - **Design Responsivo** — Mobile-first com breakpoints para sm, md, lg e xl
+- **Comentarios** — Sistema de comentarios anonimos por serie com nickname, validacao e moderacao pelo admin
+- **Requisicao de Series** — Pagina publica (`/requisicoes`) para pedir series, com sistema de votos e gestao pelo admin
+- **Multi-idioma (i18n)** — Suporte a Portugues, Ingles e Espanhol com deteccao automatica do navegador e seletor no header
 - **Image Fallbacks** — Fallback gracioso para imagens quebradas em cards e pagina de detalhe
 - **Paginas Legais** — Termos de Uso, Politica de Privacidade e DMCA com conteudo completo
 - **PWA** — Progressive Web App com manifest.json para instalacao no dispositivo
@@ -85,6 +90,7 @@ O nome, tagline e descricao do site sao 100% configuraveis via variaveis de ambi
 - **Gestao de Episodios** — Numero, titulo, URL de download, tamanho do arquivo e qualidade (480p-4K)
 - **Upsert Inteligente** — Ao editar, atualiza registros existentes (preservando IDs) em vez de deletar e recriar
 - **Audit Logging** — Todas as acoes admin (login, logout, create, update, delete) sao registradas na tabela `admin_audit_log`
+- **Analytics Interno** — Dashboard em `/admin/analytics` com views totais, top paginas, series mais vistas, moderacao de comentarios e gestao de requisicoes
 
 ### SEO e Performance
 
@@ -649,6 +655,15 @@ Configure `NEXT_PUBLIC_GA_MEASUREMENT_ID` para ativar. Envia page views automati
 ### Microsoft Clarity
 
 Configure `NEXT_PUBLIC_CLARITY_PROJECT_ID` para heatmaps e session recording. Automaticamente excluido de rotas admin.
+
+### Analytics Interno
+
+Dashboard em `/admin/analytics` com:
+- Total de page views
+- Top paginas mais acessadas (30 dias)
+- Series mais vistas (30 dias)
+- Moderacao de comentarios (aprovar/reprovar/excluir)
+- Gestao de requisicoes (aprovar/rejeitar/concluir)
 
 ### Audit Log
 
