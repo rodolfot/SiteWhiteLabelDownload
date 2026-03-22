@@ -40,6 +40,7 @@ CREATE TABLE series (
   synopsis TEXT,
   poster_url TEXT,
   backdrop_url TEXT,
+  trailer_url TEXT,
   year INTEGER,
   genre VARCHAR(100),
   rating DECIMAL(3,1) DEFAULT 0,

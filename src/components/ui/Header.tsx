@@ -10,6 +10,7 @@ import { createClient } from '@/lib/supabase/client';
 import { siteConfig } from '@/lib/site-config';
 import { getBrandParts } from '@/lib/brand';
 import { AdSlot } from '@/components/ads/AdSlot';
+import { ThemeToggle } from './ThemeToggle';
 
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -61,14 +62,14 @@ export function Header() {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled
-          ? 'bg-surface-900/95 backdrop-blur-lg shadow-lg shadow-black/20'
-          : 'bg-gradient-to-b from-surface-900/80 to-transparent'
-      }`}
+      className="fixed top-0 left-0 right-0 z-50 transition-all duration-300 backdrop-blur-lg"
+      style={{
+        backgroundColor: isScrolled ? 'color-mix(in srgb, var(--surface-900) 95%, transparent)' : 'color-mix(in srgb, var(--surface-900) 80%, transparent)',
+        boxShadow: isScrolled ? '0 10px 15px -3px rgba(0,0,0,0.2)' : 'none',
+      }}
     >
       {/* Ad Banner Top */}
-      <div className="hidden lg:flex justify-center items-center gap-4 py-2 bg-surface-900/50">
+      <div className="hidden lg:flex justify-center items-center gap-4 py-2" style={{ backgroundColor: 'color-mix(in srgb, var(--surface-900) 50%, transparent)' }}>
         <AdSlot width={728} height={90} format="horizontal" slotId={process.env.NEXT_PUBLIC_ADSENSE_SLOT_HEADER} />
         <AdSlot width={728} height={90} format="horizontal" slotId={process.env.NEXT_PUBLIC_ADSENSE_SLOT_HEADER} />
       </div>
@@ -142,13 +143,17 @@ export function Header() {
             )}
           </div>
 
-          {/* Mobile Toggle */}
-          <button
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden text-gray-300 hover:text-white"
-          >
-            {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-          </button>
+          {/* Theme Toggle + Mobile Menu */}
+          <div className="flex items-center gap-1">
+            <ThemeToggle />
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="md:hidden p-2 hover:bg-surface-700 rounded-lg transition-colors"
+              style={{ color: 'var(--text-secondary)' }}
+            >
+              {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
+          </div>
         </div>
       </div>
 

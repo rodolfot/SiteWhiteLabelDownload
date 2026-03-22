@@ -5,6 +5,7 @@ export interface Series {
   synopsis: string;
   poster_url: string;
   backdrop_url: string;
+  trailer_url: string;
   year: number;
   genre: string;
   rating: number;

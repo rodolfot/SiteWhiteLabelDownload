@@ -7,6 +7,7 @@ import { Star, Calendar, Film, Download } from 'lucide-react';
 import { Series, SeasonWithEpisodes } from '@/types/database';
 import { DownloadTimer } from '@/components/ads/DownloadTimer';
 import { AdSlot } from '@/components/ads/AdSlot';
+import { VideoEmbed } from './VideoEmbed';
 
 interface SeriesDetailProps {
   series: Series;
@@ -87,6 +88,17 @@ export function SeriesDetail({ series, seasons }: SeriesDetailProps) {
               <p className="text-gray-300 text-sm leading-relaxed mb-6">
                 {series.synopsis}
               </p>
+
+              {/* Trailer */}
+              {series.trailer_url && (
+                <div className="mb-6">
+                  <VideoEmbed
+                    url={series.trailer_url}
+                    title={`${series.title} - Trailer`}
+                    posterUrl={series.backdrop_url || series.poster_url}
+                  />
+                </div>
+              )}
 
               {/* Season Tabs */}
               {seasons.length > 0 && (

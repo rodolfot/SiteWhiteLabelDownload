@@ -31,6 +31,7 @@ interface SeriesFormProps {
     synopsis: string;
     poster_url: string;
     backdrop_url: string;
+    trailer_url: string;
     year: number;
     genre: string;
     rating: number;
@@ -63,6 +64,7 @@ export function SeriesForm({ initialData, initialSeasons }: SeriesFormProps) {
     synopsis: initialData?.synopsis || '',
     poster_url: initialData?.poster_url || '',
     backdrop_url: initialData?.backdrop_url || '',
+    trailer_url: initialData?.trailer_url || '',
     year: initialData?.year || new Date().getFullYear(),
     genre: initialData?.genre || '',
     rating: initialData?.rating || 0,
@@ -439,6 +441,19 @@ export function SeriesForm({ initialData, initialSeasons }: SeriesFormProps) {
                 <Image src={form.backdrop_url} alt="Backdrop" width={400} height={96} className="mt-2 w-full h-24 object-cover rounded-lg" />
               )}
             </div>
+          </div>
+
+          {/* Trailer URL */}
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">URL do Trailer (YouTube, Twitch, Kick)</label>
+            <input
+              type="url"
+              value={form.trailer_url}
+              onChange={(e) => updateForm('trailer_url', e.target.value)}
+              placeholder="https://youtube.com/watch?v=..."
+              className="w-full bg-surface-700 border border-surface-500 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-neon-blue"
+            />
+            <p className="text-gray-500 text-xs mt-1">Aceita links do YouTube, Twitch e Kick. Deixe vazio para não exibir trailer.</p>
           </div>
         </section>
 

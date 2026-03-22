@@ -34,7 +34,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR">
+    <html lang="pt-BR" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: `
+          (function(){try{var t=localStorage.getItem('theme');if(t==='light')document.documentElement.className='light'}catch(e){}})();
+        `}} />
+      </head>
       <body className={inter.className}>
         {children}
         <AdSenseScript />

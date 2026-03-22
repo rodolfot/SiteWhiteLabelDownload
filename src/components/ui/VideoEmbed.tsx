@@ -1,0 +1,91 @@
+'use client';
+
+import { useState } from 'react';
+import { Play } from 'lucide-react';
+
+interface VideoEmbedProps {
+  url: string;
+  title: string;
+  posterUrl?: string;
+}
+
+function getEmbedUrl(url: string): string | null {
+  try {
+    const u = new URL(url);
+
+    // YouTube: youtube.com/watch?v=ID, youtu.be/ID, youtube.com/embed/ID
+    if (u.hostname.includes('youtube.com') || u.hostname.includes('youtu.be')) {
+      let videoId = '';
+      if (u.hostname.includes('youtu.be')) {
+        videoId = u.pathname.slice(1);
+      } else if (u.pathname.includes('/embed/')) {
+        return url;
+      } else {
+        videoId = u.searchParams.get('v') || '';
+      }
+      if (videoId) return `https://www.youtube.com/embed/${videoId}`;
+    }
+
+    // Twitch: twitch.tv/videos/ID or twitch.tv/CHANNEL
+    if (u.hostname.includes('twitch.tv')) {
+      const parts = u.pathname.split('/').filter(Boolean);
+      if (parts[0] === 'videos' && parts[1]) {
+        return `https://player.twitch.tv/?video=${parts[1]}&parent=${typeof window !== 'undefined' ? window.location.hostname : 'localhost'}&autoplay=false`;
+      }
+      if (parts[0]) {
+        return `https://player.twitch.tv/?channel=${parts[0]}&parent=${typeof window !== 'undefined' ? window.location.hostname : 'localhost'}&autoplay=false`;
+      }
+    }
+
+    // Kick: kick.com/CHANNEL or kick.com/video/ID
+    if (u.hostname.includes('kick.com')) {
+      return url;
+    }
+
+    // Generic embed (user already provides embed URL)
+    return url;
+  } catch {
+    return null;
+  }
+}
+
+export function VideoEmbed({ url, title, posterUrl }: VideoEmbedProps) {
+  const [showPlayer, setShowPlayer] = useState(false);
+  const embedUrl = getEmbedUrl(url);
+
+  if (!embedUrl) return null;
+
+  if (!showPlayer) {
+    return (
+      <button
+        onClick={() => setShowPlayer(true)}
+        className="relative w-full aspect-video rounded-xl overflow-hidden group cursor-pointer"
+        style={{ backgroundColor: 'var(--surface-700)' }}
+      >
+        {posterUrl && (
+          <img src={posterUrl} alt={title} className="absolute inset-0 w-full h-full object-cover" />
+        )}
+        <div className="absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+          <div className="w-16 h-16 rounded-full bg-neon-blue/90 flex items-center justify-center shadow-lg shadow-neon-blue/30 group-hover:scale-110 transition-transform">
+            <Play className="h-7 w-7 text-white ml-1" fill="white" />
+          </div>
+        </div>
+        <div className="absolute bottom-3 left-3 text-white text-sm font-medium bg-black/60 px-3 py-1 rounded-lg">
+          Assistir Trailer
+        </div>
+      </button>
+    );
+  }
+
+  return (
+    <div className="relative w-full aspect-video rounded-xl overflow-hidden">
+      <iframe
+        src={embedUrl}
+        title={title}
+        className="absolute inset-0 w-full h-full"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowFullScreen
+      />
+    </div>
+  );
+}
