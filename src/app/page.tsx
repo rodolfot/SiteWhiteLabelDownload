@@ -1,6 +1,7 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { HeroCarousel } from '@/components/ui/HeroCarousel';
 import { CategoryRow } from '@/components/ui/CategoryRow';
+import { InfiniteCategories } from '@/components/ui/InfiniteCategories';
 import { SiteShell } from '@/components/ui/SiteShell';
 import { Series } from '@/types/database';
 
@@ -84,16 +85,20 @@ export default async function HomePage() {
           <CategoryRow title="🔥 Lançamentos" series={latest} showNativeAd />
         </section>
 
-        {/* Categories */}
-        <section id="categorias" className="space-y-10">
-          {Object.entries(categories).map(([category, seriesList], i) => (
-            <CategoryRow
-              key={category}
-              title={category}
-              series={seriesList}
-              showNativeAd={i % 2 === 0}
-            />
-          ))}
+        {/* Categories — first 2 server-rendered, rest lazy-loaded on scroll */}
+        <section id="categorias">
+          {(() => {
+            const entries = Object.entries(categories);
+            const initial = entries.slice(0, 2);
+            const rest = entries.slice(2);
+            return (
+              <InfiniteCategories
+                initialCategories={initial}
+                remainingCategories={rest}
+                batchSize={3}
+              />
+            );
+          })()}
         </section>
       </div>
     </SiteShell>
