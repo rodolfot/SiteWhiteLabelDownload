@@ -2,7 +2,7 @@ import { createServerSupabaseClient } from './server';
 
 /** Check if the current user is an admin. Returns the user if admin, null otherwise. */
 export async function requireAdmin() {
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

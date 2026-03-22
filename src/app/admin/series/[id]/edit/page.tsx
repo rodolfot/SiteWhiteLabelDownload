@@ -4,19 +4,20 @@ import { requireAdmin } from '@/lib/supabase/admin';
 import { SeriesForm } from '@/components/admin/SeriesForm';
 
 interface PageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export default async function EditSeriesPage({ params }: PageProps) {
+  const { id } = await params;
   const admin = await requireAdmin();
   if (!admin) redirect('/admin/login');
 
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
 
   const { data: series } = await supabase
     .from('series')
     .select('*')
-    .eq('id', params.id)
+    .eq('id', id)
     .single();
 
   if (!series) notFound();

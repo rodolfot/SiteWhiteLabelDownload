@@ -10,11 +10,11 @@ import { Series, SeasonWithEpisodes } from '@/types/database';
 export const revalidate = 3600; // ISR: regenera a cada 1 hora
 
 interface PageProps {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }
 
 async function getSeriesData(slug: string) {
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
 
   const { data: series } = await supabase
     .from('series')
@@ -41,7 +41,8 @@ async function getSeriesData(slug: string) {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const data = await getSeriesData(params.slug);
+  const { slug } = await params;
+  const data = await getSeriesData(slug);
   if (!data) return { title: `Serie nao encontrada - ${siteConfig.name}` };
 
   const { series } = data;
@@ -95,7 +96,8 @@ function generateJsonLd(series: Series, seasons: SeasonWithEpisodes[]) {
 }
 
 export default async function SeriePage({ params }: PageProps) {
-  const data = await getSeriesData(params.slug);
+  const { slug } = await params;
+  const data = await getSeriesData(slug);
   if (!data) notFound();
 
   const jsonLd = generateJsonLd(data.series, data.seasons);

@@ -7,7 +7,7 @@ export default async function AnalyticsPage() {
   const admin = await requireAdmin();
   if (!admin) redirect('/admin/login');
 
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
 
   // Views dos últimos 30 dias
   const thirtyDaysAgo = new Date();

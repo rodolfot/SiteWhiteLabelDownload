@@ -16,7 +16,7 @@ export function generateMetadata(): Metadata {
 
 async function getAllSeries(): Promise<Series[]> {
   try {
-    const supabase = createServerSupabaseClient();
+    const supabase = await createServerSupabaseClient();
     const { data, error } = await supabase
       .from('series')
       .select('id,title,slug,synopsis,poster_url,backdrop_url,year,genre,rating,category,featured,created_at,updated_at')

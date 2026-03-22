@@ -22,6 +22,8 @@ O nome, tagline e descricao do site sao 100% configuraveis via variaveis de ambi
 - [SEO e Performance](#seo-e-performance)
 - [Observabilidade](#observabilidade)
 - [CI/CD](#cicd)
+- [Testes Unitarios e E2E](#testes-unitarios-e-e2e)
+- [Storybook (Documentacao Visual)](#storybook-documentacao-visual)
 - [Deploy em Producao](#deploy-em-producao)
 - [Comandos](#comandos)
 - [Arquitetura](#arquitetura)
@@ -131,19 +133,24 @@ O nome, tagline e descricao do site sao 100% configuraveis via variaveis de ambi
 
 | Camada         | Tecnologia                             | Versao |
 | -------------- | -------------------------------------- | ------ |
-| Framework      | Next.js (App Router)                   | 14.2   |
+| Framework      | Next.js (App Router)                   | 16.2   |
+| Runtime        | React                                  | 19.2   |
 | Linguagem      | TypeScript                             | 5.5+   |
 | Estilizacao    | Tailwind CSS                           | 3.4    |
 | Animacoes      | Framer Motion + CSS animations         | 11.3   |
 | Icones         | Lucide React                           | 0.400  |
 | Backend/Auth   | Supabase (PostgreSQL + Auth + Storage) | 2.45   |
 | Anti-bot       | Cloudflare Turnstile                   | -      |
+| Testes         | Vitest + Testing Library               | 3.x    |
+| Storybook      | Storybook (React Vite)                 | 10.x   |
 | Error Tracking | Sentry                                 | 10.x   |
 | Analytics      | Google Analytics 4 + Microsoft Clarity | -      |
 | Web Vitals     | web-vitals                             | 5.x    |
+| Linting        | ESLint                                 | 10.x   |
 | Anuncios       | Google AdSense                         | -      |
+| Container      | Docker + Kubernetes                    | -      |
 | CI/CD          | GitHub Actions                         | -      |
-| Hospedagem     | Vercel                                 | -      |
+| Hospedagem     | Vercel / Docker / Kubernetes           | -      |
 
 ---
 
@@ -178,12 +185,19 @@ src/
 │   │   ├── SeriesCard.tsx         # Card otimizado (memo + favorito + fallback)
 │   │   ├── SeriesDetail.tsx       # Pagina da serie (fallback de imagens)
 │   │   ├── VideoEmbed.tsx         # Embed YouTube/Twitch/Kick (sandbox)
+│   │   ├── Comments.tsx           # Comentarios anonimos por serie
+│   │   ├── SeriesRequests.tsx     # Requisicao de series + votos
+│   │   ├── PageViewTracker.tsx    # Tracker de page views (analytics)
+│   │   ├── LanguageSwitcher.tsx   # Seletor de idioma (pt-BR/en/es)
 │   │   ├── Analytics.tsx          # Google Analytics 4
 │   │   ├── WebVitals.tsx          # Core Web Vitals tracking
 │   │   ├── ClarityScript.tsx      # Microsoft Clarity (excl. admin)
 │   │   └── TurnstileScript.tsx    # Cloudflare Turnstile loader
 │   ├── ads/                       # Componentes de anuncio
-│   └── admin/                     # Dashboard + SeriesForm (com audit log)
+│   └── admin/
+│       ├── AdminDashboard.tsx     # Dashboard + link analytics
+│       ├── AnalyticsDashboard.tsx # Analytics + moderacao + requisicoes
+│       └── SeriesForm.tsx         # CRUD de series (com audit log)
 ├── hooks/
 │   └── useFavorites.ts            # Hook de favoritos (localStorage + sync)
 ├── lib/
@@ -192,13 +206,19 @@ src/
 │   ├── brand.ts                   # Helper para split do nome no logo
 │   ├── validation.ts              # Validacao de URLs e upload de imagens
 │   ├── audit-log.ts               # Registro de acoes admin
+│   ├── i18n/
+│   │   ├── dictionaries.ts        # Dicionarios pt-BR, en, es
+│   │   └── context.tsx            # Provider + hook useI18n()
 │   └── supabase/
 │       ├── client.ts              # Cliente Supabase (browser)
 │       ├── server.ts              # Cliente Supabase (server/SSR)
 │       ├── admin.ts               # Helper requireAdmin()
 │       ├── schema.sql             # Schema SQL principal
 │       ├── audit-log-migration.sql # Tabela de audit log
+│       ├── comments-migration.sql # Tabelas comments, requests, page_views
 │       └── security-hardening.sql # Hardening SQL (RLS, REVOKE)
+├── __tests__/
+│   └── setup.ts                   # Setup do Vitest + jest-dom
 ├── types/
 │   └── database.ts                # Tipos TypeScript
 ├── middleware.ts                   # Protecao de rotas admin + session refresh
@@ -518,6 +538,19 @@ npm run dev -- -p 3002              # abrir http://localhost:3002
                         │ details          │
                         │ created_at       │
                         └──────────────────┘
+
+┌──────────────────┐   ┌──────────────────┐   ┌──────────────────┐
+│ comments          │   │ series_requests   │   │ page_views        │
+│──────────────────│   │──────────────────│   │──────────────────│
+│ id (UUID/PK)     │   │ id (UUID/PK)     │   │ id (UUID/PK)     │
+│ series_id (FK)   │   │ title            │   │ page_path        │
+│ nickname         │   │ description      │   │ series_id (FK)   │
+│ content          │   │ nickname         │   │ referrer         │
+│ approved         │   │ status           │   │ user_agent       │
+│ created_at       │   │ admin_notes      │   │ ip_hash          │
+└──────────────────┘   │ votes            │   │ created_at       │
+                        │ created_at       │   └──────────────────┘
+                        └──────────────────┘
 ```
 
 ### Politicas RLS
@@ -529,6 +562,9 @@ npm run dev -- -p 3002              # abrir http://localhost:3002
 | `episodes`        | Publico                | Apenas `is_admin()`  |
 | `admin_users`     | Apenas o proprio admin | -                    |
 | `admin_audit_log` | Apenas admins          | admin_id = auth.uid()|
+| `comments`        | Aprovados (publico)    | INSERT anonimo, moderacao admin |
+| `series_requests` | Publico                | INSERT anonimo, gestao admin    |
+| `page_views`      | Apenas admins          | INSERT anonimo                  |
 | `storage` (media) | Publico                | Apenas `is_admin()`  |
 
 ### Funcao is_admin()
@@ -750,6 +786,58 @@ npm run test:e2e:ui             # rodar com interface visual
 
 ---
 
+## Testes Unitarios e E2E
+
+### Vitest (Unitarios)
+
+O projeto usa **Vitest** com **Testing Library** para testes unitarios. Atualmente possui **25 testes** cobrindo:
+
+| Arquivo                          | Testes | O que testa                                      |
+| -------------------------------- | ------ | ------------------------------------------------ |
+| `src/lib/validation.test.ts`     | 14     | Validacao de URLs de download e trailer           |
+| `src/lib/i18n/dictionaries.test.ts` | 7   | Locales, getDictionary, consistencia de chaves    |
+| `src/lib/site-config.test.ts`    | 3      | Propriedades do siteConfig                        |
+| `src/lib/brand.test.ts`          | 1      | Split do nome para o logo                         |
+
+```bash
+npm test              # rodar todos os testes
+npm run test:watch    # modo watch (re-roda ao salvar)
+npm run test:coverage # rodar com relatorio de cobertura
+```
+
+### Testes E2E (Playwright)
+
+6 arquivos de teste cobrindo home, categorias, serie, admin, SEO e paginas legais em 3 browsers (Chromium, Firefox, WebKit).
+
+```bash
+npx playwright install   # instalar browsers (primeira vez)
+npm run test:e2e         # rodar todos os testes
+npm run test:e2e:ui      # rodar com interface visual
+```
+
+---
+
+## Storybook (Documentacao Visual)
+
+Documentacao visual de componentes com **Storybook 10** (React Vite).
+
+### Stories disponiveis
+
+| Componente        | Variantes                         |
+| ----------------- | --------------------------------- |
+| `ThemeToggle`     | Default                           |
+| `LanguageSwitcher`| Default (com I18nProvider)        |
+| `SeriesCard`      | Default, Featured, NoImage        |
+
+### Comandos
+
+```bash
+npm run storybook        # abrir Storybook em http://localhost:6006
+npm run build-storybook  # build estatico do Storybook
+```
+
+---
+
 ## Deploy em Producao
 
 > Para o guia completo de configuracao de servicos externos (Sentry, GA4, dominio, CDN), veja [`docs/SETUP-GUIDE.md`](docs/SETUP-GUIDE.md).
@@ -763,7 +851,52 @@ npm run test:e2e:ui             # rodar com interface visual
 1. Clique em **Deploy**
 1. Apos ~2 min, o site estara no ar em `https://seu-projeto.vercel.app`
 
-### Opcao 2 — Self-hosted
+### Opcao 2 — Docker
+
+```bash
+# Build da imagem
+docker build -t downdoor \
+  --build-arg NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co \
+  --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ... \
+  .
+
+# Rodar o container
+docker run -p 3000:3000 --env-file .env.local downdoor
+```
+
+Ou com Docker Compose (recomendado):
+
+```bash
+# Copie .env.local para o diretorio e rode:
+docker-compose up -d
+```
+
+O `docker-compose.yml` ja inclui health check, restart policy e todas as env vars.
+
+### Opcao 3 — Kubernetes
+
+```bash
+# 1. Criar os secrets (copie e preencha o exemplo)
+cp k8s/secrets.yaml.example k8s/secrets.yaml
+# Edite k8s/secrets.yaml com seus valores em base64:
+#   echo -n "valor" | base64
+
+# 2. Aplicar os manifests
+kubectl apply -f k8s/secrets.yaml
+kubectl apply -f k8s/deployment.yaml
+
+# 3. Verificar o deploy
+kubectl get pods -l app=downdoor
+kubectl get svc downdoor
+```
+
+Os manifests incluem:
+- **Deployment** com 2 replicas, readiness/liveness probes e limites de recursos
+- **Service** (ClusterIP) na porta 80 → 3000
+- **Ingress** (nginx) com TLS — edite `downdoor.example.com` para seu dominio
+- **HPA** (Horizontal Pod Autoscaler) — escala de 2 a 10 pods com base em CPU (70%)
+
+### Opcao 4 — Self-hosted
 
 ```bash
 npm run build
@@ -779,13 +912,20 @@ O servidor roda na porta 3000 por padrao. Use um reverse proxy (Nginx, Caddy) pa
 | Comando                       | Descricao                                   |
 | ----------------------------- | ------------------------------------------- |
 | `npm run dev -- -p 3002`      | Servidor de desenvolvimento (porta 3002)    |
-| `npm run build`               | Compilar para producao                      |
+| `npm run build`               | Compilar para producao (standalone output)  |
 | `npm start`                   | Iniciar servidor de producao (apos build)   |
-| `npm run lint`                | Verificar erros de codigo com ESLint        |
-| `npx tsc --noEmit`           | Verificar tipos TypeScript sem compilar     |
-| `npm audit`                   | Verificar vulnerabilidades em dependencias  |
+| `npm run lint`                | Verificar erros de codigo com ESLint 10     |
+| `npx tsc --noEmit`            | Verificar tipos TypeScript sem compilar     |
+| `npm test`                    | Rodar testes unitarios com Vitest           |
+| `npm run test:watch`          | Testes unitarios em modo watch              |
+| `npm run test:coverage`       | Testes unitarios com relatorio de cobertura |
 | `npm run test:e2e`            | Rodar testes E2E com Playwright             |
 | `npm run test:e2e:ui`         | Rodar testes E2E com interface visual       |
+| `npm run storybook`           | Abrir Storybook em localhost:6006           |
+| `npm run build-storybook`     | Build estatico do Storybook                 |
+| `npm audit`                   | Verificar vulnerabilidades (0 atualmente)   |
+| `docker-compose up -d`        | Rodar com Docker Compose                    |
+| `kubectl apply -f k8s/`       | Deploy no Kubernetes                        |
 
 ---
 

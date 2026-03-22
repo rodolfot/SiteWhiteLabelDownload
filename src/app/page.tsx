@@ -10,7 +10,7 @@ const SERIES_LIST_FIELDS = 'id,title,slug,poster_url,backdrop_url,year,genre,rat
 
 async function getFeaturedSeries(): Promise<Series[]> {
   try {
-    const supabase = createServerSupabaseClient();
+    const supabase = await createServerSupabaseClient();
     const { data, error } = await supabase
       .from('series')
       .select(SERIES_LIST_FIELDS)
@@ -27,7 +27,7 @@ async function getFeaturedSeries(): Promise<Series[]> {
 
 async function getSeriesByCategory(): Promise<Record<string, Series[]>> {
   try {
-    const supabase = createServerSupabaseClient();
+    const supabase = await createServerSupabaseClient();
     const { data, error } = await supabase
       .from('series')
       .select(SERIES_LIST_FIELDS)
@@ -51,7 +51,7 @@ async function getSeriesByCategory(): Promise<Record<string, Series[]>> {
 
 async function getLatestSeries(): Promise<Series[]> {
   try {
-    const supabase = createServerSupabaseClient();
+    const supabase = await createServerSupabaseClient();
     const { data, error } = await supabase
       .from('series')
       .select(SERIES_LIST_FIELDS)

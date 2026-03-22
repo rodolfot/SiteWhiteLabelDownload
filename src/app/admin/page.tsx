@@ -10,7 +10,7 @@ export default async function AdminPage() {
     redirect('/admin/login');
   }
 
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
   const { data: series } = await supabase
     .from('series')
     .select('*, seasons(id, number, episodes(id))')
