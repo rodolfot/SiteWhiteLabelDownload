@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Plus, Edit, Trash2, LogOut, Tv, Film, BarChart3 } from 'lucide-react';
 import { siteConfig } from '@/lib/site-config';
+import { logAdminAction } from '@/lib/audit-log';
 
 interface SeriesWithRelations {
   id: string;
@@ -34,6 +35,7 @@ export function AdminDashboard({ series }: AdminDashboardProps) {
 
   const handleLogout = async () => {
     const supabase = createClient();
+    logAdminAction({ action: 'logout', entity: 'auth' });
     await supabase.auth.signOut();
     router.push('/admin/login');
     router.refresh();
@@ -44,10 +46,12 @@ export function AdminDashboard({ series }: AdminDashboardProps) {
     setDeleting(id);
     try {
       const supabase = createClient();
+      const target = series.find((s) => s.id === id);
       const { error } = await supabase.from('series').delete().eq('id', id);
       if (error) {
         alert(`Erro ao excluir: ${error.message}`);
       } else {
+        logAdminAction({ action: 'delete', entity: 'series', entity_id: id, details: target?.title });
         router.refresh();
       }
     } catch {

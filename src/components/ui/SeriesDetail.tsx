@@ -16,18 +16,25 @@ interface SeriesDetailProps {
 
 export function SeriesDetail({ series, seasons }: SeriesDetailProps) {
   const [activeSeason, setActiveSeason] = useState(0);
+  const [backdropError, setBackdropError] = useState(false);
+  const [posterError, setPosterError] = useState(false);
 
   return (
     <div className="min-h-screen">
       {/* Backdrop Hero */}
       <div className="relative h-[60vh] min-h-[400px]">
-        <Image
-          src={series.backdrop_url || series.poster_url || '/images/placeholder.svg'}
-          alt={series.title}
-          fill
-          className="object-cover"
-          priority
-        />
+        {backdropError ? (
+          <div className="absolute inset-0 bg-surface-800" />
+        ) : (
+          <Image
+            src={series.backdrop_url || series.poster_url || '/images/placeholder.svg'}
+            alt={series.title}
+            fill
+            className="object-cover"
+            priority
+            onError={() => setBackdropError(true)}
+          />
+        )}
         <div className="absolute inset-0 gradient-overlay" />
         <div className="absolute inset-0 gradient-overlay-left w-1/2" />
       </div>
@@ -44,12 +51,19 @@ export function SeriesDetail({ series, seasons }: SeriesDetailProps) {
               className="shrink-0"
             >
               <div className="relative w-48 h-72 rounded-xl overflow-hidden shadow-2xl shadow-black/50 mx-auto sm:mx-0">
-                <Image
-                  src={series.poster_url || '/images/placeholder.svg'}
-                  alt={series.title}
-                  fill
-                  className="object-cover"
-                />
+                {posterError ? (
+                  <div className="absolute inset-0 bg-surface-700 flex items-center justify-center">
+                    <span className="text-gray-500 text-xs text-center px-2">{series.title}</span>
+                  </div>
+                ) : (
+                  <Image
+                    src={series.poster_url || '/images/placeholder.svg'}
+                    alt={series.title}
+                    fill
+                    className="object-cover"
+                    onError={() => setPosterError(true)}
+                  />
+                )}
               </div>
             </motion.div>
 
