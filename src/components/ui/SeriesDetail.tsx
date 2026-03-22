@@ -9,6 +9,7 @@ import { DownloadTimer } from '@/components/ads/DownloadTimer';
 import { AdSlot } from '@/components/ads/AdSlot';
 import { VideoEmbed } from './VideoEmbed';
 import { Comments } from './Comments';
+import { StarRating } from './StarRating';
 
 interface SeriesDetailProps {
   series: Series;
@@ -187,6 +188,10 @@ export function SeriesDetail({ series, seasons }: SeriesDetailProps) {
                     {series.rating}/10
                   </span>
                 )}
+              </div>
+
+              <div className="mb-4">
+                <StarRating seriesId={series.id} initialRating={series.rating} />
               </div>
 
               <p className="text-gray-300 text-sm leading-relaxed mb-6">
