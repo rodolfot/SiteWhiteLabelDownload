@@ -122,13 +122,15 @@ export function HeroCarousel({ series }: HeroCarouselProps) {
         <>
           <button
             onClick={() => setCurrent((prev) => (prev - 1 + series.length) % series.length)}
-            className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white p-2 rounded-full backdrop-blur-sm transition-all"
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-white p-2 rounded-full backdrop-blur-sm transition-all"
+            style={{ backgroundColor: 'color-mix(in srgb, var(--surface-900) 50%, transparent)' }}
           >
             <ChevronLeft className="h-6 w-6" />
           </button>
           <button
             onClick={() => setCurrent((prev) => (prev + 1) % series.length)}
-            className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white p-2 rounded-full backdrop-blur-sm transition-all"
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-white p-2 rounded-full backdrop-blur-sm transition-all"
+            style={{ backgroundColor: 'color-mix(in srgb, var(--surface-900) 50%, transparent)' }}
           >
             <ChevronRight className="h-6 w-6" />
           </button>

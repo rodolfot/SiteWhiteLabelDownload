@@ -95,7 +95,8 @@ export function DownloadTimer({ downloadUrl, episodeTitle }: DownloadTimerProps)
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
+          className="fixed inset-0 z-[100] backdrop-blur-sm flex items-center justify-center p-4"
+          style={{ backgroundColor: 'color-mix(in srgb, var(--surface-900) 70%, transparent)' }}
           onClick={() => setIsOpen(false)}
         >
           <motion.div
@@ -116,7 +117,7 @@ export function DownloadTimer({ downloadUrl, episodeTitle }: DownloadTimerProps)
               <div className="text-center">
                 <div className="relative w-20 h-20 mx-auto mb-4">
                   <svg className="w-20 h-20 -rotate-90" viewBox="0 0 80 80">
-                    <circle cx="40" cy="40" r="35" fill="none" stroke="#1a1a25" strokeWidth="6" />
+                    <circle cx="40" cy="40" r="35" fill="none" stroke="var(--surface-700)" strokeWidth="6" />
                     <circle
                       cx="40"
                       cy="40"

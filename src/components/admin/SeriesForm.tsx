@@ -20,6 +20,7 @@ interface Season {
   id?: string;
   number: number;
   title: string;
+  trailer_url: string;
   episodes: Episode[];
 }
 
@@ -31,7 +32,6 @@ interface SeriesFormProps {
     synopsis: string;
     poster_url: string;
     backdrop_url: string;
-    trailer_url: string;
     year: number;
     genre: string;
     rating: number;
@@ -64,7 +64,6 @@ export function SeriesForm({ initialData, initialSeasons }: SeriesFormProps) {
     synopsis: initialData?.synopsis || '',
     poster_url: initialData?.poster_url || '',
     backdrop_url: initialData?.backdrop_url || '',
-    trailer_url: initialData?.trailer_url || '',
     year: initialData?.year || new Date().getFullYear(),
     genre: initialData?.genre || '',
     rating: initialData?.rating || 0,
@@ -90,7 +89,7 @@ export function SeriesForm({ initialData, initialSeasons }: SeriesFormProps) {
 
   const addSeason = () => {
     const num = seasons.length + 1;
-    setSeasons([...seasons, { number: num, title: `Temporada ${num}`, episodes: [] }]);
+    setSeasons([...seasons, { number: num, title: `Temporada ${num}`, trailer_url: '', episodes: [] }]);
     setExpandedSeasons((prev) => new Set(prev).add(seasons.length));
   };
 
@@ -179,7 +178,7 @@ export function SeriesForm({ initialData, initialSeasons }: SeriesFormProps) {
             // Update existing season
             const { error: seasonError } = await supabase
               .from('seasons')
-              .update({ number: season.number, title: season.title })
+              .update({ number: season.number, title: season.title, trailer_url: season.trailer_url })
               .eq('id', seasonId);
             if (seasonError) throw seasonError;
 
@@ -198,7 +197,7 @@ export function SeriesForm({ initialData, initialSeasons }: SeriesFormProps) {
             // Insert new season
             const { data: newSeason, error: seasonError } = await supabase
               .from('seasons')
-              .insert({ series_id: initialData.id, number: season.number, title: season.title })
+              .insert({ series_id: initialData.id, number: season.number, title: season.title, trailer_url: season.trailer_url })
               .select()
               .single();
             if (seasonError) throw seasonError;
@@ -244,7 +243,7 @@ export function SeriesForm({ initialData, initialSeasons }: SeriesFormProps) {
         for (const season of seasons) {
           const { data: newSeason, error: seasonError } = await supabase
             .from('seasons')
-            .insert({ series_id: newSeries.id, number: season.number, title: season.title })
+            .insert({ series_id: newSeries.id, number: season.number, title: season.title, trailer_url: season.trailer_url })
             .select()
             .single();
           if (seasonError) throw seasonError;
@@ -443,18 +442,6 @@ export function SeriesForm({ initialData, initialSeasons }: SeriesFormProps) {
             </div>
           </div>
 
-          {/* Trailer URL */}
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">URL do Trailer (YouTube, Twitch, Kick)</label>
-            <input
-              type="url"
-              value={form.trailer_url}
-              onChange={(e) => updateForm('trailer_url', e.target.value)}
-              placeholder="https://youtube.com/watch?v=..."
-              className="w-full bg-surface-700 border border-surface-500 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-neon-blue"
-            />
-            <p className="text-gray-500 text-xs mt-1">Aceita links do YouTube, Twitch e Kick. Deixe vazio para não exibir trailer.</p>
-          </div>
         </section>
 
         {/* Seasons & Episodes */}
@@ -511,6 +498,24 @@ export function SeriesForm({ initialData, initialSeasons }: SeriesFormProps) {
                   <Trash2 className="h-4 w-4" />
                 </button>
               </div>
+
+              {/* Trailer URL per season */}
+              {expandedSeasons.has(si) && (
+                <div className="px-3 pt-3">
+                  <label className="block text-xs font-medium text-gray-400 mb-1">Trailer (YouTube, Twitch, Kick)</label>
+                  <input
+                    type="url"
+                    value={season.trailer_url || ''}
+                    onChange={(e) => {
+                      const updated = [...seasons];
+                      updated[si].trailer_url = e.target.value;
+                      setSeasons(updated);
+                    }}
+                    placeholder="https://youtube.com/watch?v=..."
+                    className="w-full bg-surface-700 border border-surface-500 rounded-lg px-3 py-1.5 text-white text-xs focus:outline-none focus:border-neon-blue"
+                  />
+                </div>
+              )}
 
               {/* Episodes */}
               {expandedSeasons.has(si) && (

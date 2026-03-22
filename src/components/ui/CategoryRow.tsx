@@ -36,13 +36,15 @@ export function CategoryRow({ title, series, showNativeAd = false }: CategoryRow
         {/* Scroll Buttons */}
         <button
           onClick={() => scroll('left')}
-          className="absolute left-0 top-0 bottom-0 z-10 w-12 bg-gradient-to-r from-surface-900 to-transparent flex items-center justify-center opacity-0 group-hover/row:opacity-100 transition-opacity"
+          className="absolute left-0 top-0 bottom-0 z-10 w-12 flex items-center justify-center opacity-0 group-hover/row:opacity-100 transition-opacity"
+          style={{ background: 'linear-gradient(to right, var(--surface-900), transparent)' }}
         >
           <ChevronLeft className="h-6 w-6 text-white" />
         </button>
         <button
           onClick={() => scroll('right')}
-          className="absolute right-0 top-0 bottom-0 z-10 w-12 bg-gradient-to-l from-surface-900 to-transparent flex items-center justify-center opacity-0 group-hover/row:opacity-100 transition-opacity"
+          className="absolute right-0 top-0 bottom-0 z-10 w-12 flex items-center justify-center opacity-0 group-hover/row:opacity-100 transition-opacity"
+          style={{ background: 'linear-gradient(to left, var(--surface-900), transparent)' }}
         >
           <ChevronRight className="h-6 w-6 text-white" />
         </button>

@@ -89,17 +89,6 @@ export function SeriesDetail({ series, seasons }: SeriesDetailProps) {
                 {series.synopsis}
               </p>
 
-              {/* Trailer */}
-              {series.trailer_url && (
-                <div className="mb-6">
-                  <VideoEmbed
-                    url={series.trailer_url}
-                    title={`${series.title} - Trailer`}
-                    posterUrl={series.backdrop_url || series.poster_url}
-                  />
-                </div>
-              )}
-
               {/* Season Tabs */}
               {seasons.length > 0 && (
                 <div className="mb-6">
@@ -118,6 +107,17 @@ export function SeriesDetail({ series, seasons }: SeriesDetailProps) {
                       </button>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {/* Season Trailer */}
+              {seasons.length > 0 && seasons[activeSeason]?.trailer_url && (
+                <div className="mb-6">
+                  <VideoEmbed
+                    url={seasons[activeSeason].trailer_url}
+                    title={`${series.title} - ${seasons[activeSeason].title || `Temporada ${seasons[activeSeason].number}`}`}
+                    posterUrl={series.backdrop_url || series.poster_url}
+                  />
                 </div>
               )}
 

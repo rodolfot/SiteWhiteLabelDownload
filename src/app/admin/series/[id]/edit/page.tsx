@@ -31,6 +31,7 @@ export default async function EditSeriesPage({ params }: PageProps) {
     id: s.id,
     number: s.number,
     title: s.title || `Temporada ${s.number}`,
+    trailer_url: s.trailer_url || '',
     episodes: (s.episodes || [])
       .sort((a: { number: number }, b: { number: number }) => a.number - b.number)
       .map((ep: Record<string, string | number>) => ({

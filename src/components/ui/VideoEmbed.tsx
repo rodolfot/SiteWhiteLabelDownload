@@ -65,12 +65,12 @@ export function VideoEmbed({ url, title, posterUrl }: VideoEmbedProps) {
         {posterUrl && (
           <img src={posterUrl} alt={title} className="absolute inset-0 w-full h-full object-cover" />
         )}
-        <div className="absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+        <div className="absolute inset-0 transition-colors flex items-center justify-center" style={{ backgroundColor: 'color-mix(in srgb, var(--surface-900) 40%, transparent)' }}>
           <div className="w-16 h-16 rounded-full bg-neon-blue/90 flex items-center justify-center shadow-lg shadow-neon-blue/30 group-hover:scale-110 transition-transform">
             <Play className="h-7 w-7 text-white ml-1" fill="white" />
           </div>
         </div>
-        <div className="absolute bottom-3 left-3 text-white text-sm font-medium bg-black/60 px-3 py-1 rounded-lg">
+        <div className="absolute bottom-3 left-3 text-white text-sm font-medium px-3 py-1 rounded-lg" style={{ backgroundColor: 'color-mix(in srgb, var(--surface-900) 60%, transparent)' }}>
           Assistir Trailer
         </div>
       </button>

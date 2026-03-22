@@ -40,7 +40,6 @@ CREATE TABLE series (
   synopsis TEXT,
   poster_url TEXT,
   backdrop_url TEXT,
-  trailer_url TEXT,
   year INTEGER,
   genre VARCHAR(100),
   rating DECIMAL(3,1) DEFAULT 0,
@@ -56,6 +55,7 @@ CREATE TABLE seasons (
   series_id UUID REFERENCES series(id) ON DELETE CASCADE NOT NULL,
   number INTEGER NOT NULL,
   title VARCHAR(255),
+  trailer_url TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   UNIQUE(series_id, number)
 );
