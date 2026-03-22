@@ -538,6 +538,33 @@ Roda em **pull requests**: faz build e deploy preview no Vercel, comenta na PR c
 
 Roda em **push para main/master** (apos CI passar): faz build e deploy de producao no Vercel.
 
+### 4. E2E Tests (e2e.yml)
+
+Roda em **push** e **pull requests** para `main`/`master`:
+
+- Instala browsers Playwright (chromium, firefox, webkit)
+- Roda testes E2E em matriz paralela (3 browsers)
+- Upload de report como artifact em caso de falha
+
+#### Testes incluidos
+
+| Arquivo              | O que testa                                          |
+| -------------------- | ---------------------------------------------------- |
+| `e2e/home.spec.ts`   | Home carrega, header, footer, navegacao              |
+| `e2e/categorias.spec.ts` | Filtros, busca, painel avancado                  |
+| `e2e/serie.spec.ts`  | 404 para slug inexistente                            |
+| `e2e/admin.spec.ts`  | Redirect sem auth, login, credenciais invalidas      |
+| `e2e/seo.spec.ts`    | robots.txt, sitemap.xml, meta tags, manifest.json    |
+| `e2e/legal.spec.ts`  | Termos, privacidade, DMCA carregam com conteudo      |
+
+#### Rodar localmente
+
+```bash
+npx playwright install          # instalar browsers (primeira vez)
+npm run test:e2e                # rodar todos os testes
+npm run test:e2e:ui             # rodar com interface visual
+```
+
 ### Configurar Vercel no GitHub Actions
 
 1. Instale o Vercel CLI: `npm i -g vercel`
@@ -561,6 +588,8 @@ Roda em **push para main/master** (apos CI passar): faz build e deploy de produc
 ---
 
 ## Deploy em Producao
+
+> Para o guia completo de configuracao de servicos externos (Sentry, GA4, dominio, CDN), veja [`docs/SETUP-GUIDE.md`](docs/SETUP-GUIDE.md).
 
 ### Opcao 1 — Vercel (Recomendado)
 
@@ -592,6 +621,8 @@ O servidor roda na porta 3000 por padrao. Use um reverse proxy (Nginx, Caddy) pa
 | `npm run lint`                | Verificar erros de codigo com ESLint        |
 | `npx tsc --noEmit`           | Verificar tipos TypeScript sem compilar     |
 | `npm audit`                   | Verificar vulnerabilidades em dependencias  |
+| `npm run test:e2e`            | Rodar testes E2E com Playwright             |
+| `npm run test:e2e:ui`         | Rodar testes E2E com interface visual       |
 
 ---
 
