@@ -237,6 +237,18 @@ export function SeriesForm({ initialData, initialSeasons }: SeriesFormProps) {
     try {
       const supabase = createClient();
 
+      // Garantir slug único antes de salvar
+      if (!initialData) {
+        const { data: existing } = await supabase
+          .from('series')
+          .select('id')
+          .eq('slug', form.slug)
+          .maybeSingle();
+        if (existing) {
+          form.slug = `${form.slug}-${Date.now().toString(36)}`;
+        }
+      }
+
       if (initialData) {
         // Update existing series
         const { error: updateError } = await supabase
@@ -409,8 +421,11 @@ export function SeriesForm({ initialData, initialSeasons }: SeriesFormProps) {
 
       router.push('/admin');
       router.refresh();
-    } catch (err) {
-      setError('Erro ao salvar. Verifique os dados e tente novamente.');
+    } catch (err: unknown) {
+      const msg = err instanceof Object && 'code' in err && (err as { code: string }).code === '23505'
+        ? 'Já existe uma série com este slug. Altere o título ou slug.'
+        : 'Erro ao salvar. Verifique os dados e tente novamente.';
+      setError(msg);
       setSaving(false);
     }
   };
