@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { MessageCircle, Send, User } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { Comment } from '@/types/database';
+import { useI18n } from '@/lib/i18n/context';
 
 interface CommentsProps {
   seriesId: string;
@@ -19,6 +20,7 @@ export function Comments({ seriesId }: CommentsProps) {
   const [success, setSuccess] = useState('');
   const [showAll, setShowAll] = useState(false);
   const INITIAL_LIMIT = 3;
+  const { t } = useI18n();
 
   const loadComments = useCallback(async () => {
     const supabase = createClient();
@@ -52,15 +54,15 @@ export function Comments({ seriesId }: CommentsProps) {
     const trimmedContent = content.trim();
 
     if (!trimmedNick || trimmedNick.length < 2) {
-      setError('O apelido deve ter pelo menos 2 caracteres.');
+      setError(t.comments.errorNick);
       return;
     }
     if (!trimmedContent || trimmedContent.length < 3) {
-      setError('O comentário deve ter pelo menos 3 caracteres.');
+      setError(t.comments.errorMin);
       return;
     }
     if (trimmedContent.length > 1000) {
-      setError('O comentário deve ter no máximo 1000 caracteres.');
+      setError(t.comments.errorMax);
       return;
     }
 
@@ -85,12 +87,12 @@ export function Comments({ seriesId }: CommentsProps) {
       } else {
         localStorage.setItem('comment_nickname', trimmedNick);
         setContent('');
-        setSuccess('Comentário enviado com sucesso!');
+        setSuccess(t.comments.success);
         loadComments();
         setTimeout(() => setSuccess(''), 3000);
       }
     } catch {
-      setError('Erro inesperado. Tente novamente.');
+      setError(t.comments.errorGeneric);
     } finally {
       setSubmitting(false);
     }
@@ -104,10 +106,10 @@ export function Comments({ seriesId }: CommentsProps) {
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffMin < 1) return 'agora';
-    if (diffMin < 60) return `${diffMin}min atrás`;
-    if (diffHours < 24) return `${diffHours}h atrás`;
-    if (diffDays < 7) return `${diffDays}d atrás`;
+    if (diffMin < 1) return t.comments.now;
+    if (diffMin < 60) return `${diffMin}min ${t.comments.ago}`;
+    if (diffHours < 24) return `${diffHours}h ${t.comments.ago}`;
+    if (diffDays < 7) return `${diffDays}d ${t.comments.ago}`;
     return date.toLocaleDateString('pt-BR');
   };
 
@@ -115,7 +117,7 @@ export function Comments({ seriesId }: CommentsProps) {
     <div className="mt-8">
       <h3 className="text-lg font-semibold text-white flex items-center gap-2 mb-4">
         <MessageCircle className="h-5 w-5 text-neon-blue" />
-        Comentários ({comments.length})
+        {t.comments.title} ({comments.length})
       </h3>
 
       {/* Form */}
@@ -127,7 +129,7 @@ export function Comments({ seriesId }: CommentsProps) {
               type="text"
               value={nickname}
               onChange={(e) => setNickname(e.target.value)}
-              placeholder="Seu apelido"
+              placeholder={t.comments.nickname}
               maxLength={50}
               className="w-full bg-surface-800 border border-surface-600 rounded-lg pl-10 pr-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-neon-blue"
             />
@@ -137,7 +139,7 @@ export function Comments({ seriesId }: CommentsProps) {
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            placeholder="Escreva seu comentário..."
+            placeholder={t.comments.placeholder}
             maxLength={1000}
             rows={3}
             className="w-full bg-surface-800 border border-surface-600 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-neon-blue resize-none"
@@ -156,7 +158,7 @@ export function Comments({ seriesId }: CommentsProps) {
           className="btn-primary flex items-center gap-2 text-sm disabled:opacity-50"
         >
           <Send className="h-4 w-4" />
-          {submitting ? 'Enviando...' : 'Enviar'}
+          {submitting ? t.comments.submitting : t.comments.submit}
         </button>
       </form>
 
@@ -174,7 +176,7 @@ export function Comments({ seriesId }: CommentsProps) {
       ) : comments.length === 0 ? (
         <div className="bg-surface-700/30 border border-surface-600 rounded-lg p-6 text-center">
           <MessageCircle className="h-6 w-6 text-gray-500 mx-auto mb-2" />
-          <p className="text-gray-500 text-sm">Nenhum comentário ainda. Seja o primeiro!</p>
+          <p className="text-gray-500 text-sm">{t.comments.empty}</p>
         </div>
       ) : (
         <div className="space-y-3">

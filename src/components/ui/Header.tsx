@@ -12,6 +12,7 @@ import { getBrandParts } from '@/lib/brand';
 import { AdSlot } from '@/components/ads/AdSlot';
 import { ThemeToggle } from './ThemeToggle';
 import { LanguageSwitcher } from './LanguageSwitcher';
+import { useI18n } from '@/lib/i18n/context';
 
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -21,6 +22,7 @@ export function Header() {
   const [isSearching, setIsSearching] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const [brandFirst, brandSecond] = getBrandParts();
+  const { t } = useI18n();
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -89,13 +91,13 @@ export function Header() {
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center space-x-8">
             <Link href="/" className="text-gray-300 hover:text-neon-blue transition-colors text-sm font-medium">
-              Home
+              {t.common.home}
             </Link>
             <Link href="/#categorias" className="text-gray-300 hover:text-neon-blue transition-colors text-sm font-medium">
-              Categorias
+              {t.common.categories}
             </Link>
             <Link href="/#lancamentos" className="text-gray-300 hover:text-neon-blue transition-colors text-sm font-medium">
-              Lançamentos
+              {t.series.featured}
             </Link>
           </nav>
 
@@ -105,7 +107,7 @@ export function Header() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
                 type="text"
-                placeholder="Buscar séries..."
+                placeholder={t.common.search}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full bg-surface-700 border border-surface-500 rounded-full py-2 pl-10 pr-4 text-sm text-white placeholder-gray-400 focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue/50 transition-all"
@@ -174,7 +176,7 @@ export function Header() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Buscar series..."
+                  placeholder={t.common.search}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full bg-surface-700 border border-surface-500 rounded-full py-2 pl-10 pr-4 text-sm text-white placeholder-gray-400 focus:outline-none focus:border-neon-blue"
@@ -205,9 +207,9 @@ export function Header() {
                   ))}
                 </div>
               )}
-              <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-gray-300 hover:text-white">Home</Link>
-              <Link href="/#categorias" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-gray-300 hover:text-white">Categorias</Link>
-              <Link href="/#lancamentos" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-gray-300 hover:text-white">Lancamentos</Link>
+              <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-gray-300 hover:text-white">{t.common.home}</Link>
+              <Link href="/#categorias" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-gray-300 hover:text-white">{t.common.categories}</Link>
+              <Link href="/#lancamentos" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-gray-300 hover:text-white">{t.series.featured}</Link>
             </div>
           </motion.div>
         )}

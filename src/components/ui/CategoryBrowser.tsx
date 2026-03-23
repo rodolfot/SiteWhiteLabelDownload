@@ -5,6 +5,7 @@ import { Search, Filter, ChevronLeft, ChevronRight, SlidersHorizontal, X, ArrowU
 import { Series } from '@/types/database';
 import { SeriesCard } from './SeriesCard';
 import { useFavorites } from '@/hooks/useFavorites';
+import { useI18n } from '@/lib/i18n/context';
 
 interface CategoryBrowserProps {
   series: Series[];
@@ -33,6 +34,7 @@ export function CategoryBrowser({ series, categories }: CategoryBrowserProps) {
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
 
   const { favorites, isFavorite } = useFavorites();
+  const { t } = useI18n();
 
   // Extrair gêneros únicos
   const genres = useMemo(() => {
@@ -115,7 +117,7 @@ export function CategoryBrowser({ series, categories }: CategoryBrowserProps) {
     <div className="px-4 sm:px-6 lg:px-8 py-8">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">Categorias</h1>
+        <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">{t.common.categories}</h1>
         <p className="text-gray-400 text-sm">
           {series.length} séries em {categories.length} categorias
         </p>
@@ -127,7 +129,7 @@ export function CategoryBrowser({ series, categories }: CategoryBrowserProps) {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <input
             type="text"
-            placeholder="Buscar por título ou gênero..."
+            placeholder={t.common.search}
             value={searchQuery}
             onChange={(e) => handleSearchChange(e.target.value)}
             className="w-full bg-surface-700 border border-surface-500 rounded-lg py-2.5 pl-10 pr-4 text-sm text-white placeholder-gray-400 focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue/50 transition-all"
@@ -143,7 +145,7 @@ export function CategoryBrowser({ series, categories }: CategoryBrowserProps) {
           }`}
         >
           <SlidersHorizontal className="h-4 w-4" />
-          Filtros
+          {t.categories.filter}
         </button>
 
         <button
@@ -155,7 +157,7 @@ export function CategoryBrowser({ series, categories }: CategoryBrowserProps) {
           }`}
         >
           <Heart className={`h-4 w-4 ${showFavoritesOnly ? 'fill-current' : ''}`} />
-          Favoritos ({favorites.length})
+          {t.common.favorites} ({favorites.length})
         </button>
 
         {hasActiveFilters && (
@@ -174,7 +176,7 @@ export function CategoryBrowser({ series, categories }: CategoryBrowserProps) {
         <div className="mb-6 p-4 bg-surface-800 border border-surface-500 rounded-xl grid grid-cols-1 sm:grid-cols-3 gap-4 animate-fadeIn">
           {/* Genre filter */}
           <div>
-            <label className="block text-xs font-medium text-gray-400 mb-1.5">Gênero</label>
+            <label className="block text-xs font-medium text-gray-400 mb-1.5">{t.categories.genreFilter}</label>
             <select
               value={selectedGenre || ''}
               onChange={(e) => { setSelectedGenre(e.target.value || null); setPage(1); }}
@@ -224,7 +226,7 @@ export function CategoryBrowser({ series, categories }: CategoryBrowserProps) {
 
           {/* Sort */}
           <div>
-            <label className="block text-xs font-medium text-gray-400 mb-1.5">Ordenar por</label>
+            <label className="block text-xs font-medium text-gray-400 mb-1.5">{t.categories.sort}</label>
             <div className="relative">
               <ArrowUpDown className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
               <select
@@ -251,7 +253,7 @@ export function CategoryBrowser({ series, categories }: CategoryBrowserProps) {
               : 'bg-surface-700 text-gray-300 border border-surface-500 hover:border-neon-blue hover:text-white'
           }`}
         >
-          Todas ({series.length})
+          {t.categories.all} ({series.length})
         </button>
         {categoryCounts.map(({ name, count }) => (
           <button
@@ -271,13 +273,12 @@ export function CategoryBrowser({ series, categories }: CategoryBrowserProps) {
       {/* Results */}
       {filtered.length === 0 ? (
         <div className="text-center py-16">
-          <p className="text-gray-400 text-lg mb-2">Nenhuma série encontrada</p>
-          <p className="text-gray-500 text-sm">Tente outro filtro ou termo de busca</p>
+          <p className="text-gray-400 text-lg mb-2">{t.common.noResults}</p>
         </div>
       ) : (
         <>
           <p className="text-gray-400 text-xs mb-4">
-            {filtered.length} {filtered.length === 1 ? 'resultado' : 'resultados'}
+            {filtered.length} {t.categories.results}
             {activeCategory && <> em <span className="text-neon-blue">{activeCategory}</span></>}
             {selectedGenre && <> • gênero: <span className="text-neon-blue">{selectedGenre}</span></>}
             {totalPages > 1 && <> — Página {page} de {totalPages}</>}

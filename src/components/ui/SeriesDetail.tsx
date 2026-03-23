@@ -10,6 +10,7 @@ import { AdSlot } from '@/components/ads/AdSlot';
 import { VideoEmbed } from './VideoEmbed';
 import { Comments } from './Comments';
 import { StarRating } from './StarRating';
+import { useI18n } from '@/lib/i18n/context';
 
 interface SeriesDetailProps {
   series: Series;
@@ -111,6 +112,7 @@ export function SeriesDetail({ series, seasons }: SeriesDetailProps) {
   const [activeSeason, setActiveSeason] = useState(0);
   const [backdropError, setBackdropError] = useState(false);
   const [posterError, setPosterError] = useState(false);
+  const { t } = useI18n();
 
   return (
     <div className="min-h-screen">
@@ -254,7 +256,7 @@ export function SeriesDetail({ series, seasons }: SeriesDetailProps) {
               {seasons.length === 0 && (
                 <div className="bg-surface-700/50 border border-surface-600 rounded-lg p-8 text-center">
                   <Download className="h-8 w-8 text-gray-500 mx-auto mb-3" />
-                  <p className="text-gray-400">Nenhum episódio disponível ainda.</p>
+                  <p className="text-gray-400">{t.series.noEpisodes}</p>
                 </div>
               )}
 
