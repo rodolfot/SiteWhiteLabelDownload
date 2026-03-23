@@ -23,6 +23,7 @@ function EpisodeRow({ episode, series, seasonLabel }: {
   seasonLabel: string;
 }) {
   const [showLinks, setShowLinks] = useState(false);
+  const { t } = useI18n();
   const links: EpisodeLink[] = ('episode_links' in episode && Array.isArray(episode.episode_links))
     ? episode.episode_links
     : [];
@@ -51,7 +52,7 @@ function EpisodeRow({ episode, series, seasonLabel }: {
               )}
               {hasLinks && (
                 <span className="text-xs text-gray-500">
-                  {links.length} {links.length === 1 ? 'idioma' : 'idiomas'}
+                  {links.length} {links.length === 1 ? t.series.language : t.series.languages}
                 </span>
               )}
             </div>
@@ -64,7 +65,7 @@ function EpisodeRow({ episode, series, seasonLabel }: {
             className="flex items-center gap-2 bg-surface-700 hover:bg-surface-600 border border-surface-500 rounded-lg px-4 py-2.5 text-sm text-white transition-all hover:border-neon-blue group"
           >
             <Globe className="h-4 w-4 text-neon-blue" />
-            Download
+            {t.series.download}
             <ChevronDown className={`h-3 w-3 text-gray-400 transition-transform ${showLinks ? 'rotate-180' : ''}`} />
           </button>
         ) : (

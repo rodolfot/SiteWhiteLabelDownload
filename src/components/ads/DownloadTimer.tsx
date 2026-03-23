@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Download, Clock, Shield } from 'lucide-react';
 import { AdSlot } from './AdSlot';
 import { isValidDownloadUrl } from '@/lib/validation';
+import { useI18n } from '@/lib/i18n/context';
 
 interface DownloadTimerProps {
   downloadUrl: string;
@@ -12,6 +13,7 @@ interface DownloadTimerProps {
 }
 
 export function DownloadTimer({ downloadUrl, episodeTitle }: DownloadTimerProps) {
+  const { t } = useI18n();
   const uniqueId = useId();
   const gradientId = `timer-gradient-${uniqueId.replace(/:/g, '')}`;
   const [isOpen, setIsOpen] = useState(false);
@@ -90,7 +92,7 @@ export function DownloadTimer({ downloadUrl, episodeTitle }: DownloadTimerProps)
         className="flex items-center gap-2 bg-surface-700 hover:bg-surface-600 border border-surface-500 rounded-lg px-4 py-2.5 text-sm text-white transition-all hover:border-neon-blue group"
       >
         <Download className="h-4 w-4 text-neon-blue group-hover:scale-110 transition-transform" />
-        Download
+        {t.series.download}
       </button>
 
       {isOpen && (
@@ -107,7 +109,7 @@ export function DownloadTimer({ downloadUrl, episodeTitle }: DownloadTimerProps)
             onClick={(e) => e.stopPropagation()}
             className="max-w-lg w-full bg-surface-800 border border-surface-600 rounded-2xl p-6 shadow-2xl"
           >
-            <h3 className="text-lg font-bold text-white mb-1">Download</h3>
+            <h3 className="text-lg font-bold text-white mb-1">{t.series.download}</h3>
             <p className="text-gray-400 text-sm mb-6">{episodeTitle}</p>
 
             {/* Ad space during countdown */}
@@ -144,7 +146,7 @@ export function DownloadTimer({ downloadUrl, episodeTitle }: DownloadTimerProps)
                 </div>
                 <div className="flex items-center justify-center gap-2 text-gray-400 text-sm">
                   <Clock className="h-4 w-4" />
-                  Aguarde {countdown} segundos...
+                  {t.ads.waitSeconds.replace('{s}', String(countdown))}
                 </div>
               </div>
             ) : (
@@ -160,14 +162,14 @@ export function DownloadTimer({ downloadUrl, episodeTitle }: DownloadTimerProps)
                     onClick={() => setIsOpen(false)}
                   >
                     <Download className="h-5 w-5" />
-                    Baixar Agora
+                    {t.ads.downloadNow}
                   </a>
                 ) : canDownload && !safeUrl ? (
-                  <p className="text-red-400 text-sm text-center py-3">URL de download inválida.</p>
+                  <p className="text-red-400 text-sm text-center py-3">{t.ads.invalidUrl}</p>
                 ) : (
                   <div className="flex items-center justify-center gap-2 text-gray-400 text-sm py-3">
                     <Shield className="h-4 w-4" />
-                    Verificando que você é humano...
+                    {t.ads.verifying}
                   </div>
                 )}
               </div>
@@ -177,7 +179,7 @@ export function DownloadTimer({ downloadUrl, episodeTitle }: DownloadTimerProps)
               onClick={() => setIsOpen(false)}
               className="w-full mt-4 text-gray-500 hover:text-gray-300 text-sm transition-colors"
             >
-              Cancelar
+              {t.common.cancel}
             </button>
           </motion.div>
         </motion.div>

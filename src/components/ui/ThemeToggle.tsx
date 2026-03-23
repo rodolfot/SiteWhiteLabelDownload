@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { Sun, Moon } from 'lucide-react';
+import { useI18n } from '@/lib/i18n/context';
 
 export function ThemeToggle() {
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const [mounted, setMounted] = useState(false);
+  const { t } = useI18n();
 
   useEffect(() => {
     setMounted(true);
@@ -28,7 +30,7 @@ export function ThemeToggle() {
   return (
     <button
       onClick={toggle}
-      aria-label={theme === 'dark' ? 'Ativar modo claro' : 'Ativar modo escuro'}
+      aria-label={theme === 'dark' ? t.common.lightMode : t.common.darkMode}
       className="p-2 rounded-lg transition-all duration-200 hover:bg-surface-700"
       style={{ color: 'var(--text-secondary)' }}
     >

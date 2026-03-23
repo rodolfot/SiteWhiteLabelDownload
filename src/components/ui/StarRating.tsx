@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Star } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { useI18n } from '@/lib/i18n/context';
 
 interface StarRatingProps {
   seriesId: string;
@@ -19,6 +20,7 @@ async function hashIp(): Promise<string> {
 }
 
 export function StarRating({ seriesId, initialRating = 0 }: StarRatingProps) {
+  const { t } = useI18n();
   const [hovering, setHovering] = useState(0);
   const [userRating, setUserRating] = useState(0);
   const [averageRating, setAverageRating] = useState(initialRating);
@@ -84,7 +86,7 @@ export function StarRating({ seriesId, initialRating = 0 }: StarRatingProps) {
             onMouseLeave={() => setHovering(0)}
             disabled={submitting}
             className="p-0.5 transition-transform hover:scale-110 disabled:opacity-50"
-            aria-label={`Avaliar ${value} estrelas`}
+            aria-label={`${t.series.rating} ${value}`}
           >
             <Star
               className={`h-5 w-5 transition-colors ${
@@ -98,10 +100,10 @@ export function StarRating({ seriesId, initialRating = 0 }: StarRatingProps) {
       </div>
       <div className="flex items-center gap-1.5 text-sm">
         <span className="text-yellow-400 font-medium">{averageRating.toFixed(1)}</span>
-        <span className="text-gray-500">({totalVotes} {totalVotes === 1 ? 'voto' : 'votos'})</span>
+        <span className="text-gray-500">({totalVotes} {t.requests.votes})</span>
       </div>
       {userRating > 0 && (
-        <span className="text-xs text-gray-500">Sua nota: {userRating}</span>
+        <span className="text-xs text-gray-500">{t.series.yourRating}: {userRating}</span>
       )}
     </div>
   );

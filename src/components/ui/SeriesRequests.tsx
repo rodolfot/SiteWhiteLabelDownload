@@ -4,8 +4,10 @@ import { useState, useEffect, useCallback } from 'react';
 import { FileQuestion, Send, ThumbsUp, User } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { SeriesRequest } from '@/types/database';
+import { useI18n } from '@/lib/i18n/context';
 
 export function SeriesRequests() {
+  const { t } = useI18n();
   const [requests, setRequests] = useState<SeriesRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -45,11 +47,11 @@ export function SeriesRequests() {
     const trimmedNick = nickname.trim();
 
     if (!trimmedTitle) {
-      setError('O nome da série é obrigatório.');
+      setError(t.requests.errorTitle);
       return;
     }
     if (!trimmedNick || trimmedNick.length < 2) {
-      setError('O apelido deve ter pelo menos 2 caracteres.');
+      setError(t.requests.errorNick);
       return;
     }
 
@@ -63,17 +65,17 @@ export function SeriesRequests() {
       });
 
       if (insertError) {
-        setError('Erro ao enviar pedido. Tente novamente.');
+        setError(t.requests.errorTitle);
       } else {
         localStorage.setItem('comment_nickname', trimmedNick);
         setTitle('');
         setDescription('');
-        setSuccess('Pedido enviado com sucesso!');
+        setSuccess(t.requests.success);
         loadRequests();
         setTimeout(() => setSuccess(''), 3000);
       }
     } catch {
-      setError('Erro inesperado. Tente novamente.');
+      setError(t.requests.errorTitle);
     } finally {
       setSubmitting(false);
     }
@@ -111,20 +113,20 @@ export function SeriesRequests() {
   };
 
   const statusLabels: Record<string, string> = {
-    pending: 'Pendente',
-    approved: 'Aprovada',
-    rejected: 'Rejeitada',
-    completed: 'Concluída',
+    pending: t.requests.pending,
+    approved: t.requests.approved,
+    rejected: t.requests.rejected,
+    completed: t.requests.completed,
   };
 
   return (
     <div>
       <h3 className="text-lg font-semibold text-white flex items-center gap-2 mb-2">
         <FileQuestion className="h-5 w-5 text-neon-purple" />
-        Pedir uma Série
+        {t.requests.title}
       </h3>
       <p className="text-gray-400 text-sm mb-4">
-        Não encontrou o que procura? Peça aqui e vote nas requisições de outros!
+        {t.requests.subtitle}
       </p>
 
       {/* Form */}
@@ -134,7 +136,7 @@ export function SeriesRequests() {
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Nome da série"
+            placeholder={t.requests.seriesName}
             maxLength={255}
             className="bg-surface-800 border border-surface-600 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-neon-blue"
           />
@@ -144,7 +146,7 @@ export function SeriesRequests() {
               type="text"
               value={nickname}
               onChange={(e) => setNickname(e.target.value)}
-              placeholder="Seu apelido"
+              placeholder={t.requests.nickname}
               maxLength={50}
               className="w-full bg-surface-800 border border-surface-600 rounded-lg pl-10 pr-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-neon-blue"
             />
@@ -153,7 +155,7 @@ export function SeriesRequests() {
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="Descrição ou detalhes (opcional)"
+          placeholder={t.requests.description}
           maxLength={500}
           rows={2}
           className="w-full bg-surface-800 border border-surface-600 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-neon-blue resize-none mb-3"
@@ -168,7 +170,7 @@ export function SeriesRequests() {
           className="btn-primary flex items-center gap-2 text-sm disabled:opacity-50"
         >
           <Send className="h-4 w-4" />
-          {submitting ? 'Enviando...' : 'Enviar pedido'}
+          {submitting ? t.requests.submitting : t.requests.submit}
         </button>
       </form>
 
@@ -185,7 +187,7 @@ export function SeriesRequests() {
       ) : requests.length === 0 ? (
         <div className="bg-surface-700/30 border border-surface-600 rounded-lg p-6 text-center">
           <FileQuestion className="h-6 w-6 text-gray-500 mx-auto mb-2" />
-          <p className="text-gray-500 text-sm">Nenhuma requisição ainda. Seja o primeiro a pedir!</p>
+          <p className="text-gray-500 text-sm">{t.requests.empty}</p>
         </div>
       ) : (
         <div className="space-y-2">

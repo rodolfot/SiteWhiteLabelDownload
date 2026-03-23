@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Play } from 'lucide-react';
+import { useI18n } from '@/lib/i18n/context';
 
 interface VideoEmbedProps {
   url: string;
@@ -69,6 +70,7 @@ function getEmbedUrl(url: string): string | null {
 
 export function VideoEmbed({ url, title, posterUrl }: VideoEmbedProps) {
   const [showPlayer, setShowPlayer] = useState(false);
+  const { t } = useI18n();
   const embedUrl = getEmbedUrl(url);
 
   if (!embedUrl) return null;
@@ -89,7 +91,7 @@ export function VideoEmbed({ url, title, posterUrl }: VideoEmbedProps) {
           </div>
         </div>
         <div className="absolute bottom-3 left-3 text-white text-sm font-medium px-3 py-1 rounded-lg" style={{ backgroundColor: 'color-mix(in srgb, var(--surface-900-hex) 60%, transparent)' }}>
-          Assistir Trailer
+          {t.series.watchTrailer}
         </div>
       </button>
     );

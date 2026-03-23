@@ -4,8 +4,10 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShieldAlert } from 'lucide-react';
 import { siteConfig } from '@/lib/site-config';
+import { useI18n } from '@/lib/i18n/context';
 
 export function AdBlockDetector() {
+  const { t } = useI18n();
   const [adBlockDetected, setAdBlockDetected] = useState(false);
 
   useEffect(() => {
@@ -59,21 +61,19 @@ export function AdBlockDetector() {
               <ShieldAlert className="h-8 w-8 text-red-400" />
             </div>
             <h2 className="text-xl font-bold text-white mb-3">
-              Bloqueador de Anúncios Detectado
+              {t.ads.adBlockTitle}
             </h2>
             <p className="text-gray-400 text-sm leading-relaxed mb-6">
-              O {siteConfig.name} e um servico gratuito mantido por anuncios. Para continuar
-              utilizando nosso site, por favor desative seu bloqueador de anúncios e
-              recarregue a página.
+              {t.ads.adBlockMessage}
             </p>
             <button
               onClick={() => window.location.reload()}
               className="btn-primary w-full"
             >
-              Já Desativei — Recarregar
+              {t.ads.adBlockReload}
             </button>
             <p className="text-gray-500 text-xs mt-4">
-              Agradecemos sua compreensão e apoio!
+              {t.ads.adBlockThanks}
             </p>
           </motion.div>
         </motion.div>

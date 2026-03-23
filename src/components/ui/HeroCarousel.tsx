@@ -8,6 +8,7 @@ import { Play, Info, ChevronLeft, ChevronRight, Star } from 'lucide-react';
 import { Series } from '@/types/database';
 import { siteConfig } from '@/lib/site-config';
 import { getBrandParts } from '@/lib/brand';
+import { useI18n } from '@/lib/i18n/context';
 
 interface HeroCarouselProps {
   series: Series[];
@@ -15,6 +16,7 @@ interface HeroCarouselProps {
 
 export function HeroCarousel({ series }: HeroCarouselProps) {
   const [current, setCurrent] = useState(0);
+  const { t } = useI18n();
 
   useEffect(() => {
     if (series.length <= 1) return;
@@ -106,11 +108,11 @@ export function HeroCarousel({ series }: HeroCarouselProps) {
             <div className="flex items-center gap-3">
               <Link href={`/serie/${item.slug}`} className="btn-primary flex items-center gap-2">
                 <Play className="h-5 w-5 fill-current" />
-                Assistir
+                {t.common.watch}
               </Link>
               <Link href={`/serie/${item.slug}`} className="btn-secondary flex items-center gap-2">
                 <Info className="h-5 w-5" />
-                Mais Detalhes
+                {t.common.moreDetails}
               </Link>
             </div>
           </motion.div>

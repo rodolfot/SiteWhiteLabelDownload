@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { Star, Heart } from 'lucide-react';
 import { Series } from '@/types/database';
 import { useFavorites } from '@/hooks/useFavorites';
+import { useI18n } from '@/lib/i18n/context';
 
 interface SeriesCardProps {
   series: Series;
@@ -16,6 +17,7 @@ export const SeriesCard = memo(function SeriesCard({ series, index = 0 }: Series
   const { isFavorite, toggleFavorite } = useFavorites();
   const favorited = isFavorite(series.id);
   const [imgError, setImgError] = useState(false);
+  const { t } = useI18n();
 
   return (
     <div
@@ -64,7 +66,7 @@ export const SeriesCard = memo(function SeriesCard({ series, index = 0 }: Series
         <button
           onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleFavorite(series.id); }}
           className="absolute top-2 right-2 z-10 p-1.5 rounded-full bg-black/50 backdrop-blur-sm hover:bg-black/70 transition-all"
-          aria-label={favorited ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
+          aria-label={favorited ? t.common.removeFavorite : t.common.addFavorite}
         >
           <Heart className={`h-4 w-4 transition-colors ${favorited ? 'fill-red-500 text-red-500' : 'text-white/70 hover:text-red-400'}`} />
         </button>

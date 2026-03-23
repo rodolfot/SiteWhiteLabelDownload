@@ -6,7 +6,7 @@ import { useI18n } from '@/lib/i18n/context';
 import { locales, localeNames, Locale } from '@/lib/i18n/dictionaries';
 
 export function LanguageSwitcher() {
-  const { locale, setLocale } = useI18n();
+  const { t, locale, setLocale } = useI18n();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -25,7 +25,7 @@ export function LanguageSwitcher() {
       <button
         onClick={() => setOpen(!open)}
         className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-surface-700 transition-all text-sm"
-        title="Idioma"
+        title={t.common.language}
       >
         <Globe className="h-4 w-4" />
         <span className="hidden sm:inline">{locale.toUpperCase()}</span>

@@ -16,13 +16,6 @@ type SortOption = 'title' | 'year_desc' | 'year_asc' | 'rating';
 
 const ITEMS_PER_PAGE = 30;
 
-const SORT_LABELS: Record<SortOption, string> = {
-  title: 'Título (A-Z)',
-  year_desc: 'Ano (Recente)',
-  year_asc: 'Ano (Antigo)',
-  rating: 'Avaliação',
-};
-
 export function CategoryBrowser({ series, categories }: CategoryBrowserProps) {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -56,7 +49,7 @@ export function CategoryBrowser({ series, categories }: CategoryBrowserProps) {
   const filtered = useMemo(() => {
     const query = searchQuery.toLowerCase();
     const result = series.filter((s) => {
-      const matchesCategory = !activeCategory || (s.category || 'Geral') === activeCategory;
+      const matchesCategory = !activeCategory || (s.category || t.categories.general) === activeCategory;
       const matchesSearch =
         !query ||
         s.title.toLowerCase().includes(query) ||
@@ -86,7 +79,7 @@ export function CategoryBrowser({ series, categories }: CategoryBrowserProps) {
   const categoryCounts = useMemo(() =>
     categories.map((cat) => ({
       name: cat,
-      count: series.filter((s) => (s.category || 'Geral') === cat).length,
+      count: series.filter((s) => (s.category || t.categories.general) === cat).length,
     })),
     [series, categories]
   );
@@ -166,7 +159,7 @@ export function CategoryBrowser({ series, categories }: CategoryBrowserProps) {
             className="flex items-center gap-2 px-4 py-2.5 bg-surface-700 border border-surface-500 rounded-lg text-sm text-gray-300 hover:text-white hover:border-neon-blue transition-all"
           >
             <X className="h-4 w-4" />
-            Limpar
+            {t.common.clear}
           </button>
         )}
       </div>
@@ -182,7 +175,7 @@ export function CategoryBrowser({ series, categories }: CategoryBrowserProps) {
               onChange={(e) => { setSelectedGenre(e.target.value || null); setPage(1); }}
               className="w-full bg-surface-700 border border-surface-500 rounded-lg py-2 px-3 text-sm text-white focus:outline-none focus:border-neon-blue transition-all"
             >
-              <option value="">Todos os gêneros</option>
+              <option value="">{t.categories.allGenres}</option>
               {genres.map((g) => (
                 <option key={g} value={g}>{g}</option>
               ))}
@@ -234,9 +227,10 @@ export function CategoryBrowser({ series, categories }: CategoryBrowserProps) {
                 onChange={(e) => { setSortBy(e.target.value as SortOption); setPage(1); }}
                 className="w-full bg-surface-700 border border-surface-500 rounded-lg py-2 pl-10 pr-3 text-sm text-white focus:outline-none focus:border-neon-blue transition-all"
               >
-                {Object.entries(SORT_LABELS).map(([key, label]) => (
-                  <option key={key} value={key}>{label}</option>
-                ))}
+                <option value="title">{t.categories.sortTitle}</option>
+                <option value="year_desc">{t.categories.sortYearDesc}</option>
+                <option value="year_asc">{t.categories.sortYearAsc}</option>
+                <option value="rating">{t.categories.sortRating}</option>
               </select>
             </div>
           </div>
