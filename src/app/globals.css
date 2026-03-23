@@ -4,11 +4,18 @@
 
 @layer base {
   :root {
-    --surface-900: #0a0a0f;
-    --surface-800: #12121a;
-    --surface-700: #1a1a25;
-    --surface-600: #22222f;
-    --surface-500: #2a2a3a;
+    /* RGB triplets for Tailwind opacity support */
+    --surface-900: 10 10 15;
+    --surface-800: 18 18 26;
+    --surface-700: 26 26 37;
+    --surface-600: 34 34 47;
+    --surface-500: 42 42 58;
+    /* Hex values for inline styles / color-mix */
+    --surface-900-hex: #0a0a0f;
+    --surface-800-hex: #12121a;
+    --surface-700-hex: #1a1a25;
+    --surface-600-hex: #22222f;
+    --surface-500-hex: #2a2a3a;
     --text-primary: #ffffff;
     --text-secondary: #9ca3af;
     --text-muted: #6b7280;
@@ -18,11 +25,16 @@
   }
 
   .light {
-    --surface-900: #f8f9fa;
-    --surface-800: #f0f1f3;
-    --surface-700: #e5e7eb;
-    --surface-600: #d1d5db;
-    --surface-500: #9ca3af;
+    --surface-900: 248 249 250;
+    --surface-800: 240 241 243;
+    --surface-700: 229 231 235;
+    --surface-600: 209 213 219;
+    --surface-500: 156 163 175;
+    --surface-900-hex: #f8f9fa;
+    --surface-800-hex: #f0f1f3;
+    --surface-700-hex: #e5e7eb;
+    --surface-600-hex: #d1d5db;
+    --surface-500-hex: #9ca3af;
     --text-primary: #111827;
     --text-secondary: #4b5563;
     --text-muted: #6b7280;
@@ -36,7 +48,7 @@
   }
 
   body {
-    background-color: var(--surface-900);
+    background-color: rgb(var(--surface-900));
     color: var(--text-primary);
     @apply antialiased;
   }
@@ -50,16 +62,16 @@
   }
 
   ::-webkit-scrollbar-track {
-    background-color: var(--surface-900);
+    background-color: rgb(var(--surface-900));
   }
 
   ::-webkit-scrollbar-thumb {
-    background-color: var(--surface-500);
+    background-color: rgb(var(--surface-500));
     @apply rounded-full;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background-color: var(--surface-600);
+    background-color: rgb(var(--surface-600));
   }
 }
 
@@ -92,41 +104,34 @@
 
   .btn-secondary {
     @apply px-6 py-3 rounded-lg font-medium transition-all duration-300;
-    border: 1px solid var(--surface-500);
+    border: 1px solid rgb(var(--surface-500));
     color: var(--text-secondary);
   }
 
   .btn-secondary:hover {
     @apply border-neon-blue;
     color: var(--text-primary);
-    background-color: var(--surface-700);
+    background-color: rgb(var(--surface-700));
   }
 
   .ad-slot {
-    background-color: var(--surface-800);
+    background-color: rgb(var(--surface-800));
     border: 1px solid var(--border-color);
     @apply rounded-lg flex items-center justify-center text-sm overflow-hidden;
     color: var(--text-muted);
   }
 
-  /* Theme-aware surface utilities */
-  .bg-surface-900 { background-color: var(--surface-900); }
-  .bg-surface-800 { background-color: var(--surface-800); }
-  .bg-surface-700 { background-color: var(--surface-700); }
-  .bg-surface-600 { background-color: var(--surface-600); }
-  .bg-surface-500 { background-color: var(--surface-500); }
-  .border-surface-600 { border-color: var(--border-color); }
-  .border-surface-500 { border-color: var(--surface-500); }
+  .bg-black\/70 { background-color: rgb(var(--surface-900) / 0.7); }
+}
+
+@layer utilities {
+  /* Theme-aware text overrides — must be in utilities layer to override Tailwind defaults */
   .text-white { color: var(--text-primary); }
   .text-gray-300 { color: var(--text-secondary); }
   .text-gray-400 { color: var(--text-secondary); }
   .text-gray-500 { color: var(--text-muted); }
   .text-gray-600 { color: var(--text-muted); }
 
-  .bg-black\/70 { background-color: color-mix(in srgb, var(--surface-900) 70%, transparent); }
-}
-
-@layer utilities {
   .text-gradient {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-neon-blue to-neon-purple;
   }

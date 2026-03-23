@@ -37,14 +37,14 @@ export function CategoryRow({ title, series, showNativeAd = false }: CategoryRow
         <button
           onClick={() => scroll('left')}
           className="absolute left-0 top-0 bottom-0 z-10 w-12 flex items-center justify-center opacity-0 group-hover/row:opacity-100 transition-opacity"
-          style={{ background: 'linear-gradient(to right, var(--surface-900), transparent)' }}
+          style={{ background: 'linear-gradient(to right, var(--surface-900-hex), transparent)' }}
         >
           <ChevronLeft className="h-6 w-6 text-white" />
         </button>
         <button
           onClick={() => scroll('right')}
           className="absolute right-0 top-0 bottom-0 z-10 w-12 flex items-center justify-center opacity-0 group-hover/row:opacity-100 transition-opacity"
-          style={{ background: 'linear-gradient(to left, var(--surface-900), transparent)' }}
+          style={{ background: 'linear-gradient(to left, var(--surface-900-hex), transparent)' }}
         >
           <ChevronRight className="h-6 w-6 text-white" />
         </button>

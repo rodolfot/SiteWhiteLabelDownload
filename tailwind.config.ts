@@ -29,11 +29,11 @@ const config: Config = {
           cyan: '#22d3ee',
         },
         surface: {
-          900: '#0a0a0f',
-          800: '#12121a',
-          700: '#1a1a25',
-          600: '#22222f',
-          500: '#2a2a3a',
+          900: 'rgb(var(--surface-900) / <alpha-value>)',
+          800: 'rgb(var(--surface-800) / <alpha-value>)',
+          700: 'rgb(var(--surface-700) / <alpha-value>)',
+          600: 'rgb(var(--surface-600) / <alpha-value>)',
+          500: 'rgb(var(--surface-500) / <alpha-value>)',
         },
       },
       fontFamily: {

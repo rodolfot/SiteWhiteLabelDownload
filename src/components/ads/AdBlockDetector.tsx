@@ -47,7 +47,7 @@ export function AdBlockDetector() {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-[9999] backdrop-blur-lg flex items-center justify-center p-4"
-          style={{ backgroundColor: 'color-mix(in srgb, var(--surface-900) 98%, transparent)' }}
+          style={{ backgroundColor: 'color-mix(in srgb, var(--surface-900-hex) 98%, transparent)' }}
         >
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}

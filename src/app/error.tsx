@@ -15,7 +15,7 @@ export default function GlobalError({
   }, [error]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4" style={{ backgroundColor: 'var(--surface-900)' }}>
+    <div className="min-h-screen flex items-center justify-center px-4" style={{ backgroundColor: 'var(--surface-900-hex)' }}>
       <div className="text-center max-w-md">
         <h1 className="text-5xl font-extrabold text-gradient mb-4">Erro</h1>
         <p className="text-gray-400 text-lg mb-2">Algo deu errado ao carregar esta página.</p>

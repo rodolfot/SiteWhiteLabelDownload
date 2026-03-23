@@ -68,12 +68,12 @@ export function Header() {
     <header
       className="fixed top-0 left-0 right-0 z-50 transition-all duration-300 backdrop-blur-lg"
       style={{
-        backgroundColor: isScrolled ? 'color-mix(in srgb, var(--surface-900) 95%, transparent)' : 'color-mix(in srgb, var(--surface-900) 80%, transparent)',
+        backgroundColor: isScrolled ? 'color-mix(in srgb, var(--surface-900-hex) 95%, transparent)' : 'color-mix(in srgb, var(--surface-900-hex) 80%, transparent)',
         boxShadow: isScrolled ? '0 10px 15px -3px rgba(0,0,0,0.2)' : 'none',
       }}
     >
       {/* Ad Banner Top */}
-      <div className="hidden lg:flex justify-center items-center gap-4 py-2" style={{ backgroundColor: 'color-mix(in srgb, var(--surface-900) 50%, transparent)' }}>
+      <div className="hidden lg:flex justify-center items-center gap-4 py-2" style={{ backgroundColor: 'color-mix(in srgb, var(--surface-900-hex) 50%, transparent)' }}>
         <AdSlot width={728} height={90} format="horizontal" slotId={process.env.NEXT_PUBLIC_ADSENSE_SLOT_HEADER} />
         <AdSlot width={728} height={90} format="horizontal" slotId={process.env.NEXT_PUBLIC_ADSENSE_SLOT_HEADER} />
       </div>
