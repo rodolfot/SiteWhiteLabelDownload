@@ -93,7 +93,7 @@ export function Header() {
             <Link href="/" className="text-gray-300 hover:text-neon-blue transition-colors text-sm font-medium">
               {t.common.home}
             </Link>
-            <Link href="/#categorias" className="text-gray-300 hover:text-neon-blue transition-colors text-sm font-medium">
+            <Link href="/categorias" className="text-gray-300 hover:text-neon-blue transition-colors text-sm font-medium">
               {t.common.categories}
             </Link>
             <Link href="/#lancamentos" className="text-gray-300 hover:text-neon-blue transition-colors text-sm font-medium">
@@ -208,7 +208,7 @@ export function Header() {
                 </div>
               )}
               <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-gray-300 hover:text-white">{t.common.home}</Link>
-              <Link href="/#categorias" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-gray-300 hover:text-white">{t.common.categories}</Link>
+              <Link href="/categorias" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-gray-300 hover:text-white">{t.common.categories}</Link>
               <Link href="/#lancamentos" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-gray-300 hover:text-white">{t.series.featured}</Link>
             </div>
           </motion.div>
