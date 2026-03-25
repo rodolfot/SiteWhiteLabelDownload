@@ -11,10 +11,30 @@ import { VideoEmbed } from './VideoEmbed';
 import { Comments } from './Comments';
 import { StarRating } from './StarRating';
 import { useI18n } from '@/lib/i18n/context';
+import { translateGenre, getLocalizedTitle, getLocalizedSynopsis } from '@/lib/genreTranslations';
 
 interface SeriesDetailProps {
   series: Series;
   seasons: SeasonWithEpisodes[];
+}
+
+/**
+ * Returns a localised season label.
+ * Priority: DB translated column → strip PT-BR prefix + translated word.
+ * e.g. DB "Temporada 1 - O Alvo" with title_en="Season 1 - The Target"
+ *      → "Season 1 - The Target" (EN) | "Temporada 1 - El objetivo" (ES)
+ */
+function buildSeasonLabel(
+  season: { title?: string | null; title_en?: string | null; title_es?: string | null; number: number },
+  word: string,
+  locale: string
+): string {
+  if (locale === 'en' && season.title_en) return season.title_en;
+  if (locale === 'es' && season.title_es) return season.title_es;
+  // Fallback: strip any "Word N - " PT-BR prefix and reconstruct
+  if (!season.title) return `${word} ${season.number}`;
+  const subtitle = season.title.replace(/^\D+\d+\s*[-–]\s*/, '').trim() || season.title;
+  return `${word} ${season.number} - ${subtitle}`;
 }
 
 function EpisodeRow({ episode, series, seasonLabel }: {
@@ -23,12 +43,18 @@ function EpisodeRow({ episode, series, seasonLabel }: {
   seasonLabel: string;
 }) {
   const [showLinks, setShowLinks] = useState(false);
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const links: EpisodeLink[] = ('episode_links' in episode && Array.isArray(episode.episode_links))
     ? episode.episode_links
     : [];
   const hasLinks = links.length > 0;
-  const episodeTitle = `${series.title} - ${seasonLabel} E${String(episode.number).padStart(2, '0')} - ${episode.title}`;
+  const seriesTitle = getLocalizedTitle(series, locale);
+  // Use DB translated field when available; fallback strips PT-BR prefix and adds translated word
+  const localizedEpisodeTitle =
+    (locale === 'en' && episode.title_en) ? episode.title_en :
+    (locale === 'es' && episode.title_es) ? episode.title_es :
+    `${t.series.episode} ${episode.number} — ${episode.title.replace(/^\D+\d+\s*[-–]\s*/, '').trim() || episode.title}`;
+  const episodeTitle = `${seriesTitle} - ${seasonLabel} E${String(episode.number).padStart(2, '0')} - ${localizedEpisodeTitle}`;
 
   return (
     <div className="bg-surface-700/50 border border-surface-600 rounded-lg hover:bg-surface-700 transition-colors group">
@@ -39,7 +65,7 @@ function EpisodeRow({ episode, series, seasonLabel }: {
           </span>
           <div className="min-w-0">
             <h4 className="text-white text-sm font-medium truncate">
-              {episode.title}
+              {localizedEpisodeTitle}
             </h4>
             <div className="flex items-center gap-2 mt-0.5">
               {episode.quality && (
@@ -113,7 +139,10 @@ export function SeriesDetail({ series, seasons }: SeriesDetailProps) {
   const [activeSeason, setActiveSeason] = useState(0);
   const [backdropError, setBackdropError] = useState(false);
   const [posterError, setPosterError] = useState(false);
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const localizedTitle = getLocalizedTitle(series, locale);
+  const localizedSynopsis = getLocalizedSynopsis(series, locale);
+  const localizedGenre = series.genre ? translateGenre(series.genre, locale) : '';
 
   return (
     <div className="min-h-screen">
@@ -124,7 +153,7 @@ export function SeriesDetail({ series, seasons }: SeriesDetailProps) {
         ) : (
           <Image
             src={series.backdrop_url || series.poster_url || '/images/placeholder.svg'}
-            alt={series.title}
+            alt={localizedTitle}
             fill
             className="object-cover"
             priority
@@ -171,7 +200,7 @@ export function SeriesDetail({ series, seasons }: SeriesDetailProps) {
               className="flex-1"
             >
               <h1 className="text-3xl md:text-4xl font-extrabold text-white mb-3">
-                {series.title}
+                {localizedTitle}
               </h1>
 
               <div className="flex flex-wrap items-center gap-3 mb-4">
@@ -184,7 +213,7 @@ export function SeriesDetail({ series, seasons }: SeriesDetailProps) {
                 {series.genre && (
                   <span className="flex items-center gap-1.5 text-gray-300 text-sm">
                     <Film className="h-4 w-4" />
-                    {series.genre}
+                    {localizedGenre}
                   </span>
                 )}
                 {series.rating > 0 && (
@@ -200,7 +229,7 @@ export function SeriesDetail({ series, seasons }: SeriesDetailProps) {
               </div>
 
               <p className="text-gray-300 text-sm leading-relaxed mb-6">
-                {series.synopsis}
+                {localizedSynopsis}
               </p>
 
               {/* Season Tabs */}
@@ -217,7 +246,7 @@ export function SeriesDetail({ series, seasons }: SeriesDetailProps) {
                             : 'bg-surface-700 text-gray-400 hover:text-white hover:bg-surface-600'
                         }`}
                       >
-                        {season.title || `Temporada ${season.number}`}
+                        {buildSeasonLabel(season, t.series.season, locale)}
                       </button>
                     ))}
                   </div>
@@ -229,7 +258,7 @@ export function SeriesDetail({ series, seasons }: SeriesDetailProps) {
                 <div className="mb-6">
                   <VideoEmbed
                     url={seasons[activeSeason].trailer_url}
-                    title={`${series.title} - ${seasons[activeSeason].title || `Temporada ${seasons[activeSeason].number}`}`}
+                    title={`${series.title} - ${buildSeasonLabel(seasons[activeSeason], t.series.season, locale)}`}
                     posterUrl={series.backdrop_url || series.poster_url}
                   />
                 </div>
@@ -248,7 +277,7 @@ export function SeriesDetail({ series, seasons }: SeriesDetailProps) {
                       key={episode.id}
                       episode={episode}
                       series={series}
-                      seasonLabel={seasons[activeSeason].title || `T${seasons[activeSeason].number}`}
+                      seasonLabel={buildSeasonLabel(seasons[activeSeason], t.series.season, locale)}
                     />
                   ))}
                 </motion.div>

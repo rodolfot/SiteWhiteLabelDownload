@@ -13,6 +13,7 @@ import { AdSlot } from '@/components/ads/AdSlot';
 import { ThemeToggle } from './ThemeToggle';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { useI18n } from '@/lib/i18n/context';
+import { translateGenre } from '@/lib/genreTranslations';
 
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -22,7 +23,7 @@ export function Header() {
   const [isSearching, setIsSearching] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const [brandFirst, brandSecond] = getBrandParts();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -93,8 +94,11 @@ export function Header() {
             <Link href="/" className="text-gray-300 hover:text-neon-blue transition-colors text-sm font-medium">
               {t.common.home}
             </Link>
-            <Link href="/categorias" className="text-gray-300 hover:text-neon-blue transition-colors text-sm font-medium">
-              {t.common.categories}
+            <Link href="/series" className="text-gray-300 hover:text-neon-blue transition-colors text-sm font-medium">
+              {t.common.seriesNav}
+            </Link>
+            <Link href="/filmes" className="text-gray-300 hover:text-neon-blue transition-colors text-sm font-medium">
+              {t.movies.title}
             </Link>
             <Link href="/#lancamentos" className="text-gray-300 hover:text-neon-blue transition-colors text-sm font-medium">
               {t.series.featured}
@@ -133,7 +137,7 @@ export function Header() {
                       )}
                       <div>
                         <p className="text-sm font-medium text-white">{series.title}</p>
-                        <p className="text-xs text-gray-400">{series.year} • {series.genre}</p>
+                        <p className="text-xs text-gray-400">{series.year} • {series.genre ? translateGenre(series.genre, locale) : ''}</p>
                       </div>
                     </Link>
                   ))}
@@ -201,14 +205,15 @@ export function Header() {
                       )}
                       <div>
                         <p className="text-sm font-medium text-white">{series.title}</p>
-                        <p className="text-xs text-gray-400">{series.year} - {series.genre}</p>
+                        <p className="text-xs text-gray-400">{series.year} — {series.genre ? translateGenre(series.genre, locale) : ''}</p>
                       </div>
                     </Link>
                   ))}
                 </div>
               )}
               <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-gray-300 hover:text-white">{t.common.home}</Link>
-              <Link href="/categorias" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-gray-300 hover:text-white">{t.common.categories}</Link>
+              <Link href="/series" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-gray-300 hover:text-white">{t.common.seriesNav}</Link>
+              <Link href="/filmes" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-gray-300 hover:text-white">{t.movies.title}</Link>
               <Link href="/#lancamentos" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-gray-300 hover:text-white">{t.series.featured}</Link>
             </div>
           </motion.div>

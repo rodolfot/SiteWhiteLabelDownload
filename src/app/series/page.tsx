@@ -9,7 +9,7 @@ export const revalidate = 300; // ISR: 5 minutos
 
 export function generateMetadata(): Metadata {
   return {
-    title: `Categorias - ${siteConfig.name}`,
+    title: `Séries - ${siteConfig.name}`,
     description: `Explore todas as categorias de séries disponíveis no ${siteConfig.name}.`,
   };
 }
@@ -21,15 +21,15 @@ async function getAllSeries(): Promise<Series[]> {
       .from('series')
       .select('id,title,slug,synopsis,poster_url,backdrop_url,year,genre,rating,category,featured,title_en,title_es,synopsis_en,synopsis_es,created_at,updated_at')
       .order('title', { ascending: true });
-    if (error) console.error('[Categorias] Erro ao buscar séries:', error.message);
+    if (error) console.error('[Series] Erro ao buscar séries:', error.message);
     return data || [];
   } catch (err) {
-    console.error('[Categorias] Falha ao buscar séries:', err);
+    console.error('[Series] Falha ao buscar séries:', err);
     return [];
   }
 }
 
-export default async function CategoriasPage() {
+export default async function SeriesPage() {
   const series = await getAllSeries();
 
   const categories = Array.from(

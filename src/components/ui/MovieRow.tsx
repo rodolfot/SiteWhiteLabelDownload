@@ -1,22 +1,20 @@
 'use client';
 
-import React, { useRef } from 'react';
+import { useRef } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Series } from '@/types/database';
-import { SeriesCard } from './SeriesCard';
-import { NativeAd } from '../ads/NativeAd';
+import { Movie } from '@/types/database';
+import { MovieCard } from './MovieCard';
 import { useI18n } from '@/lib/i18n/context';
 
-interface CategoryRowProps {
+interface MovieRowProps {
   title: string;
-  series: Series[];
-  showNativeAd?: boolean;
+  movies: Movie[];
 }
 
-export function CategoryRow({ title, series, showNativeAd = false }: CategoryRowProps) {
+export function MovieRow({ title, movies }: MovieRowProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const { t } = useI18n();
-  const displayTitle = title === '🔥 Lançamentos' ? t.home.latest : title;
+  const displayTitle = title === '🎬 Lançamentos de Filmes' ? t.home.latestMovies : title;
 
   const scroll = (direction: 'left' | 'right') => {
     if (!scrollRef.current) return;
@@ -27,7 +25,7 @@ export function CategoryRow({ title, series, showNativeAd = false }: CategoryRow
     });
   };
 
-  if (series.length === 0) return null;
+  if (movies.length === 0) return null;
 
   return (
     <section className="relative group/row">
@@ -58,24 +56,11 @@ export function CategoryRow({ title, series, showNativeAd = false }: CategoryRow
           className="flex gap-3 overflow-x-auto scrollbar-hide px-4 sm:px-6 lg:px-8 pb-4"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
-          {series.map((item, i) => (
-            <React.Fragment key={item.id}>
-              {/* Insert native ad before 5th item */}
-              {showNativeAd && i === 4 && (
-                <div className="flex-shrink-0 w-[140px] sm:w-[160px] md:w-[180px]">
-                  <NativeAd />
-                </div>
-              )}
-              <div className="flex-shrink-0 w-[140px] sm:w-[160px] md:w-[180px]">
-                <SeriesCard series={item} index={i} />
-              </div>
-            </React.Fragment>
-          ))}
-          {showNativeAd && series.length <= 4 && (
-            <div className="flex-shrink-0 w-[140px] sm:w-[160px] md:w-[180px]">
-              <NativeAd />
+          {movies.map((item, i) => (
+            <div key={item.id} className="flex-shrink-0 w-[140px] sm:w-[160px] md:w-[180px]">
+              <MovieCard movie={item} index={i} />
             </div>
-          )}
+          ))}
         </div>
       </div>
     </section>

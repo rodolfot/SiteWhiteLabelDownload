@@ -19,6 +19,8 @@ interface AnalyticsDashboardProps {
   dailyViews: { date: string; count: number }[];
   topPages: { path: string; count: number }[];
   topSeries: { title: string; slug: string; count: number }[];
+  topMovies: { title: string; slug: string; count: number }[];
+  topMoviePages: { path: string; count: number }[];
   recentComments: (Comment & { series: { title: string; slug: string } | null })[];
   recentRequests: SeriesRequest[];
 }
@@ -28,6 +30,8 @@ export function AnalyticsDashboard({
   dailyViews,
   topPages,
   topSeries,
+  topMovies,
+  topMoviePages,
   recentComments,
   recentRequests,
 }: AnalyticsDashboardProps) {
@@ -245,11 +249,44 @@ export function AnalyticsDashboard({
                       }}
                       formatter={(value: unknown) => [String(value), 'Views']}
                     />
-                    <Bar
-                      dataKey="count"
-                      fill="#a855f7"
-                      radius={[0, 4, 4, 0]}
+                    <Bar dataKey="count" fill="#a855f7" radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
+
+          {/* Top Movies Bar Chart */}
+          {topMovies.length > 0 && (
+            <div className="bg-surface-800 border border-surface-600 rounded-xl p-5">
+              <h3 className="text-white font-semibold flex items-center gap-2 mb-4">
+                <Eye className="h-4 w-4 text-neon-purple" />
+                Top Filmes por Views
+              </h3>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={topMovies.slice(0, 10)} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" stroke="#2a2a3e" />
+                    <XAxis type="number" stroke="#6b7280" fontSize={12} />
+                    <YAxis
+                      type="category"
+                      dataKey="title"
+                      stroke="#6b7280"
+                      fontSize={11}
+                      width={120}
+                      tickFormatter={(v) => v.length > 18 ? v.slice(0, 18) + '...' : v}
                     />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: '#1e1e2e',
+                        border: '1px solid #374151',
+                        borderRadius: '8px',
+                        color: '#fff',
+                        fontSize: '12px',
+                      }}
+                      formatter={(value: unknown) => [String(value), 'Views']}
+                    />
+                    <Bar dataKey="count" fill="#a855f7" radius={[0, 4, 4, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -257,58 +294,112 @@ export function AnalyticsDashboard({
           )}
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Top Páginas */}
-          <div className="bg-surface-800 border border-surface-600 rounded-xl overflow-hidden">
-            <div className="p-4 border-b border-surface-600">
-              <h3 className="text-white font-semibold flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-neon-blue" />
-                Top Páginas (30 dias)
-              </h3>
-            </div>
-            <div className="divide-y divide-surface-600">
-              {topPages.length === 0 ? (
-                <p className="p-4 text-gray-500 text-sm text-center">Nenhuma visualização registrada</p>
-              ) : (
-                topPages.map((page, i) => (
-                  <div key={page.path} className="flex items-center justify-between p-3 px-4">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <span className="text-gray-500 text-xs w-5">{i + 1}.</span>
-                      <span className="text-gray-300 text-sm truncate">{page.path}</span>
+            {/* Top Páginas */}
+            <div className="bg-surface-800 border border-surface-600 rounded-xl overflow-hidden">
+              <div className="p-4 border-b border-surface-600">
+                <h3 className="text-white font-semibold flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4 text-neon-blue" />
+                  Top Páginas (30 dias)
+                </h3>
+              </div>
+              <div className="divide-y divide-surface-600">
+                {topPages.length === 0 ? (
+                  <p className="p-4 text-gray-500 text-sm text-center">Nenhuma visualização registrada</p>
+                ) : (
+                  topPages.map((page, i) => (
+                    <div key={page.path} className="flex items-center justify-between p-3 px-4">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span className="text-gray-500 text-xs w-5">{i + 1}.</span>
+                        <span className="text-gray-300 text-sm truncate">{page.path}</span>
+                      </div>
+                      <span className="text-neon-blue text-sm font-medium shrink-0">{page.count}</span>
                     </div>
-                    <span className="text-neon-blue text-sm font-medium shrink-0">{page.count}</span>
-                  </div>
-                ))
-              )}
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* Top Séries */}
+            <div className="bg-surface-800 border border-surface-600 rounded-xl overflow-hidden">
+              <div className="p-4 border-b border-surface-600">
+                <h3 className="text-white font-semibold flex items-center gap-2">
+                  <Eye className="h-4 w-4 text-neon-purple" />
+                  Séries Mais Vistas (30 dias)
+                </h3>
+              </div>
+              <div className="divide-y divide-surface-600">
+                {topSeries.length === 0 ? (
+                  <p className="p-4 text-gray-500 text-sm text-center">Nenhuma visualização de série</p>
+                ) : (
+                  topSeries.map((s, i) => (
+                    <div key={s.slug} className="flex items-center justify-between p-3 px-4">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span className="text-gray-500 text-xs w-5">{i + 1}.</span>
+                        <Link href={`/serie/${s.slug}`} className="text-gray-300 text-sm truncate hover:text-neon-blue transition-colors">
+                          {s.title}
+                        </Link>
+                      </div>
+                      <span className="text-neon-purple text-sm font-medium shrink-0">{s.count} views</span>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Top Séries */}
-          <div className="bg-surface-800 border border-surface-600 rounded-xl overflow-hidden">
-            <div className="p-4 border-b border-surface-600">
-              <h3 className="text-white font-semibold flex items-center gap-2">
-                <Eye className="h-4 w-4 text-neon-purple" />
-                Séries Mais Vistas (30 dias)
-              </h3>
-            </div>
-            <div className="divide-y divide-surface-600">
-              {topSeries.length === 0 ? (
-                <p className="p-4 text-gray-500 text-sm text-center">Nenhuma visualização de série</p>
-              ) : (
-                topSeries.map((s, i) => (
-                  <div key={s.slug} className="flex items-center justify-between p-3 px-4">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <span className="text-gray-500 text-xs w-5">{i + 1}.</span>
-                      <Link href={`/serie/${s.slug}`} className="text-gray-300 text-sm truncate hover:text-neon-blue transition-colors">
-                        {s.title}
-                      </Link>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Top Páginas de Filmes */}
+            <div className="bg-surface-800 border border-surface-600 rounded-xl overflow-hidden">
+              <div className="p-4 border-b border-surface-600">
+                <h3 className="text-white font-semibold flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4 text-neon-blue" />
+                  Top Páginas de Filmes (30 dias)
+                </h3>
+              </div>
+              <div className="divide-y divide-surface-600">
+                {topMoviePages.length === 0 ? (
+                  <p className="p-4 text-gray-500 text-sm text-center">Nenhuma visualização registrada</p>
+                ) : (
+                  topMoviePages.map((page, i) => (
+                    <div key={page.path} className="flex items-center justify-between p-3 px-4">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span className="text-gray-500 text-xs w-5">{i + 1}.</span>
+                        <span className="text-gray-300 text-sm truncate">{page.path}</span>
+                      </div>
+                      <span className="text-neon-blue text-sm font-medium shrink-0">{page.count}</span>
                     </div>
-                    <span className="text-neon-purple text-sm font-medium shrink-0">{s.count} views</span>
-                  </div>
-                ))
-              )}
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* Filmes Mais Vistos */}
+            <div className="bg-surface-800 border border-surface-600 rounded-xl overflow-hidden">
+              <div className="p-4 border-b border-surface-600">
+                <h3 className="text-white font-semibold flex items-center gap-2">
+                  <Eye className="h-4 w-4 text-neon-purple" />
+                  Filmes Mais Vistos (30 dias)
+                </h3>
+              </div>
+              <div className="divide-y divide-surface-600">
+                {topMovies.length === 0 ? (
+                  <p className="p-4 text-gray-500 text-sm text-center">Nenhuma visualização de filme</p>
+                ) : (
+                  topMovies.map((m, i) => (
+                    <div key={m.slug} className="flex items-center justify-between p-3 px-4">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span className="text-gray-500 text-xs w-5">{i + 1}.</span>
+                        <Link href={`/filmes/${m.slug}`} className="text-gray-300 text-sm truncate hover:text-neon-blue transition-colors">
+                          {m.title}
+                        </Link>
+                      </div>
+                      <span className="text-neon-purple text-sm font-medium shrink-0">{m.count} views</span>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
           </div>
-        </div>
         </div>
       )}
 

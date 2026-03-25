@@ -8,10 +8,15 @@ export interface Series {
   year: number;
   genre: string;
   rating: number;
-  category: string;
+  category: string[];
   featured: boolean;
   created_at: string;
   updated_at: string;
+  // i18n translation columns (may be null until translateContent.ts is run)
+  title_en?: string | null;
+  title_es?: string | null;
+  synopsis_en?: string | null;
+  synopsis_es?: string | null;
 }
 
 export interface Season {
@@ -21,6 +26,9 @@ export interface Season {
   title: string;
   trailer_url: string;
   created_at: string;
+  // i18n translation columns (null until translateContent.ts is run)
+  title_en?: string | null;
+  title_es?: string | null;
 }
 
 export interface Episode {
@@ -32,6 +40,9 @@ export interface Episode {
   file_size: string;
   quality: string;
   created_at: string;
+  // i18n translation columns (null until translateContent.ts is run)
+  title_en?: string | null;
+  title_es?: string | null;
 }
 
 export interface EpisodeLink {
@@ -73,7 +84,33 @@ export interface SeriesRequest {
   status: 'pending' | 'approved' | 'rejected' | 'completed';
   admin_notes: string;
   votes: number;
+  type: 'serie' | 'movie';
   created_at: string;
+}
+
+export interface Movie {
+  id: string;
+  title: string;
+  slug: string;
+  synopsis: string;
+  poster_url: string;
+  backdrop_url: string;
+  year: number;
+  genre: string;
+  rating: number;
+  category: string[];
+  featured: boolean;
+  duration: number | null; // minutes
+  download_url: string;
+  file_size: string;
+  quality: string;
+  created_at: string;
+  updated_at: string;
+  // i18n translation columns (may be null until translate-movie webhook runs)
+  title_en?: string | null;
+  title_es?: string | null;
+  synopsis_en?: string | null;
+  synopsis_es?: string | null;
 }
 
 export interface PageView {

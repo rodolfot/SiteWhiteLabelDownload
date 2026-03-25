@@ -17,6 +17,20 @@ const nextConfig = {
       },
     ],
   },
+  async redirects() {
+    return [
+      {
+        source: '/categorias',
+        destination: '/series',
+        permanent: true,
+      },
+      {
+        source: '/categorias/:path*',
+        destination: '/series/:path*',
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       {

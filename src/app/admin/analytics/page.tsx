@@ -20,6 +20,7 @@ export default async function AnalyticsPage() {
     { data: totalViews },
     { data: recentComments },
     { data: recentRequests },
+    { data: topMovieViews },
   ] = await Promise.all([
     // All views últimos 30 dias (para agregar por dia)
     supabase
@@ -59,6 +60,14 @@ export default async function AnalyticsPage() {
       .select('*')
       .order('created_at', { ascending: false })
       .limit(20),
+    // Top filmes por views
+    supabase
+      .from('page_views')
+      .select('movie_id, movies:movie_id(title, slug)')
+      .not('movie_id', 'is', null)
+      .gte('created_at', thirtyDaysAgo.toISOString())
+      .order('created_at', { ascending: false })
+      .limit(500),
   ]);
 
   // Agregar top páginas
@@ -86,6 +95,33 @@ export default async function AnalyticsPage() {
     .sort((a, b) => b.count - a.count)
     .slice(0, 10);
 
+  // Agregar top filmes
+  const moviesCount: Record<string, { title: string; slug: string; count: number }> = {};
+  (topMovieViews || []).forEach((v) => {
+    const m = v.movies as unknown as { title: string; slug: string } | null;
+    if (m && v.movie_id) {
+      if (!moviesCount[v.movie_id]) {
+        moviesCount[v.movie_id] = { title: m.title, slug: m.slug, count: 0 };
+      }
+      moviesCount[v.movie_id].count++;
+    }
+  });
+  const topMoviesAgg = Object.values(moviesCount)
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 10);
+
+  // Agregar top páginas de filmes (a partir dos dados já buscados)
+  const moviePageCount: Record<string, number> = {};
+  (topPages || []).forEach((v) => {
+    if (v.page_path.startsWith('/filmes/')) {
+      moviePageCount[v.page_path] = (moviePageCount[v.page_path] || 0) + 1;
+    }
+  });
+  const topMoviePagesAgg = Object.entries(moviePageCount)
+    .map(([path, count]) => ({ path, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 10);
+
   // Agregar views por dia
   const dailyCount: Record<string, number> = {};
   (allViews || []).forEach((v) => {
@@ -107,6 +143,8 @@ export default async function AnalyticsPage() {
       dailyViews={dailyViews}
       topPages={topPagesAgg}
       topSeries={topSeriesAgg}
+      topMovies={topMoviesAgg}
+      topMoviePages={topMoviePagesAgg}
       recentComments={recentComments || []}
       recentRequests={recentRequests || []}
     />

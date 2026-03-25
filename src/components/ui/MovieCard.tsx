@@ -3,24 +3,24 @@
 import { memo, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Star, Heart } from 'lucide-react';
-import { Series } from '@/types/database';
+import { Star, Clock, Heart } from 'lucide-react';
+import { Movie } from '@/types/database';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useI18n } from '@/lib/i18n/context';
-import { translateGenre, getLocalizedTitle } from '@/lib/genreTranslations';
+import { translateGenre, getLocalizedMovieTitle } from '@/lib/genreTranslations';
 
-interface SeriesCardProps {
-  series: Series;
+interface MovieCardProps {
+  movie: Movie;
   index?: number;
 }
 
-export const SeriesCard = memo(function SeriesCard({ series, index = 0 }: SeriesCardProps) {
+export const MovieCard = memo(function MovieCard({ movie, index = 0 }: MovieCardProps) {
   const { isFavorite, toggleFavorite } = useFavorites();
-  const favorited = isFavorite(series.id);
+  const favorited = isFavorite(movie.id);
   const [imgError, setImgError] = useState(false);
   const { t, locale } = useI18n();
-  const localizedTitle = getLocalizedTitle(series, locale);
-  const localizedGenre = series.genre ? translateGenre(series.genre, locale) : '';
+  const localizedTitle = getLocalizedMovieTitle(movie, locale);
+  const localizedGenre = movie.genre ? translateGenre(movie.genre, locale) : '';
 
   return (
     <div
@@ -28,15 +28,15 @@ export const SeriesCard = memo(function SeriesCard({ series, index = 0 }: Series
       style={{ animationDelay: `${Math.min(index * 50, 500)}ms` }}
     >
       <div className="relative">
-        <Link href={`/serie/${series.slug}`} className="group block">
+        <Link href={`/filmes/${movie.slug}`} className="group block">
           <div className="relative aspect-[2/3] rounded-xl overflow-hidden card-hover">
             {imgError ? (
               <div className="absolute inset-0 bg-surface-700 flex items-center justify-center">
-                <span className="text-gray-500 text-xs text-center px-2">{series.title}</span>
+                <span className="text-gray-500 text-xs text-center px-2">{movie.title}</span>
               </div>
             ) : (
               <Image
-                src={series.poster_url || '/images/placeholder.svg'}
+                src={movie.poster_url || '/images/placeholder.svg'}
                 alt={localizedTitle}
                 fill
                 sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
@@ -49,16 +49,22 @@ export const SeriesCard = memo(function SeriesCard({ series, index = 0 }: Series
             <div className="absolute bottom-0 left-0 right-0 p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
               <h3 className="text-white font-semibold text-sm truncate">{localizedTitle}</h3>
               <div className="flex items-center gap-2 mt-1">
-                <span className="text-gray-300 text-xs">{series.year}</span>
-                {series.rating > 0 && (
+                <span className="text-gray-300 text-xs">{movie.year}</span>
+                {movie.rating > 0 && (
                   <span className="flex items-center gap-1 text-yellow-400 text-xs">
                     <Star className="h-3 w-3 fill-current" />
-                    {series.rating}
+                    {movie.rating}
+                  </span>
+                )}
+                {movie.duration && (
+                  <span className="flex items-center gap-1 text-gray-300 text-xs">
+                    <Clock className="h-3 w-3" />
+                    {movie.duration} {t.movies.minutes}
                   </span>
                 )}
               </div>
             </div>
-            {series.featured && (
+            {movie.featured && (
               <div className="absolute top-2 left-2 bg-neon-blue/90 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
                 {t.series.featured}
               </div>
@@ -67,7 +73,7 @@ export const SeriesCard = memo(function SeriesCard({ series, index = 0 }: Series
         </Link>
         {/* Favorite button — outside Link to prevent navigation */}
         <button
-          onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleFavorite(series.id); }}
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleFavorite(movie.id); }}
           className="absolute top-2 right-2 z-10 p-1.5 rounded-full bg-black/50 backdrop-blur-sm hover:bg-black/70 transition-all"
           aria-label={favorited ? t.common.removeFavorite : t.common.addFavorite}
         >

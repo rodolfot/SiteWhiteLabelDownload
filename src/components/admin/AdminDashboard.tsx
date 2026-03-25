@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { Plus, Edit, Trash2, LogOut, Tv, Film, BarChart3, MessageCircle, Tag } from 'lucide-react';
+import { Plus, Edit, Trash2, LogOut, Tv, Film, BarChart3, Tag } from 'lucide-react';
 import { siteConfig } from '@/lib/site-config';
 import { logAdminAction } from '@/lib/audit-log';
 
@@ -14,7 +14,7 @@ interface SeriesWithRelations {
   title: string;
   slug: string;
   poster_url: string;
-  category: string;
+  category: string[];
   featured: boolean;
   updated_at: string;
   seasons: { id: string; number: number; episodes: { id: string }[] }[];
@@ -70,6 +70,10 @@ export function AdminDashboard({ series }: AdminDashboardProps) {
           <p className="text-gray-400 text-sm mt-1">Gerencie o conteudo do {siteConfig.name}</p>
         </div>
         <div className="flex items-center gap-3">
+          <Link href="/admin/movies" className="btn-secondary flex items-center gap-2 text-sm">
+            <Film className="h-4 w-4" />
+            Filmes
+          </Link>
           <Link href="/admin/categories" className="btn-secondary flex items-center gap-2 text-sm">
             <Tag className="h-4 w-4" />
             Categorias
@@ -163,7 +167,7 @@ export function AdminDashboard({ series }: AdminDashboardProps) {
                     )}
                   </div>
                   <p className="text-gray-500 text-xs mt-0.5">
-                    {s.category} • {s.seasons.length} temp. •{' '}
+                    {Array.isArray(s.category) ? s.category.join(', ') : s.category} • {s.seasons.length} temp. •{' '}
                     {s.seasons.reduce((a, sea) => a + sea.episodes.length, 0)} eps.
                   </p>
                 </div>

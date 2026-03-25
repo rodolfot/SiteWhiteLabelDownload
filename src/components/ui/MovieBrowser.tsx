@@ -2,14 +2,14 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import { Search, ChevronLeft, ChevronRight, SlidersHorizontal, X, ArrowUpDown, Heart } from 'lucide-react';
-import { Series } from '@/types/database';
-import { SeriesCard } from './SeriesCard';
+import { Movie } from '@/types/database';
+import { MovieCard } from './MovieCard';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useI18n } from '@/lib/i18n/context';
 import { translateGenre } from '@/lib/genreTranslations';
 
-interface CategoryBrowserProps {
-  series: Series[];
+interface MovieBrowserProps {
+  movies: Movie[];
   categories: string[];
 }
 
@@ -17,12 +17,12 @@ type SortOption = 'title' | 'year_desc' | 'year_asc' | 'rating';
 
 const ITEMS_PER_PAGE = 30;
 
-export function CategoryBrowser({ series, categories }: CategoryBrowserProps) {
+export function MovieBrowser({ movies, categories }: MovieBrowserProps) {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
   const [sortBy, setSortBy] = useState<SortOption>('title');
-  const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
+  const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
   const [yearRange, setYearRange] = useState<[number, number] | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
@@ -30,42 +30,39 @@ export function CategoryBrowser({ series, categories }: CategoryBrowserProps) {
   const { favorites, isFavorite } = useFavorites();
   const { t, locale } = useI18n();
 
-  // Extrair gêneros únicos
+  // Unique genres
   const genres = useMemo(() => {
     const genreSet = new Set<string>();
-    series.forEach((s) => {
-      if (s.genre) {
-        s.genre.split(',').forEach((g) => genreSet.add(g.trim()));
+    movies.forEach((m) => {
+      if (m.genre) {
+        m.genre.split(',').forEach((g) => genreSet.add(g.trim()));
       }
     });
     return Array.from(genreSet).sort();
-  }, [series]);
+  }, [movies]);
 
-  // Extrair range de anos
+  // Year bounds
   const yearBounds = useMemo(() => {
-    const years = series.map((s) => s.year).filter(Boolean);
+    const years = movies.map((m) => m.year).filter(Boolean);
+    if (years.length === 0) return { min: 2000, max: new Date().getFullYear() };
     return { min: Math.min(...years), max: Math.max(...years) };
-  }, [series]);
+  }, [movies]);
 
   const filtered = useMemo(() => {
     const query = searchQuery.toLowerCase();
-    const result = series.filter((s) => {
-      const seriesCats = Array.isArray(s.category) && s.category.length > 0 ? s.category : [t.categories.general];
-      const matchesCategory = !activeCategory || seriesCats.includes(activeCategory);
+    const result = movies.filter((m) => {
+      const movieCats = Array.isArray(m.category) && m.category.length > 0 ? m.category : [t.categories.general];
+      const matchesCategory = !activeCategory || movieCats.includes(activeCategory);
       const matchesSearch =
         !query ||
-        s.title.toLowerCase().includes(query) ||
-        (s.genre && s.genre.toLowerCase().includes(query));
-      // OR filter: show series that match at least one of the selected genres
-      const matchesGenre =
-        selectedGenres.length === 0 ||
-        selectedGenres.some((g) => s.genre && s.genre.toLowerCase().includes(g.toLowerCase()));
-      const matchesYear = !yearRange || (s.year >= yearRange[0] && s.year <= yearRange[1]);
-      const matchesFavorites = !showFavoritesOnly || isFavorite(s.id);
+        m.title.toLowerCase().includes(query) ||
+        (m.genre && m.genre.toLowerCase().includes(query));
+      const matchesGenre = !selectedGenre || (m.genre && m.genre.toLowerCase().includes(selectedGenre.toLowerCase()));
+      const matchesYear = !yearRange || (m.year >= yearRange[0] && m.year <= yearRange[1]);
+      const matchesFavorites = !showFavoritesOnly || isFavorite(m.id);
       return matchesCategory && matchesSearch && matchesGenre && matchesYear && matchesFavorites;
     });
 
-    // Ordenação
     result.sort((a, b) => {
       switch (sortBy) {
         case 'year_desc': return (b.year || 0) - (a.year || 0);
@@ -76,7 +73,7 @@ export function CategoryBrowser({ series, categories }: CategoryBrowserProps) {
     });
 
     return result;
-  }, [series, activeCategory, searchQuery, selectedGenres, yearRange, sortBy, showFavoritesOnly, isFavorite]);
+  }, [movies, activeCategory, searchQuery, selectedGenre, yearRange, sortBy, showFavoritesOnly, isFavorite, t.categories.general]);
 
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
   const paginated = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
@@ -84,12 +81,12 @@ export function CategoryBrowser({ series, categories }: CategoryBrowserProps) {
   const categoryCounts = useMemo(() =>
     categories.map((cat) => ({
       name: cat,
-      count: series.filter((s) => {
-        const cats = Array.isArray(s.category) && s.category.length > 0 ? s.category : [t.categories.general];
+      count: movies.filter((m) => {
+        const cats = Array.isArray(m.category) && m.category.length > 0 ? m.category : [t.categories.general];
         return cats.includes(cat);
       }).length,
     })),
-    [series, categories, t.categories.general]
+    [movies, categories, t.categories.general]
   );
 
   const handleCategoryChange = (cat: string | null) => {
@@ -102,31 +99,26 @@ export function CategoryBrowser({ series, categories }: CategoryBrowserProps) {
     setPage(1);
   };
 
-  const toggleGenre = (g: string) => {
-    setSelectedGenres((prev) =>
-      prev.includes(g) ? prev.filter((x) => x !== g) : [...prev, g]
-    );
-    setPage(1);
-  };
-
   const resetFilters = useCallback(() => {
     setActiveCategory(null);
     setSearchQuery('');
-    setSelectedGenres([]);
+    setSelectedGenre(null);
     setYearRange(null);
     setSortBy('title');
     setShowFavoritesOnly(false);
     setPage(1);
   }, []);
 
-  const hasActiveFilters = activeCategory || searchQuery || selectedGenres.length > 0 || yearRange || showFavoritesOnly;
+  const hasActiveFilters = activeCategory || searchQuery || selectedGenre || yearRange || showFavoritesOnly;
 
   return (
     <div className="px-4 sm:px-6 lg:px-8 py-8">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">{t.common.seriesNav}</h1>
-        <p className="text-gray-400 text-sm">{t.common.allSeries}</p>
+        <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">{t.movies.allMovies}</h1>
+        <p className="text-gray-400 text-sm">
+          {movies.length} {t.movies.title.toLowerCase()} em {categories.length} {t.common.categories.toLowerCase()}
+        </p>
       </div>
 
       {/* Search + Filter bar */}
@@ -179,84 +171,72 @@ export function CategoryBrowser({ series, categories }: CategoryBrowserProps) {
 
       {/* Advanced Filters Panel */}
       {showFilters && (
-        <div className="mb-6 p-4 bg-surface-800 border border-surface-500 rounded-xl space-y-4 animate-fadeIn">
-          {/* Genre pills — multi-select */}
+        <div className="mb-6 p-4 bg-surface-800 border border-surface-500 rounded-xl grid grid-cols-1 sm:grid-cols-3 gap-4 animate-fadeIn">
+          {/* Genre filter */}
           <div>
-            <label className="block text-xs font-medium text-gray-400 mb-2">
-              {t.categories.genreFilter}
-              {selectedGenres.length > 0 && (
-                <span className="ml-2 text-neon-blue">({selectedGenres.length})</span>
-              )}
-            </label>
-            <div className="flex flex-wrap gap-2">
+            <label className="block text-xs font-medium text-gray-400 mb-1.5">{t.categories.genreFilter}</label>
+            <select
+              value={selectedGenre || ''}
+              onChange={(e) => { setSelectedGenre(e.target.value || null); setPage(1); }}
+              className="w-full bg-surface-700 border border-surface-500 rounded-lg py-2 px-3 text-sm text-white focus:outline-none focus:border-neon-blue transition-all"
+            >
+              <option value="">{t.categories.allGenres}</option>
               {genres.map((g) => (
-                <button
-                  key={g}
-                  onClick={() => toggleGenre(g)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                    selectedGenres.includes(g)
-                      ? 'bg-neon-blue/20 border border-neon-blue text-neon-blue'
-                      : 'bg-surface-700 border border-surface-500 text-gray-300 hover:border-neon-blue hover:text-white'
-                  }`}
-                >
-                  {translateGenre(g, locale)}
-                </button>
+                <option key={g} value={g}>{translateGenre(g, locale)}</option>
               ))}
+            </select>
+          </div>
+
+          {/* Year filter */}
+          <div>
+            <label className="block text-xs font-medium text-gray-400 mb-1.5">
+              {t.categories.yearRange} {yearRange ? `(${yearRange[0]} - ${yearRange[1]})` : ''}
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="number"
+                placeholder={String(yearBounds.min)}
+                min={yearBounds.min}
+                max={yearBounds.max}
+                value={yearRange ? yearRange[0] : ''}
+                onChange={(e) => {
+                  const v = parseInt(e.target.value);
+                  setYearRange(v ? [v, yearRange?.[1] || yearBounds.max] : null);
+                  setPage(1);
+                }}
+                className="w-full bg-surface-700 border border-surface-500 rounded-lg py-2 px-3 text-sm text-white focus:outline-none focus:border-neon-blue transition-all"
+              />
+              <input
+                type="number"
+                placeholder={String(yearBounds.max)}
+                min={yearBounds.min}
+                max={yearBounds.max}
+                value={yearRange ? yearRange[1] : ''}
+                onChange={(e) => {
+                  const v = parseInt(e.target.value);
+                  setYearRange(v ? [yearRange?.[0] || yearBounds.min, v] : null);
+                  setPage(1);
+                }}
+                className="w-full bg-surface-700 border border-surface-500 rounded-lg py-2 px-3 text-sm text-white focus:outline-none focus:border-neon-blue transition-all"
+              />
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Year filter */}
-            <div>
-              <label className="block text-xs font-medium text-gray-400 mb-1.5">
-                {t.categories.yearRange} {yearRange ? `(${yearRange[0]} - ${yearRange[1]})` : ''}
-              </label>
-              <div className="flex gap-2">
-                <input
-                  type="number"
-                  placeholder={String(yearBounds.min)}
-                  min={yearBounds.min}
-                  max={yearBounds.max}
-                  value={yearRange ? yearRange[0] : ''}
-                  onChange={(e) => {
-                    const v = parseInt(e.target.value);
-                    setYearRange(v ? [v, yearRange?.[1] || yearBounds.max] : null);
-                    setPage(1);
-                  }}
-                  className="w-full bg-surface-700 border border-surface-500 rounded-lg py-2 px-3 text-sm text-white focus:outline-none focus:border-neon-blue transition-all"
-                />
-                <input
-                  type="number"
-                  placeholder={String(yearBounds.max)}
-                  min={yearBounds.min}
-                  max={yearBounds.max}
-                  value={yearRange ? yearRange[1] : ''}
-                  onChange={(e) => {
-                    const v = parseInt(e.target.value);
-                    setYearRange(v ? [yearRange?.[0] || yearBounds.min, v] : null);
-                    setPage(1);
-                  }}
-                  className="w-full bg-surface-700 border border-surface-500 rounded-lg py-2 px-3 text-sm text-white focus:outline-none focus:border-neon-blue transition-all"
-                />
-              </div>
-            </div>
-
-            {/* Sort */}
-            <div>
-              <label className="block text-xs font-medium text-gray-400 mb-1.5">{t.categories.sort}</label>
-              <div className="relative">
-                <ArrowUpDown className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-                <select
-                  value={sortBy}
-                  onChange={(e) => { setSortBy(e.target.value as SortOption); setPage(1); }}
-                  className="w-full bg-surface-700 border border-surface-500 rounded-lg py-2 pl-10 pr-3 text-sm text-white focus:outline-none focus:border-neon-blue transition-all"
-                >
-                  <option value="title">{t.categories.sortTitle}</option>
-                  <option value="year_desc">{t.categories.sortYearDesc}</option>
-                  <option value="year_asc">{t.categories.sortYearAsc}</option>
-                  <option value="rating">{t.categories.sortRating}</option>
-                </select>
-              </div>
+          {/* Sort */}
+          <div>
+            <label className="block text-xs font-medium text-gray-400 mb-1.5">{t.categories.sort}</label>
+            <div className="relative">
+              <ArrowUpDown className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+              <select
+                value={sortBy}
+                onChange={(e) => { setSortBy(e.target.value as SortOption); setPage(1); }}
+                className="w-full bg-surface-700 border border-surface-500 rounded-lg py-2 pl-10 pr-3 text-sm text-white focus:outline-none focus:border-neon-blue transition-all"
+              >
+                <option value="title">{t.categories.sortTitle}</option>
+                <option value="year_desc">{t.categories.sortYearDesc}</option>
+                <option value="year_asc">{t.categories.sortYearAsc}</option>
+                <option value="rating">{t.categories.sortRating}</option>
+              </select>
             </div>
           </div>
         </div>
@@ -272,7 +252,7 @@ export function CategoryBrowser({ series, categories }: CategoryBrowserProps) {
               : 'bg-surface-700 text-gray-300 border border-surface-500 hover:border-neon-blue hover:text-white'
           }`}
         >
-          {t.categories.all} ({series.length})
+          {t.categories.all} ({movies.length})
         </button>
         {categoryCounts.map(({ name, count }) => (
           <button
@@ -299,14 +279,12 @@ export function CategoryBrowser({ series, categories }: CategoryBrowserProps) {
           <p className="text-gray-400 text-xs mb-4">
             {filtered.length} {t.categories.results}
             {activeCategory && <> — <span className="text-neon-blue">{translateGenre(activeCategory, locale)}</span></>}
-            {selectedGenres.length > 0 && (
-              <> • <span className="text-neon-blue">{selectedGenres.map((g) => translateGenre(g, locale)).join(', ')}</span></>
-            )}
+            {selectedGenre && <> • <span className="text-neon-blue">{translateGenre(selectedGenre, locale)}</span></>}
             {totalPages > 1 && <> — {t.categories.pageOf.replace('{page}', String(page)).replace('{total}', String(totalPages))}</>}
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
             {paginated.map((item, i) => (
-              <SeriesCard key={item.id} series={item} index={i} />
+              <MovieCard key={item.id} movie={item} index={i} />
             ))}
           </div>
 

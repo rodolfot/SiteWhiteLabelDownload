@@ -6,9 +6,10 @@ import { createClient } from '@/lib/supabase/client';
 
 interface PageViewTrackerProps {
   seriesId?: string;
+  movieId?: string;
 }
 
-export function PageViewTracker({ seriesId }: PageViewTrackerProps) {
+export function PageViewTracker({ seriesId, movieId }: PageViewTrackerProps) {
   const pathname = usePathname();
 
   useEffect(() => {
@@ -21,6 +22,7 @@ export function PageViewTracker({ seriesId }: PageViewTrackerProps) {
         await supabase.from('page_views').insert({
           page_path: pathname,
           series_id: seriesId || null,
+          movie_id: movieId || null,
           referrer: document.referrer || null,
           user_agent: navigator.userAgent.substring(0, 200),
         });
@@ -30,7 +32,7 @@ export function PageViewTracker({ seriesId }: PageViewTrackerProps) {
     };
 
     trackView();
-  }, [pathname, seriesId]);
+  }, [pathname, seriesId, movieId]);
 
   return null;
 }

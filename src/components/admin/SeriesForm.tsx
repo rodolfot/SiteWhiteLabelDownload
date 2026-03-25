@@ -57,7 +57,7 @@ interface SeriesFormProps {
     year: number;
     genre: string;
     rating: number;
-    category: string;
+    category: string[];
     featured: boolean;
   };
   initialSeasons?: Season[];
@@ -90,7 +90,7 @@ export function SeriesForm({ initialData, initialSeasons }: SeriesFormProps) {
     year: initialData?.year || new Date().getFullYear(),
     genre: initialData?.genre || '',
     rating: initialData?.rating || 0,
-    category: initialData?.category || 'Geral',
+    category: Array.isArray(initialData?.category) ? initialData.category : ['Geral'],
     featured: initialData?.featured || false,
   });
 
@@ -123,6 +123,15 @@ export function SeriesForm({ initialData, initialSeasons }: SeriesFormProps) {
       }
       return updated;
     });
+  };
+
+  const toggleCategory = (cat: string) => {
+    setForm((prev) => ({
+      ...prev,
+      category: prev.category.includes(cat)
+        ? prev.category.filter((c) => c !== cat)
+        : [...prev.category, cat],
+    }));
   };
 
   const addSeason = () => {
@@ -248,6 +257,9 @@ export function SeriesForm({ initialData, initialSeasons }: SeriesFormProps) {
           form.slug = `${form.slug}-${Date.now().toString(36)}`;
         }
       }
+
+      // Track the saved series ID for the translation webhook
+      let savedSeriesId = initialData?.id ?? '';
 
       if (initialData) {
         // Update existing series
@@ -376,6 +388,7 @@ export function SeriesForm({ initialData, initialSeasons }: SeriesFormProps) {
           .select()
           .single();
         if (insertError) throw insertError;
+        savedSeriesId = newSeries.id;
 
         for (const season of seasons) {
           const { data: newSeason, error: seasonError } = await supabase
@@ -418,6 +431,22 @@ export function SeriesForm({ initialData, initialSeasons }: SeriesFormProps) {
         entity_id: isEdit ? initialData.id : undefined,
         details: form.title,
       });
+
+      // Fire-and-forget: trigger translation in background, don't block the UI
+      if (savedSeriesId) {
+        supabase.auth.getSession().then(({ data: { session } }) => {
+          if (session?.access_token) {
+            fetch('/api/translate-series', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.access_token}`,
+              },
+              body: JSON.stringify({ seriesId: savedSeriesId }),
+            }).catch(() => {}); // Best-effort — never blocks the admin panel
+          }
+        }).catch(() => {});
+      }
 
       router.push('/admin');
       router.refresh();
@@ -519,16 +548,34 @@ export function SeriesForm({ initialData, initialSeasons }: SeriesFormProps) {
               />
             </div>
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Categoria</label>
-              <select
-                value={form.category}
-                onChange={(e) => updateForm('category', e.target.value)}
-                className="w-full bg-surface-700 border border-surface-500 rounded-lg py-2.5 px-4 text-sm text-white focus:outline-none focus:border-neon-blue"
-              >
-                {dynamicCategories.map((cat) => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-              </select>
+              <label className="block text-sm text-gray-400 mb-2">
+                Categoria
+                {form.category.length > 0 && (
+                  <span className="ml-2 text-neon-blue text-xs">({form.category.length} selecionada{form.category.length > 1 ? 's' : ''})</span>
+                )}
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {dynamicCategories.map((cat) => {
+                  const selected = form.category.includes(cat);
+                  return (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => toggleCategory(cat)}
+                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all border ${
+                        selected
+                          ? 'bg-neon-blue/20 border-neon-blue text-neon-blue'
+                          : 'bg-surface-700 border-surface-500 text-gray-300 hover:border-neon-blue hover:text-white'
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  );
+                })}
+              </div>
+              {form.category.length === 0 && (
+                <p className="text-xs text-red-400 mt-1">Selecione ao menos uma categoria.</p>
+              )}
             </div>
           </div>
 

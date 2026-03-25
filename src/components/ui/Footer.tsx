@@ -19,9 +19,10 @@ export function Footer() {
 
           <nav className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-gray-400">
             <Link href="/" className="hover:text-neon-blue transition-colors">{t.common.home}</Link>
-            <Link href="/categorias" className="hover:text-neon-blue transition-colors">{t.common.categories}</Link>
+            <Link href="/series" className="hover:text-neon-blue transition-colors">{t.common.seriesNav}</Link>
+            <Link href="/filmes" className="hover:text-neon-blue transition-colors">{t.movies.title}</Link>
             <Link href="/#lancamentos" className="hover:text-neon-blue transition-colors">{t.series.featured}</Link>
-            <Link href="/requisicoes" className="hover:text-neon-blue transition-colors">{t.requests.title}</Link>
+            <Link href="/requisicoes" className="hover:text-neon-blue transition-colors">{t.requests.navTitle}</Link>
             <span className="text-surface-600">|</span>
             <Link href="/termos" className="hover:text-neon-blue transition-colors">{t.footer.terms}</Link>
             <Link href="/privacidade" className="hover:text-neon-blue transition-colors">{t.footer.privacy}</Link>

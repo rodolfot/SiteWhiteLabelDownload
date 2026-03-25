@@ -3,12 +3,13 @@ import { cached } from '@/lib/cache';
 import { HeroCarousel } from '@/components/ui/HeroCarousel';
 import { CategoryRow } from '@/components/ui/CategoryRow';
 import { InfiniteCategories } from '@/components/ui/InfiniteCategories';
+import { MovieRow } from '@/components/ui/MovieRow';
 import { SiteShell } from '@/components/ui/SiteShell';
-import { Series } from '@/types/database';
+import { Series, Movie } from '@/types/database';
 
 export const revalidate = 300; // ISR: regenera a cada 5 minutos
 
-const SERIES_LIST_FIELDS = 'id,title,slug,poster_url,backdrop_url,year,genre,rating,category,featured,synopsis,created_at,updated_at' as const;
+const SERIES_LIST_FIELDS = 'id,title,slug,poster_url,backdrop_url,year,genre,rating,category,featured,synopsis,title_en,title_es,synopsis_en,synopsis_es,created_at,updated_at' as const;
 
 async function getFeaturedSeries(): Promise<Series[]> {
   return cached('home:featured', 120, async () => {
@@ -43,9 +44,13 @@ async function getSeriesByCategory(): Promise<Record<string, Series[]>> {
 
       const grouped: Record<string, Series[]> = {};
       data.forEach((series) => {
-        const cat = series.category || 'Geral';
-        if (!grouped[cat]) grouped[cat] = [];
-        grouped[cat].push(series);
+        const cats = Array.isArray(series.category) && series.category.length > 0
+          ? series.category
+          : ['Geral'];
+        cats.forEach((cat) => {
+          if (!grouped[cat]) grouped[cat] = [];
+          grouped[cat].push(series);
+        });
       });
       return grouped;
     } catch (err) {
@@ -73,11 +78,63 @@ async function getLatestSeries(): Promise<Series[]> {
   });
 }
 
+const MOVIE_LIST_FIELDS = 'id,title,slug,poster_url,backdrop_url,year,genre,rating,category,featured,synopsis,title_en,title_es,synopsis_en,synopsis_es,duration,created_at,updated_at' as const;
+
+async function getLatestMovies(): Promise<Movie[]> {
+  return cached('home:latest-movies', 120, async () => {
+    try {
+      const supabase = await createServerSupabaseClient();
+      const { data, error } = await supabase
+        .from('movies')
+        .select(MOVIE_LIST_FIELDS)
+        .order('created_at', { ascending: false })
+        .limit(15);
+      if (error) console.error('[Home] Erro ao buscar filmes recentes:', error.message);
+      return (data || []) as Movie[];
+    } catch (err) {
+      console.error('[Home] Falha ao buscar filmes recentes:', err);
+      return [];
+    }
+  });
+}
+
+async function getMoviesByCategory(): Promise<Record<string, Movie[]>> {
+  return cached('home:movies-categories', 120, async () => {
+    try {
+      const supabase = await createServerSupabaseClient();
+      const { data, error } = await supabase
+        .from('movies')
+        .select(MOVIE_LIST_FIELDS)
+        .order('updated_at', { ascending: false });
+
+      if (error) console.error('[Home] Erro ao buscar filmes por categoria:', error.message);
+      if (!data) return {};
+
+      const grouped: Record<string, Movie[]> = {};
+      (data as Movie[]).forEach((movie) => {
+        const cats = Array.isArray(movie.category) && movie.category.length > 0
+          ? movie.category
+          : ['Geral'];
+        cats.forEach((cat) => {
+          if (!grouped[cat]) grouped[cat] = [];
+          grouped[cat].push(movie);
+        });
+      });
+      return grouped;
+    } catch (err) {
+      console.error('[Home] Falha ao buscar filmes por categoria:', err);
+      return {};
+    }
+  });
+}
+
 export default async function HomePage() {
-  const [featured, categories, latest] = await Promise.all([
+  const [featured, categories, latest, latestMovies, movieCategories] = await Promise.all([
     getFeaturedSeries(),
     getSeriesByCategory(),
     getLatestSeries(),
+    getLatestMovies(),
+    getMoviesByCategory(),
   ]);
 
   return (
@@ -107,6 +164,18 @@ export default async function HomePage() {
             );
           })()}
         </section>
+
+        {/* Latest Movies */}
+        {latestMovies.length > 0 && (
+          <section id="lancamentos-filmes">
+            <MovieRow title="🎬 Lançamentos de Filmes" movies={latestMovies} />
+          </section>
+        )}
+
+        {/* Movie Categories */}
+        {Object.entries(movieCategories).map(([cat, movies]) => (
+          <MovieRow key={cat} title={cat} movies={movies} />
+        ))}
       </div>
     </SiteShell>
   );

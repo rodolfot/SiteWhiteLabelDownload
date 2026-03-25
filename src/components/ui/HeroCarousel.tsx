@@ -9,6 +9,7 @@ import { Series } from '@/types/database';
 import { siteConfig } from '@/lib/site-config';
 import { getBrandParts } from '@/lib/brand';
 import { useI18n } from '@/lib/i18n/context';
+import { translateGenre, getLocalizedTitle, getLocalizedSynopsis } from '@/lib/genreTranslations';
 
 interface HeroCarouselProps {
   series: Series[];
@@ -16,7 +17,7 @@ interface HeroCarouselProps {
 
 export function HeroCarousel({ series }: HeroCarouselProps) {
   const [current, setCurrent] = useState(0);
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
 
   useEffect(() => {
     if (series.length <= 1) return;
@@ -42,6 +43,9 @@ export function HeroCarousel({ series }: HeroCarouselProps) {
   }
 
   const item = series[current];
+  const localizedTitle = getLocalizedTitle(item, locale);
+  const localizedSynopsis = getLocalizedSynopsis(item, locale);
+  const localizedGenre = item.genre ? translateGenre(item.genre, locale) : '';
 
   return (
     <div className="relative h-[70vh] min-h-[500px] overflow-hidden">
@@ -56,7 +60,7 @@ export function HeroCarousel({ series }: HeroCarouselProps) {
         >
           <Image
             src={item.backdrop_url || item.poster_url || '/images/placeholder.svg'}
-            alt={item.title}
+            alt={localizedTitle}
             fill
             className="object-cover"
             priority
@@ -83,14 +87,14 @@ export function HeroCarousel({ series }: HeroCarouselProps) {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 }}
             >
-              {item.title}
+              {localizedTitle}
             </motion.h1>
 
             <div className="flex items-center gap-3 mb-4 text-sm">
               {item.year && <span className="text-gray-300">{item.year}</span>}
               {item.genre && (
                 <span className="bg-surface-600/80 text-gray-300 px-2 py-0.5 rounded">
-                  {item.genre}
+                  {localizedGenre}
                 </span>
               )}
               {item.rating > 0 && (
@@ -102,7 +106,7 @@ export function HeroCarousel({ series }: HeroCarouselProps) {
             </div>
 
             <p className="text-gray-300 text-sm md:text-base leading-relaxed mb-6 line-clamp-3">
-              {item.synopsis}
+              {localizedSynopsis}
             </p>
 
             <div className="flex items-center gap-3">
