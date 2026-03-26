@@ -5,6 +5,7 @@ import { siteConfig } from '@/lib/site-config';
 import { SiteShell } from '@/components/ui/SiteShell';
 import { MovieDetail } from '@/components/ui/MovieDetail';
 import { PageViewTracker } from '@/components/ui/PageViewTracker';
+import { AgeVerificationGate } from '@/components/ui/AgeVerificationGate';
 import { Movie } from '@/types/database';
 
 export const revalidate = 3600; // ISR: 1 hora
@@ -83,7 +84,9 @@ export default async function FilmePage({ params }: PageProps) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <PageViewTracker movieId={movie.id} />
-      <MovieDetail movie={movie} />
+      <AgeVerificationGate category={movie.category}>
+        <MovieDetail movie={movie} />
+      </AgeVerificationGate>
     </SiteShell>
   );
 }

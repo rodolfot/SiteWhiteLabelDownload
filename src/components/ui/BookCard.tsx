@@ -3,25 +3,25 @@
 import { memo, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Star, Clock, Heart } from 'lucide-react';
-import { Movie } from '@/types/database';
+import { Star, BookOpen, Heart } from 'lucide-react';
+import { Book } from '@/types/database';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useI18n } from '@/lib/i18n/context';
-import { translateGenre, getLocalizedMovieTitle } from '@/lib/genreTranslations';
+import { translateGenre, getLocalizedBookTitle } from '@/lib/genreTranslations';
 import { isAdultCategory } from './AgeVerificationGate';
 
-interface MovieCardProps {
-  movie: Movie;
+interface BookCardProps {
+  book: Book;
   index?: number;
 }
 
-export const MovieCard = memo(function MovieCard({ movie, index = 0 }: MovieCardProps) {
+export const BookCard = memo(function BookCard({ book, index = 0 }: BookCardProps) {
   const { isFavorite, toggleFavorite } = useFavorites();
-  const favorited = isFavorite(movie.id);
+  const favorited = isFavorite(book.id);
   const [imgError, setImgError] = useState(false);
   const { t, locale } = useI18n();
-  const localizedTitle = getLocalizedMovieTitle(movie, locale);
-  const localizedGenre = movie.genre ? translateGenre(movie.genre, locale) : '';
+  const localizedTitle = getLocalizedBookTitle(book, locale);
+  const localizedGenre = book.genre ? translateGenre(book.genre, locale) : '';
 
   return (
     <div
@@ -29,15 +29,15 @@ export const MovieCard = memo(function MovieCard({ movie, index = 0 }: MovieCard
       style={{ animationDelay: `${Math.min(index * 50, 500)}ms` }}
     >
       <div className="relative">
-        <Link href={`/filmes/${movie.slug}`} className="group block">
+        <Link href={`/livros/${book.slug}`} className="group block">
           <div className="relative aspect-[2/3] rounded-xl overflow-hidden card-hover">
             {imgError ? (
               <div className="absolute inset-0 bg-surface-700 flex items-center justify-center">
-                <span className="text-gray-500 text-xs text-center px-2">{movie.title}</span>
+                <span className="text-gray-500 text-xs text-center px-2">{book.title}</span>
               </div>
             ) : (
               <Image
-                src={movie.poster_url || '/images/placeholder.svg'}
+                src={book.poster_url || '/images/placeholder.svg'}
                 alt={localizedTitle}
                 fill
                 sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
@@ -50,36 +50,35 @@ export const MovieCard = memo(function MovieCard({ movie, index = 0 }: MovieCard
             <div className="absolute bottom-0 left-0 right-0 p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
               <h3 className="text-white font-semibold text-sm truncate">{localizedTitle}</h3>
               <div className="flex items-center gap-2 mt-1">
-                <span className="text-gray-300 text-xs">{movie.year}</span>
-                {movie.rating > 0 && (
+                <span className="text-gray-300 text-xs">{book.year}</span>
+                {book.rating > 0 && (
                   <span className="flex items-center gap-1 text-yellow-400 text-xs">
                     <Star className="h-3 w-3 fill-current" />
-                    {movie.rating}
+                    {book.rating}
                   </span>
                 )}
-                {movie.duration && (
+                {book.pages && (
                   <span className="flex items-center gap-1 text-gray-300 text-xs">
-                    <Clock className="h-3 w-3" />
-                    {movie.duration} {t.movies.minutes}
+                    <BookOpen className="h-3 w-3" />
+                    {book.pages}p
                   </span>
                 )}
               </div>
             </div>
-            {movie.featured && (
+            {book.featured && (
               <div className="absolute top-2 left-2 bg-neon-blue/90 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
                 {t.series.featured}
               </div>
             )}
-            {isAdultCategory(movie.category) && (
+            {isAdultCategory(book.category) && (
               <div className="absolute bottom-2 left-2 bg-red-600/90 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
                 18+
               </div>
             )}
           </div>
         </Link>
-        {/* Favorite button — outside Link to prevent navigation */}
         <button
-          onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleFavorite(movie.id); }}
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleFavorite(book.id); }}
           className="absolute top-2 right-2 z-10 p-1.5 rounded-full bg-black/50 backdrop-blur-sm hover:bg-black/70 transition-all"
           aria-label={favorited ? t.common.removeFavorite : t.common.addFavorite}
         >
@@ -88,7 +87,7 @@ export const MovieCard = memo(function MovieCard({ movie, index = 0 }: MovieCard
       </div>
       <div className="mt-2">
         <h3 className="text-white font-medium text-sm truncate">{localizedTitle}</h3>
-        <p className="text-gray-400 text-xs mt-0.5">{localizedGenre}</p>
+        <p className="text-gray-400 text-xs mt-0.5">{book.author || localizedGenre}</p>
       </div>
     </div>
   );

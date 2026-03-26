@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/client';
 
 export type AuditAction = 'create' | 'update' | 'delete' | 'login' | 'logout';
-export type AuditEntity = 'series' | 'season' | 'episode' | 'movie' | 'auth';
+export type AuditEntity = 'series' | 'season' | 'episode' | 'movie' | 'book' | 'game' | 'auth';
 
 interface AuditLogEntry {
   action: AuditAction;

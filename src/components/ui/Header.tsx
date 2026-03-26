@@ -100,6 +100,12 @@ export function Header() {
             <Link href="/filmes" className="text-gray-300 hover:text-neon-blue transition-colors text-sm font-medium">
               {t.movies.title}
             </Link>
+            <Link href="/livros" className="text-gray-300 hover:text-neon-blue transition-colors text-sm font-medium">
+              {t.books.title}
+            </Link>
+            <Link href="/jogos" className="text-gray-300 hover:text-neon-blue transition-colors text-sm font-medium">
+              {t.games.title}
+            </Link>
           </nav>
 
           {/* Search */}
@@ -211,6 +217,8 @@ export function Header() {
               <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-gray-300 hover:text-white">{t.common.home}</Link>
               <Link href="/series" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-gray-300 hover:text-white">{t.common.seriesNav}</Link>
               <Link href="/filmes" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-gray-300 hover:text-white">{t.movies.title}</Link>
+              <Link href="/livros" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-gray-300 hover:text-white">{t.books.title}</Link>
+              <Link href="/jogos" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-gray-300 hover:text-white">{t.games.title}</Link>
             </div>
           </motion.div>
         )}

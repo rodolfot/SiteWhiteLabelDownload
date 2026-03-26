@@ -1,5 +1,5 @@
 import { Locale } from './i18n/dictionaries';
-import { Series, Movie } from '@/types/database';
+import { Series, Movie, Book, Game } from '@/types/database';
 
 type TranslationMap = Partial<Record<Exclude<Locale, 'pt-BR'>, string>>;
 
@@ -82,4 +82,28 @@ export function getLocalizedMovieSynopsis(movie: Movie, locale: Locale): string 
   if (locale === 'en') return movie.synopsis_en || movie.synopsis || '';
   if (locale === 'es') return movie.synopsis_es || movie.synopsis || '';
   return movie.synopsis || '';
+}
+
+export function getLocalizedBookTitle(book: Book, locale: Locale): string {
+  if (locale === 'en') return book.title_en || book.title;
+  if (locale === 'es') return book.title_es || book.title;
+  return book.title;
+}
+
+export function getLocalizedBookSynopsis(book: Book, locale: Locale): string {
+  if (locale === 'en') return book.synopsis_en || book.synopsis || '';
+  if (locale === 'es') return book.synopsis_es || book.synopsis || '';
+  return book.synopsis || '';
+}
+
+export function getLocalizedGameTitle(game: Game, locale: Locale): string {
+  if (locale === 'en') return game.title_en || game.title;
+  if (locale === 'es') return game.title_es || game.title;
+  return game.title;
+}
+
+export function getLocalizedGameSynopsis(game: Game, locale: Locale): string {
+  if (locale === 'en') return game.synopsis_en || game.synopsis || '';
+  if (locale === 'es') return game.synopsis_es || game.synopsis || '';
+  return game.synopsis || '';
 }

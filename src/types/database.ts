@@ -113,6 +113,60 @@ export interface Movie {
   synopsis_es?: string | null;
 }
 
+export interface Book {
+  id: string;
+  title: string;
+  slug: string;
+  synopsis: string;
+  poster_url: string;
+  backdrop_url: string;
+  year: number;
+  genre: string;
+  rating: number;
+  category: string[];
+  featured: boolean;
+  author: string;
+  pages: number | null;
+  publisher: string;
+  isbn: string;
+  format: string;
+  download_url: string;
+  file_size: string;
+  created_at: string;
+  updated_at: string;
+  title_en?: string | null;
+  title_es?: string | null;
+  synopsis_en?: string | null;
+  synopsis_es?: string | null;
+}
+
+export interface Game {
+  id: string;
+  title: string;
+  slug: string;
+  synopsis: string;
+  poster_url: string;
+  backdrop_url: string;
+  year: number;
+  genre: string;
+  rating: number;
+  category: string[];
+  featured: boolean;
+  platform: string;
+  developer: string;
+  publisher: string;
+  min_requirements: string;
+  rec_requirements: string;
+  download_url: string;
+  file_size: string;
+  created_at: string;
+  updated_at: string;
+  title_en?: string | null;
+  title_es?: string | null;
+  synopsis_en?: string | null;
+  synopsis_es?: string | null;
+}
+
 export interface PageView {
   id: string;
   page_path: string;

@@ -4,8 +4,10 @@ import { HeroCarousel } from '@/components/ui/HeroCarousel';
 import { CategoryRow } from '@/components/ui/CategoryRow';
 import { InfiniteCategories } from '@/components/ui/InfiniteCategories';
 import { MovieRow } from '@/components/ui/MovieRow';
+import { BookRow } from '@/components/ui/BookRow';
+import { GameRow } from '@/components/ui/GameRow';
 import { SiteShell } from '@/components/ui/SiteShell';
-import { Series, Movie } from '@/types/database';
+import { Series, Movie, Book, Game } from '@/types/database';
 
 export const revalidate = 300; // ISR: regenera a cada 5 minutos
 
@@ -128,13 +130,55 @@ async function getMoviesByCategory(): Promise<Record<string, Movie[]>> {
   });
 }
 
+const BOOK_LIST_FIELDS = 'id,title,slug,poster_url,backdrop_url,year,genre,rating,category,featured,synopsis,title_en,title_es,synopsis_en,synopsis_es,author,pages,format,created_at,updated_at' as const;
+
+async function getLatestBooks(): Promise<Book[]> {
+  return cached('home:latest-books', 120, async () => {
+    try {
+      const supabase = await createServerSupabaseClient();
+      const { data, error } = await supabase
+        .from('books')
+        .select(BOOK_LIST_FIELDS)
+        .order('created_at', { ascending: false })
+        .limit(15);
+      if (error) console.error('[Home] Erro ao buscar livros recentes:', error.message);
+      return (data || []) as Book[];
+    } catch (err) {
+      console.error('[Home] Falha ao buscar livros recentes:', err);
+      return [];
+    }
+  });
+}
+
+const GAME_LIST_FIELDS = 'id,title,slug,poster_url,backdrop_url,year,genre,rating,category,featured,synopsis,title_en,title_es,synopsis_en,synopsis_es,platform,developer,created_at,updated_at' as const;
+
+async function getLatestGames(): Promise<Game[]> {
+  return cached('home:latest-games', 120, async () => {
+    try {
+      const supabase = await createServerSupabaseClient();
+      const { data, error } = await supabase
+        .from('games')
+        .select(GAME_LIST_FIELDS)
+        .order('created_at', { ascending: false })
+        .limit(15);
+      if (error) console.error('[Home] Erro ao buscar jogos recentes:', error.message);
+      return (data || []) as Game[];
+    } catch (err) {
+      console.error('[Home] Falha ao buscar jogos recentes:', err);
+      return [];
+    }
+  });
+}
+
 export default async function HomePage() {
-  const [featured, categories, latest, latestMovies, movieCategories] = await Promise.all([
+  const [featured, categories, latest, latestMovies, movieCategories, latestBooks, latestGames] = await Promise.all([
     getFeaturedSeries(),
     getSeriesByCategory(),
     getLatestSeries(),
     getLatestMovies(),
     getMoviesByCategory(),
+    getLatestBooks(),
+    getLatestGames(),
   ]);
 
   return (
@@ -176,6 +220,20 @@ export default async function HomePage() {
         {Object.entries(movieCategories).map(([cat, movies]) => (
           <MovieRow key={cat} title={cat} movies={movies} />
         ))}
+
+        {/* Latest Books */}
+        {latestBooks.length > 0 && (
+          <section id="lancamentos-livros">
+            <BookRow title="📚 Lançamentos de Livros" books={latestBooks} />
+          </section>
+        )}
+
+        {/* Latest Games */}
+        {latestGames.length > 0 && (
+          <section id="lancamentos-jogos">
+            <GameRow title="🎮 Lançamentos de Jogos" games={latestGames} />
+          </section>
+        )}
       </div>
     </SiteShell>
   );

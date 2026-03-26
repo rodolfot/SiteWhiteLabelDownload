@@ -8,6 +8,7 @@ import { Series } from '@/types/database';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useI18n } from '@/lib/i18n/context';
 import { translateGenre, getLocalizedTitle } from '@/lib/genreTranslations';
+import { isAdultCategory } from './AgeVerificationGate';
 
 interface SeriesCardProps {
   series: Series;
@@ -61,6 +62,11 @@ export const SeriesCard = memo(function SeriesCard({ series, index = 0 }: Series
             {series.featured && (
               <div className="absolute top-2 left-2 bg-neon-blue/90 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
                 {t.series.featured}
+              </div>
+            )}
+            {isAdultCategory(series.category) && (
+              <div className="absolute bottom-2 left-2 bg-red-600/90 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                18+
               </div>
             )}
           </div>

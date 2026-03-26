@@ -5,6 +5,7 @@ import { siteConfig } from '@/lib/site-config';
 import { SiteShell } from '@/components/ui/SiteShell';
 import { SeriesDetail } from '@/components/ui/SeriesDetail';
 import { PageViewTracker } from '@/components/ui/PageViewTracker';
+import { AgeVerificationGate } from '@/components/ui/AgeVerificationGate';
 import { Series, SeasonWithEpisodes } from '@/types/database';
 
 export const revalidate = 3600; // ISR: regenera a cada 1 hora
@@ -109,7 +110,9 @@ export default async function SeriePage({ params }: PageProps) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <PageViewTracker seriesId={data.series.id} />
-      <SeriesDetail series={data.series} seasons={data.seasons} />
+      <AgeVerificationGate category={data.series.category}>
+        <SeriesDetail series={data.series} seasons={data.seasons} />
+      </AgeVerificationGate>
     </SiteShell>
   );
 }

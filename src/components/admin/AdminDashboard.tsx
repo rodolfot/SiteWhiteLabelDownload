@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { Plus, Edit, Trash2, LogOut, Tv, Film, BarChart3, Tag } from 'lucide-react';
+import { Plus, Edit, Trash2, LogOut, Tv, Film, BarChart3, Tag, BookOpen, Gamepad2 } from 'lucide-react';
 import { siteConfig } from '@/lib/site-config';
 import { logAdminAction } from '@/lib/audit-log';
 
@@ -73,6 +73,14 @@ export function AdminDashboard({ series }: AdminDashboardProps) {
           <Link href="/admin/movies" className="btn-secondary flex items-center gap-2 text-sm">
             <Film className="h-4 w-4" />
             Filmes
+          </Link>
+          <Link href="/admin/books" className="btn-secondary flex items-center gap-2 text-sm">
+            <BookOpen className="h-4 w-4" />
+            Livros
+          </Link>
+          <Link href="/admin/games" className="btn-secondary flex items-center gap-2 text-sm">
+            <Gamepad2 className="h-4 w-4" />
+            Jogos
           </Link>
           <Link href="/admin/categories" className="btn-secondary flex items-center gap-2 text-sm">
             <Tag className="h-4 w-4" />
