@@ -2,17 +2,23 @@
 
 import { useState, useEffect, useCallback, useId } from 'react';
 import { motion } from 'framer-motion';
-import { Download, Clock, Shield } from 'lucide-react';
+import { Download, Clock, Shield, Lock } from 'lucide-react';
 import { AdSlot } from './AdSlot';
 import { isValidDownloadUrl } from '@/lib/validation';
+import { createClient } from '@/lib/supabase/client';
 import { useI18n } from '@/lib/i18n/context';
 
 interface DownloadTimerProps {
   downloadUrl: string;
   episodeTitle: string;
+  contentType?: 'series' | 'movie' | 'book' | 'game';
+  contentId?: string;
+  quality?: string;
+  donorOnly?: boolean;
+  isDonor?: boolean;
 }
 
-export function DownloadTimer({ downloadUrl, episodeTitle }: DownloadTimerProps) {
+export function DownloadTimer({ downloadUrl, episodeTitle, contentType, contentId, quality, donorOnly, isDonor }: DownloadTimerProps) {
   const { t } = useI18n();
   const uniqueId = useId();
   const gradientId = `timer-gradient-${uniqueId.replace(/:/g, '')}`;
@@ -84,6 +90,32 @@ export function DownloadTimer({ downloadUrl, episodeTitle }: DownloadTimerProps)
 
   const canDownload = isReady && turnstileVerified;
   const safeUrl = isValidDownloadUrl(downloadUrl) ? downloadUrl : null;
+
+  const trackDownloadClick = useCallback(() => {
+    if (!contentType || !contentId) return;
+    try {
+      const supabase = createClient();
+      supabase.from('download_clicks').insert({
+        content_type: contentType,
+        content_id: contentId,
+        download_url: downloadUrl,
+        quality: quality || null,
+      }).then(() => {});
+    } catch {}
+  }, [contentType, contentId, downloadUrl, quality]);
+
+  // Donor-only: show locked button if not donor
+  if (donorOnly && !isDonor) {
+    return (
+      <a
+        href="/doar"
+        className="flex items-center gap-2 bg-yellow-500/10 border border-yellow-500/30 rounded-lg px-4 py-2.5 text-sm text-yellow-400 transition-all hover:bg-yellow-500/20"
+      >
+        <Lock className="h-4 w-4" />
+        {t.donate.navTitle}
+      </a>
+    );
+  }
 
   return (
     <>
@@ -159,7 +191,7 @@ export function DownloadTimer({ downloadUrl, episodeTitle }: DownloadTimerProps)
                     target="_blank"
                     rel="noopener noreferrer"
                     className="btn-primary w-full flex items-center justify-center gap-2 text-center"
-                    onClick={() => setIsOpen(false)}
+                    onClick={() => { trackDownloadClick(); setIsOpen(false); }}
                   >
                     <Download className="h-5 w-5" />
                     {t.ads.downloadNow}

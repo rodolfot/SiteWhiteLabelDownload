@@ -70,6 +70,9 @@ export interface SeriesWithSeasons extends Series {
 export interface Comment {
   id: string;
   series_id: string;
+  movie_id?: string | null;
+  book_id?: string | null;
+  game_id?: string | null;
   nickname: string;
   content: string;
   approved: boolean;
@@ -84,7 +87,7 @@ export interface SeriesRequest {
   status: 'pending' | 'approved' | 'rejected' | 'completed';
   admin_notes: string;
   votes: number;
-  type: 'serie' | 'movie';
+  type: 'serie' | 'movie' | 'book' | 'game';
   created_at: string;
 }
 
@@ -165,6 +168,18 @@ export interface Game {
   title_es?: string | null;
   synopsis_en?: string | null;
   synopsis_es?: string | null;
+}
+
+export interface DownloadLink {
+  id: string;
+  content_type: 'movie' | 'book' | 'game';
+  content_id: string;
+  label: string;
+  download_url: string;
+  file_size: string;
+  quality: string;
+  donor_only: boolean;
+  created_at: string;
 }
 
 export interface PageView {

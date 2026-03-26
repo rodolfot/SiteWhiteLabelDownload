@@ -3,25 +3,29 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import { Star, Calendar, BookOpen, Download, User, Building2 } from 'lucide-react';
-import { Book } from '@/types/database';
+import { Star, Calendar, BookOpen, Download, User, Building2, Lock } from 'lucide-react';
+import { Book, DownloadLink } from '@/types/database';
 import { DownloadTimer } from '@/components/ads/DownloadTimer';
 import { AdSlot } from '@/components/ads/AdSlot';
 import { StarRating } from './StarRating';
+import { Comments } from './Comments';
 import { useI18n } from '@/lib/i18n/context';
 import { translateGenre, getLocalizedBookTitle, getLocalizedBookSynopsis } from '@/lib/genreTranslations';
+import { useDonorStatus } from '@/hooks/useDonorStatus';
 
 interface BookDetailProps {
   book: Book;
+  downloadLinks?: DownloadLink[];
 }
 
-export function BookDetail({ book }: BookDetailProps) {
+export function BookDetail({ book, downloadLinks = [] }: BookDetailProps) {
   const [backdropError, setBackdropError] = useState(false);
   const [posterError, setPosterError] = useState(false);
   const { t, locale } = useI18n();
   const localizedTitle = getLocalizedBookTitle(book, locale);
   const localizedSynopsis = getLocalizedBookSynopsis(book, locale);
   const localizedGenre = book.genre ? translateGenre(book.genre, locale) : '';
+  const { isDonor } = useDonorStatus();
 
   return (
     <div className="min-h-screen">
@@ -129,25 +133,46 @@ export function BookDetail({ book }: BookDetailProps) {
               )}
 
               {/* Download */}
-              {book.download_url ? (
-                <div className="bg-surface-700/50 border border-surface-600 rounded-lg p-4">
-                  <div className="flex items-center justify-between flex-wrap gap-3">
-                    <div className="flex items-center gap-3">
-                      <Download className="h-5 w-5 text-neon-blue shrink-0" />
-                      <div>
-                        <p className="text-white text-sm font-medium">{localizedTitle}</p>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          {book.format && (
-                            <span className="text-xs text-neon-blue bg-neon-blue/10 px-1.5 py-0.5 rounded">{book.format}</span>
-                          )}
-                          {book.file_size && (
-                            <span className="text-xs text-gray-500">{book.file_size}</span>
-                          )}
+              {(book.download_url || downloadLinks.length > 0) ? (
+                <div className="space-y-2">
+                  {book.download_url && (
+                    <div className="bg-surface-700/50 border border-surface-600 rounded-lg p-4">
+                      <div className="flex items-center justify-between flex-wrap gap-3">
+                        <div className="flex items-center gap-3">
+                          <Download className="h-5 w-5 text-neon-blue shrink-0" />
+                          <div>
+                            <p className="text-white text-sm font-medium">{localizedTitle}</p>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              {book.format && <span className="text-xs text-neon-blue bg-neon-blue/10 px-1.5 py-0.5 rounded">{book.format}</span>}
+                              {book.file_size && <span className="text-xs text-gray-500">{book.file_size}</span>}
+                            </div>
+                          </div>
                         </div>
+                        <DownloadTimer downloadUrl={book.download_url} episodeTitle={localizedTitle} contentType="book" contentId={book.id} quality={book.format} />
                       </div>
                     </div>
-                    <DownloadTimer downloadUrl={book.download_url} episodeTitle={localizedTitle} />
-                  </div>
+                  )}
+                  {downloadLinks.map((link) => (
+                    <div key={link.id} className="bg-surface-700/50 border border-surface-600 rounded-lg p-4">
+                      <div className="flex items-center justify-between flex-wrap gap-3">
+                        <div className="flex items-center gap-3">
+                          <Download className="h-5 w-5 text-neon-blue shrink-0" />
+                          <div>
+                            <p className="text-white text-sm font-medium flex items-center gap-1.5">
+                              {link.label || localizedTitle}
+                              {link.donor_only && <Lock className="h-3 w-3 text-yellow-500" />}
+                            </p>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              {link.quality && <span className="text-xs text-neon-blue bg-neon-blue/10 px-1.5 py-0.5 rounded">{link.quality}</span>}
+                              {link.file_size && <span className="text-xs text-gray-500">{link.file_size}</span>}
+                              {link.donor_only && <span className="text-xs text-yellow-500 bg-yellow-500/10 px-1.5 py-0.5 rounded">{t.donate.navTitle}</span>}
+                            </div>
+                          </div>
+                        </div>
+                        <DownloadTimer downloadUrl={link.download_url} episodeTitle={`${localizedTitle} - ${link.label || link.quality}`} contentType="book" contentId={book.id} quality={link.quality} donorOnly={link.donor_only} isDonor={isDonor} />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : (
                 <div className="bg-surface-700/50 border border-surface-600 rounded-lg p-8 text-center">
@@ -155,6 +180,9 @@ export function BookDetail({ book }: BookDetailProps) {
                   <p className="text-gray-400">{t.books.noBooks}</p>
                 </div>
               )}
+
+              {/* Comments */}
+              <Comments bookId={book.id} />
             </motion.div>
           </div>
 

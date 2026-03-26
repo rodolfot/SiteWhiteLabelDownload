@@ -11,7 +11,7 @@ export function SeriesRequests() {
   const [requests, setRequests] = useState<SeriesRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [requestType, setRequestType] = useState<'serie' | 'movie'>('serie');
+  const [requestType, setRequestType] = useState<'serie' | 'movie' | 'book' | 'game'>('serie');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [nickname, setNickname] = useState('');
@@ -134,29 +134,26 @@ export function SeriesRequests() {
       {/* Form */}
       <form onSubmit={handleSubmit} className="bg-surface-700/50 border border-surface-600 rounded-lg p-4 mb-6">
         {/* Type selector */}
-        <div className="flex gap-2 mb-3">
-          <button
-            type="button"
-            onClick={() => setRequestType('serie')}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
-              requestType === 'serie'
-                ? 'bg-gradient-to-r from-neon-blue to-neon-purple text-white'
-                : 'bg-surface-700 border border-surface-500 text-gray-300 hover:text-white hover:border-neon-blue'
-            }`}
-          >
-            {t.requests.typeSerie}
-          </button>
-          <button
-            type="button"
-            onClick={() => setRequestType('movie')}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
-              requestType === 'movie'
-                ? 'bg-gradient-to-r from-neon-blue to-neon-purple text-white'
-                : 'bg-surface-700 border border-surface-500 text-gray-300 hover:text-white hover:border-neon-blue'
-            }`}
-          >
-            {t.requests.typeMovie}
-          </button>
+        <div className="flex flex-wrap gap-2 mb-3">
+          {([
+            { key: 'serie' as const, label: t.requests.typeSerie },
+            { key: 'movie' as const, label: t.requests.typeMovie },
+            { key: 'book' as const, label: t.requests.typeBook },
+            { key: 'game' as const, label: t.requests.typeGame },
+          ]).map(({ key, label }) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setRequestType(key)}
+              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                requestType === key
+                  ? 'bg-gradient-to-r from-neon-blue to-neon-purple text-white'
+                  : 'bg-surface-700 border border-surface-500 text-gray-300 hover:text-white hover:border-neon-blue'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
@@ -164,7 +161,12 @@ export function SeriesRequests() {
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder={requestType === 'movie' ? t.requests.movieName : t.requests.seriesName}
+            placeholder={
+              requestType === 'movie' ? t.requests.movieName :
+              requestType === 'book' ? t.requests.bookName :
+              requestType === 'game' ? t.requests.gameName :
+              t.requests.seriesName
+            }
             maxLength={255}
             className="bg-surface-800 border border-surface-600 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-neon-blue"
           />

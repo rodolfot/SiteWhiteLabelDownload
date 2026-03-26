@@ -6,7 +6,7 @@ import { SiteShell } from '@/components/ui/SiteShell';
 import { GameDetail } from '@/components/ui/GameDetail';
 import { PageViewTracker } from '@/components/ui/PageViewTracker';
 import { AgeVerificationGate } from '@/components/ui/AgeVerificationGate';
-import { Game } from '@/types/database';
+import { Game, DownloadLink } from '@/types/database';
 
 export const revalidate = 3600;
 
@@ -14,16 +14,24 @@ interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
-async function getGameData(slug: string): Promise<Game | null> {
+async function getGameData(slug: string): Promise<{ game: Game; downloadLinks: DownloadLink[] } | null> {
   const supabase = await createServerSupabaseClient();
   const { data } = await supabase.from('games').select('*').eq('slug', slug).single();
-  return data as Game | null;
+  if (!data) return null;
+  const { data: links } = await supabase
+    .from('download_links')
+    .select('*')
+    .eq('content_type', 'game')
+    .eq('content_id', data.id)
+    .order('created_at', { ascending: true });
+  return { game: data as Game, downloadLinks: (links || []) as DownloadLink[] };
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const game = await getGameData(slug);
-  if (!game) return { title: `Jogo não encontrado - ${siteConfig.name}` };
+  const data = await getGameData(slug);
+  if (!data) return { title: `Jogo não encontrado - ${siteConfig.name}` };
+  const game = data.game;
 
   return {
     title: `${game.title} - Download Grátis | ${siteConfig.name}`,
@@ -64,17 +72,18 @@ function generateJsonLd(game: Game) {
 
 export default async function JogoPage({ params }: PageProps) {
   const { slug } = await params;
-  const game = await getGameData(slug);
-  if (!game) notFound();
+  const data = await getGameData(slug);
+  if (!data) notFound();
 
+  const { game, downloadLinks } = data;
   const jsonLd = generateJsonLd(game);
 
   return (
     <SiteShell>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <PageViewTracker />
+      <PageViewTracker gameId={game.id} />
       <AgeVerificationGate category={game.category}>
-        <GameDetail game={game} />
+        <GameDetail game={game} downloadLinks={downloadLinks} />
       </AgeVerificationGate>
     </SiteShell>
   );

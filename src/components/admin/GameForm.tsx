@@ -32,7 +32,7 @@ interface GameFormProps {
   };
 }
 
-const DEFAULT_CATEGORIES = ['Ação', 'Aventura', 'Comédia', 'Drama', 'Ficção Científica', 'Terror', 'Romance', 'Anime', 'Documentário', 'Geral'];
+const DEFAULT_CATEGORIES = ['Ação', 'Aventura', 'Comédia', 'Drama', 'Ficção Científica', 'Terror', 'Romance', 'Anime', 'Documentário', 'Adulto', 'Geral'];
 const PLATFORMS = ['PC', 'PlayStation 5', 'PlayStation 4', 'Xbox Series X/S', 'Xbox One', 'Nintendo Switch', 'Android', 'iOS', 'Mac', 'Linux'];
 
 function slugify(text: string): string {

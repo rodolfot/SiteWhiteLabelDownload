@@ -1,6 +1,6 @@
 # SiteWhiteLabelDownload
 
-Plataforma white-label de streaming e download de videos de alta performance, com painel administrativo completo, monetizacao via anuncios e design Dark/Light Mode inspirado em Apple TV+ / Netflix.
+Plataforma white-label de download de series, filmes, livros e jogos de alta performance, com painel administrativo completo, monetizacao via anuncios e doacoes, sistema de login de usuarios com favoritos persistentes e design Dark/Light Mode inspirado em Apple TV+ / Netflix.
 
 O nome, tagline e descricao do site sao 100% configuraveis via variaveis de ambiente — basta trocar as env vars para ter um site com sua propria marca.
 
@@ -38,13 +38,25 @@ O nome, tagline e descricao do site sao 100% configuraveis via variaveis de ambi
 | ------------------------- | -------------------------- |
 | Home (hero + lancamentos) | `/`                        |
 | Categorias (filtros)      | `/categorias`              |
+| Series                    | `/series`                  |
 | Pagina da serie           | `/serie/[slug]`            |
-| Pedir uma serie           | `/requisicoes`             |
+| Filmes                    | `/filmes`                  |
+| Pagina do filme           | `/filmes/[slug]`           |
+| Livros                    | `/livros`                  |
+| Pagina do livro           | `/livros/[slug]`           |
+| Jogos                     | `/jogos`                   |
+| Pagina do jogo            | `/jogos/[slug]`            |
+| Solicitar conteudo        | `/requisicoes`             |
+| Doar                      | `/doar`                    |
+| Conta (login/registro)    | `/conta`                   |
 | Painel admin              | `/admin`                   |
 | Login admin               | `/admin/login`             |
 | Analytics admin           | `/admin/analytics`         |
 | Criar serie               | `/admin/series/new`        |
 | Editar serie              | `/admin/series/[id]/edit`  |
+| Editar filme              | `/admin/movies/[id]/edit`  |
+| Editar livro              | `/admin/books/[id]/edit`   |
+| Editar jogo               | `/admin/games/[id]/edit`   |
 | Termos de Uso             | `/termos`                  |
 | Politica de Privacidade   | `/privacidade`             |
 | DMCA                      | `/dmca`                    |
@@ -59,13 +71,20 @@ O nome, tagline e descricao do site sao 100% configuraveis via variaveis de ambi
 - **Grids por Categoria** — Series organizadas por categoria com scroll horizontal, botoes de navegacao e efeitos de hover com zoom
 - **Pagina de Categorias** — Grid com busca avancada (titulo, genero), filtros (genero, range de ano), ordenacao (titulo, ano, rating) e paginacao
 - **Sistema de Favoritos** — Botao de favoritar em cada card, persistido em localStorage, filtro de favoritos na pagina de categorias
-- **Live Search** — Busca em tempo real no header (desktop e mobile) com debounce de 300ms, resultados com poster e metadados
+- **Live Search** — Busca em tempo real no header (desktop e mobile) com debounce de 300ms, resultados de series, filmes, livros e jogos com poster, tipo e metadados
+- **Catalogo de Filmes** — Pagina dedicada (`/filmes`) com filtros avancados, busca, genero, range de ano, ordenacao e paginacao
+- **Catalogo de Livros** — Pagina dedicada (`/livros`) com filtros por autor, formato, genero e busca
+- **Catalogo de Jogos** — Pagina dedicada (`/jogos`) com filtros por plataforma, genero e busca
 - **Pagina da Serie** — Backdrop imersivo, poster, sinopse, metadados (ano, genero, nota), abas de temporadas, trailer embed e lista de episodios com download
+- **Pagina de Filme/Livro/Jogo** — Detalhe completo com backdrop, poster, metadados, multiplos links de download e comentarios
 - **Video Embed** — Suporte a YouTube, Twitch e Kick com lazy loading, poster e sandbox de seguranca
 - **Tema Claro/Escuro** — Toggle no header com persistencia em localStorage via CSS variables
 - **Design Responsivo** — Mobile-first com breakpoints para sm, md, lg e xl
-- **Comentarios** — Sistema de comentarios anonimos por serie com nickname, validacao e moderacao pelo admin
-- **Requisicao de Series** — Pagina publica (`/requisicoes`) para pedir series, com sistema de votos e gestao pelo admin
+- **Comentarios** — Sistema de comentarios anonimos em series, filmes, livros e jogos com nickname, validacao e moderacao pelo admin
+- **Solicitar Conteudo** — Pagina publica (`/requisicoes`) para pedir series, filmes, livros ou jogos, com sistema de votos e gestao pelo admin
+- **Login de Usuarios** — Registro e login via Supabase Auth com favoritos persistentes sincronizados na nuvem (fallback para localStorage)
+- **Pagina de Doacoes** — Pagina (`/doar`) configuravel via env vars para PIX, PayPal e criptomoedas (BTC/ETH)
+- **Downloads Exclusivos para Doadores** — Links de download marcados como "donor only" no admin, bloqueados para nao-doadores com redirect para pagina de doacao
 - **Multi-idioma (i18n)** — Suporte a Portugues, Ingles e Espanhol com deteccao automatica do navegador e seletor no header
 - **Image Fallbacks** — Fallback gracioso para imagens quebradas em cards e pagina de detalhe
 - **Paginas Legais** — Termos de Uso, Politica de Privacidade e DMCA com conteudo completo
@@ -85,14 +104,16 @@ O nome, tagline e descricao do site sao 100% configuraveis via variaveis de ambi
 ### Painel Administrativo (`/admin`)
 
 - **Login** — Autenticacao via Supabase Auth com verificacao de role admin
-- **Dashboard** — Estatisticas (total de series, episodios e destaques) e listagem completa
+- **Dashboard** — Estatisticas (total de series, episodios, filmes, livros, jogos e destaques) e listagem completa
 - **CRUD de Series** — Titulo, slug (auto-gerado), sinopse, ano, genero, nota, categoria e destaque
+- **CRUD de Filmes, Livros e Jogos** — Formularios dedicados com campos especificos (duracao, autor, plataforma, requisitos, etc.)
+- **Multiple Download Links** — Editor de multiplos links de download por filme, livro ou jogo com label, qualidade, tamanho e flag "exclusivo para doadores"
 - **Upload de Imagens** — Upload direto para Supabase Storage com validacao (MIME, magic bytes, 5MB) ou via URL externa
 - **Gestao de Temporadas** — Adicionar/remover temporadas com nome editavel, trailer e accordion
 - **Gestao de Episodios** — Numero, titulo, URL de download, tamanho do arquivo e qualidade (480p-4K)
 - **Upsert Inteligente** — Ao editar, atualiza registros existentes (preservando IDs) em vez de deletar e recriar
 - **Audit Logging** — Todas as acoes admin (login, logout, create, update, delete) sao registradas na tabela `admin_audit_log`
-- **Analytics Interno** — Dashboard em `/admin/analytics` com views totais, top paginas, series mais vistas, moderacao de comentarios e gestao de requisicoes
+- **Analytics Interno** — Dashboard em `/admin/analytics` com views totais, top paginas, series/filmes/livros/jogos mais vistos, cliques em download, moderacao de comentarios e gestao de requisicoes
 
 ### SEO e Performance
 
@@ -162,12 +183,21 @@ src/
 │   ├── layout.tsx                 # Layout global (scripts, PWA, meta tags)
 │   ├── page.tsx                   # Home (Hero + Lancamentos + Categorias) [ISR 5min]
 │   ├── error.tsx                  # Error boundary global
-│   ├── categorias/
-│   │   ├── page.tsx               # Categorias com filtros avancados [ISR 5min]
-│   │   └── loading.tsx            # Loading skeleton
-│   ├── serie/[slug]/
-│   │   ├── page.tsx               # Pagina da serie (SEO + JSON-LD) [ISR 1h]
-│   │   └── loading.tsx            # Loading skeleton
+│   ├── categorias/page.tsx         # Categorias com filtros avancados [ISR 5min]
+│   ├── serie/[slug]/page.tsx      # Pagina da serie (SEO + JSON-LD) [ISR 1h]
+│   ├── series/page.tsx            # Listagem de series com filtros
+│   ├── filmes/
+│   │   ├── page.tsx               # Listagem de filmes com filtros [ISR 1h]
+│   │   └── [slug]/page.tsx        # Pagina do filme (SEO + JSON-LD) [ISR 1h]
+│   ├── livros/
+│   │   ├── page.tsx               # Listagem de livros com filtros [ISR 1h]
+│   │   └── [slug]/page.tsx        # Pagina do livro (SEO + JSON-LD) [ISR 1h]
+│   ├── jogos/
+│   │   ├── page.tsx               # Listagem de jogos com filtros [ISR 1h]
+│   │   └── [slug]/page.tsx        # Pagina do jogo (SEO + JSON-LD) [ISR 1h]
+│   ├── doar/page.tsx              # Pagina de doacoes (PIX, PayPal, Crypto)
+│   ├── conta/page.tsx             # Login/registro de usuarios
+│   ├── requisicoes/page.tsx       # Solicitar conteudo
 │   ├── admin/
 │   │   ├── layout.tsx             # Layout admin (noindex)
 │   │   ├── page.tsx               # Dashboard admin
@@ -185,8 +215,20 @@ src/
 │   │   ├── SeriesCard.tsx         # Card otimizado (memo + favorito + fallback)
 │   │   ├── SeriesDetail.tsx       # Pagina da serie (fallback de imagens)
 │   │   ├── VideoEmbed.tsx         # Embed YouTube/Twitch/Kick (sandbox)
-│   │   ├── Comments.tsx           # Comentarios anonimos por serie
-│   │   ├── SeriesRequests.tsx     # Requisicao de series + votos
+│   │   ├── MovieDetail.tsx         # Pagina de detalhe do filme
+│   │   ├── BookDetail.tsx         # Pagina de detalhe do livro
+│   │   ├── GameDetail.tsx         # Pagina de detalhe do jogo
+│   │   ├── MovieBrowser.tsx       # Filtros avancados para filmes
+│   │   ├── BookBrowser.tsx        # Filtros avancados para livros
+│   │   ├── GameBrowser.tsx        # Filtros avancados para jogos
+│   │   ├── MovieCard.tsx          # Card de filme
+│   │   ├── BookCard.tsx           # Card de livro
+│   │   ├── GameCard.tsx           # Card de jogo
+│   │   ├── Comments.tsx           # Comentarios em series, filmes, livros e jogos
+│   │   ├── SeriesRequests.tsx     # Solicitar conteudo (serie/filme/livro/jogo)
+│   │   ├── DonateContent.tsx      # Pagina de doacoes (PIX/PayPal/Crypto)
+│   │   ├── AuthPage.tsx           # Login/registro de usuarios
+│   │   ├── AgeVerificationGate.tsx# Verificacao de idade para conteudo adulto
 │   │   ├── PageViewTracker.tsx    # Tracker de page views (analytics)
 │   │   ├── LanguageSwitcher.tsx   # Seletor de idioma (pt-BR/en/es)
 │   │   ├── Analytics.tsx          # Google Analytics 4
@@ -196,16 +238,24 @@ src/
 │   ├── ads/                       # Componentes de anuncio
 │   └── admin/
 │       ├── AdminDashboard.tsx     # Dashboard + link analytics
-│       ├── AnalyticsDashboard.tsx # Analytics + moderacao + requisicoes
+│       ├── AnalyticsDashboard.tsx # Analytics completo (series/filmes/livros/jogos/downloads)
+│       ├── MovieForm.tsx         # CRUD de filmes
+│       ├── BookForm.tsx          # CRUD de livros
+│       ├── GameForm.tsx          # CRUD de jogos
+│       ├── DownloadLinksEditor.tsx# Editor de multiplos links de download
+│       ├── CategoriesManager.tsx # Gerenciamento de categorias
 │       └── SeriesForm.tsx         # CRUD de series (com audit log)
 ├── hooks/
-│   └── useFavorites.ts            # Hook de favoritos (localStorage + sync)
+│   ├── useFavorites.ts            # Hook de favoritos (localStorage + Supabase sync)
+│   └── useDonorStatus.ts         # Hook de status de doador
 ├── lib/
 │   ├── env.ts                     # Validacao de env vars
 │   ├── site-config.ts             # Configuracao white-label
 │   ├── brand.ts                   # Helper para split do nome no logo
 │   ├── validation.ts              # Validacao de URLs e upload de imagens
 │   ├── audit-log.ts               # Registro de acoes admin
+│   ├── auth/
+│   │   └── AuthContext.tsx        # Provider + hook useAuth() (login publico)
 │   ├── i18n/
 │   │   ├── dictionaries.ts        # Dicionarios pt-BR, en, es
 │   │   └── context.tsx            # Provider + hook useI18n()
@@ -498,6 +548,15 @@ npm run dev -- -p 3002              # abrir http://localhost:3002
 | `NEXT_PUBLIC_SITE_URL`         | URL publica (para sitemap) | `https://example.com`                          |
 | `NEXT_PUBLIC_CONTACT_EMAIL`    | Email exibido na pagina DMCA | `contato@exemplo.com`                        |
 
+### Opcionais — Doacoes
+
+| Variavel                       | Descricao                  | Padrao |
+| ------------------------------ | -------------------------- | ------ |
+| `NEXT_PUBLIC_DONATE_PIX`       | Chave PIX para doacoes     | -      |
+| `NEXT_PUBLIC_DONATE_PAYPAL`    | URL do PayPal.me ou botao  | -      |
+| `NEXT_PUBLIC_DONATE_BTC`       | Endereco Bitcoin            | -      |
+| `NEXT_PUBLIC_DONATE_ETH`       | Endereco Ethereum           | -      |
+
 ---
 
 ## Banco de Dados
@@ -539,16 +598,43 @@ npm run dev -- -p 3002              # abrir http://localhost:3002
                         │ created_at       │
                         └──────────────────┘
 
+┌──────────────┐   ┌──────────────┐   ┌──────────────┐   ┌──────────────┐
+│ movies        │   │ books         │   │ games         │   │ download_links│
+│──────────────│   │──────────────│   │──────────────│   │──────────────│
+│ id (UUID/PK) │   │ id (UUID/PK) │   │ id (UUID/PK) │   │ id (UUID/PK) │
+│ title, slug   │   │ title, slug   │   │ title, slug   │   │ content_type │
+│ synopsis      │   │ synopsis      │   │ synopsis      │   │ content_id   │
+│ poster_url    │   │ poster_url    │   │ poster_url    │   │ label        │
+│ year, genre   │   │ author        │   │ platform      │   │ download_url │
+│ rating        │   │ pages, isbn   │   │ developer     │   │ quality      │
+│ duration      │   │ publisher     │   │ publisher     │   │ file_size    │
+│ quality       │   │ format        │   │ requirements  │   │ donor_only   │
+│ category[]    │   │ category[]    │   │ category[]    │   │ created_at   │
+└──────────────┘   └──────────────┘   └──────────────┘   └──────────────┘
+
 ┌──────────────────┐   ┌──────────────────┐   ┌──────────────────┐
 │ comments          │   │ series_requests   │   │ page_views        │
 │──────────────────│   │──────────────────│   │──────────────────│
 │ id (UUID/PK)     │   │ id (UUID/PK)     │   │ id (UUID/PK)     │
 │ series_id (FK)   │   │ title            │   │ page_path        │
-│ nickname         │   │ description      │   │ series_id (FK)   │
-│ content          │   │ nickname         │   │ referrer         │
-│ approved         │   │ status           │   │ user_agent       │
-│ created_at       │   │ admin_notes      │   │ ip_hash          │
-└──────────────────┘   │ votes            │   │ created_at       │
+│ movie_id (FK)    │   │ type             │   │ series_id (FK)   │
+│ book_id (FK)     │   │ description      │   │ movie_id (FK)    │
+│ game_id (FK)     │   │ nickname         │   │ book_id (FK)     │
+│ nickname         │   │ status           │   │ game_id (FK)     │
+│ content          │   │ admin_notes      │   │ referrer         │
+│ approved         │   │ votes            │   │ user_agent       │
+│ created_at       │   │ created_at       │   │ created_at       │
+└──────────────────┘   └──────────────────┘   └──────────────────┘
+
+┌──────────────────┐   ┌──────────────────┐   ┌──────────────────┐
+│ user_favorites    │   │ user_donations    │   │ download_clicks   │
+│──────────────────│   │──────────────────│   │──────────────────│
+│ id (UUID/PK)     │   │ id (UUID/PK)     │   │ id (UUID/PK)     │
+│ user_id (FK)     │   │ user_id (FK)     │   │ content_type     │
+│ content_id       │   │ amount           │   │ content_id       │
+│ created_at       │   │ method           │   │ download_url     │
+└──────────────────┘   │ active           │   │ quality          │
+                        │ expires_at       │   │ created_at       │
                         │ created_at       │   └──────────────────┘
                         └──────────────────┘
 ```
@@ -560,11 +646,18 @@ npm run dev -- -p 3002              # abrir http://localhost:3002
 | `series`          | Publico                | Apenas `is_admin()`  |
 | `seasons`         | Publico                | Apenas `is_admin()`  |
 | `episodes`        | Publico                | Apenas `is_admin()`  |
+| `movies`          | Publico                | Apenas `is_admin()`  |
+| `books`           | Publico                | Apenas `is_admin()`  |
+| `games`           | Publico                | Apenas `is_admin()`  |
+| `download_links`  | Publico                | Apenas admins        |
 | `admin_users`     | Apenas o proprio admin | -                    |
 | `admin_audit_log` | Apenas admins          | admin_id = auth.uid()|
 | `comments`        | Aprovados (publico)    | INSERT anonimo, moderacao admin |
 | `series_requests` | Publico                | INSERT anonimo, gestao admin    |
 | `page_views`      | Apenas admins          | INSERT anonimo                  |
+| `download_clicks` | Apenas admins          | INSERT anonimo                  |
+| `user_favorites`  | Proprio usuario        | Proprio usuario      |
+| `user_donations`  | Proprio usuario        | Apenas admins        |
 | `storage` (media) | Publico                | Apenas `is_admin()`  |
 
 ### Funcao is_admin()
@@ -950,8 +1043,8 @@ O servidor roda na porta 3000 por padrao. Use um reverse proxy (Nginx, Caddy) pa
 
 | Tipo                 | Paginas                                                                            | Motivo                            |
 | -------------------- | ---------------------------------------------------------------------------------- | --------------------------------- |
-| **Server Component** | Home, Categorias, Serie, Admin (page), Termos, Privacidade, DMCA                   | Fetch de dados no servidor, SEO   |
-| **Client Component** | Header, CategoryBrowser, HeroCarousel, SeriesDetail, SeriesCard, SeriesForm, Ads   | Interatividade, estado, animacoes |
+| **Server Component** | Home, Categorias, Serie, Filmes, Livros, Jogos, Admin, Termos, Privacidade, DMCA   | Fetch de dados no servidor, SEO   |
+| **Client Component** | Header, Browsers, Detail pages, Cards, Forms, Ads, Auth, Donate                    | Interatividade, estado, animacoes |
 
 ### Middleware
 

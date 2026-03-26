@@ -9,6 +9,7 @@ import { TurnstileScript } from '@/components/ui/TurnstileScript';
 import { WebVitals } from '@/components/ui/WebVitals';
 import { Analytics } from '@/components/ui/Analytics';
 import { I18nProvider } from '@/lib/i18n/context';
+import { AuthProvider } from '@/lib/auth/AuthContext';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -52,7 +53,9 @@ export default function RootLayout({
       </head>
       <body className={inter.className}>
         <I18nProvider>
+        <AuthProvider>
         {children}
+        </AuthProvider>
         </I18nProvider>
         <WebVitals />
         <Analytics />

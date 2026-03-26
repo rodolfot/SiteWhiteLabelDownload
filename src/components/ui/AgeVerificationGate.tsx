@@ -9,13 +9,17 @@ import { useI18n } from '@/lib/i18n/context';
 const STORAGE_KEY = 'age_verified';
 const EXPIRY_HOURS = 24;
 
-function isAdultCategory(category: string[]): boolean {
-  if (!Array.isArray(category)) return false;
-  return category.some((c) => c.toLowerCase() === 'adulto' || c.toLowerCase() === 'adult' || c.toLowerCase() === '+18');
+function isAdultCategory(category: string | string[] | null | undefined): boolean {
+  if (!category) return false;
+  const arr = Array.isArray(category) ? category : [category];
+  return arr.some((c) => {
+    const lower = c.toLowerCase().trim();
+    return lower === 'adulto' || lower === 'adultos' || lower === 'adult' || lower === '+18' || lower === '18+';
+  });
 }
 
 interface AgeVerificationGateProps {
-  category: string[];
+  category: string | string[] | null | undefined;
   children: ReactNode;
 }
 

@@ -29,7 +29,7 @@ interface MovieFormProps {
   };
 }
 
-const DEFAULT_CATEGORIES = ['Ação', 'Aventura', 'Comédia', 'Drama', 'Ficção Científica', 'Terror', 'Romance', 'Anime', 'Documentário', 'Geral'];
+const DEFAULT_CATEGORIES = ['Ação', 'Aventura', 'Comédia', 'Drama', 'Ficção Científica', 'Terror', 'Romance', 'Anime', 'Documentário', 'Adulto', 'Geral'];
 const QUALITIES = ['480p', '720p', '1080p', '4K'];
 
 function slugify(text: string): string {

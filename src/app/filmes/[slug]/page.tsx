@@ -6,7 +6,7 @@ import { SiteShell } from '@/components/ui/SiteShell';
 import { MovieDetail } from '@/components/ui/MovieDetail';
 import { PageViewTracker } from '@/components/ui/PageViewTracker';
 import { AgeVerificationGate } from '@/components/ui/AgeVerificationGate';
-import { Movie } from '@/types/database';
+import { Movie, DownloadLink } from '@/types/database';
 
 export const revalidate = 3600; // ISR: 1 hora
 
@@ -14,20 +14,24 @@ interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
-async function getMovieData(slug: string): Promise<Movie | null> {
+async function getMovieData(slug: string): Promise<{ movie: Movie; downloadLinks: DownloadLink[] } | null> {
   const supabase = await createServerSupabaseClient();
-  const { data } = await supabase
-    .from('movies')
+  const { data } = await supabase.from('movies').select('*').eq('slug', slug).single();
+  if (!data) return null;
+  const { data: links } = await supabase
+    .from('download_links')
     .select('*')
-    .eq('slug', slug)
-    .single();
-  return data as Movie | null;
+    .eq('content_type', 'movie')
+    .eq('content_id', data.id)
+    .order('created_at', { ascending: true });
+  return { movie: data as Movie, downloadLinks: (links || []) as DownloadLink[] };
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const movie = await getMovieData(slug);
-  if (!movie) return { title: `Filme não encontrado - ${siteConfig.name}` };
+  const data = await getMovieData(slug);
+  if (!data) return { title: `Filme não encontrado - ${siteConfig.name}` };
+  const movie = data.movie;
 
   return {
     title: `${movie.title} - Download Grátis | ${siteConfig.name}`,
@@ -72,9 +76,10 @@ function generateJsonLd(movie: Movie) {
 
 export default async function FilmePage({ params }: PageProps) {
   const { slug } = await params;
-  const movie = await getMovieData(slug);
-  if (!movie) notFound();
+  const data = await getMovieData(slug);
+  if (!data) notFound();
 
+  const { movie, downloadLinks } = data;
   const jsonLd = generateJsonLd(movie);
 
   return (
@@ -85,7 +90,7 @@ export default async function FilmePage({ params }: PageProps) {
       />
       <PageViewTracker movieId={movie.id} />
       <AgeVerificationGate category={movie.category}>
-        <MovieDetail movie={movie} />
+        <MovieDetail movie={movie} downloadLinks={downloadLinks} />
       </AgeVerificationGate>
     </SiteShell>
   );

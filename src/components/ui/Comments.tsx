@@ -7,10 +7,13 @@ import { Comment } from '@/types/database';
 import { useI18n } from '@/lib/i18n/context';
 
 interface CommentsProps {
-  seriesId: string;
+  seriesId?: string;
+  movieId?: string;
+  bookId?: string;
+  gameId?: string;
 }
 
-export function Comments({ seriesId }: CommentsProps) {
+export function Comments({ seriesId, movieId, bookId, gameId }: CommentsProps) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -24,16 +27,22 @@ export function Comments({ seriesId }: CommentsProps) {
 
   const loadComments = useCallback(async () => {
     const supabase = createClient();
-    const { data } = await supabase
+    let query = supabase
       .from('comments')
       .select('*')
-      .eq('series_id', seriesId)
       .eq('approved', true)
       .order('created_at', { ascending: false })
       .limit(50);
+
+    if (seriesId) query = query.eq('series_id', seriesId);
+    else if (movieId) query = query.eq('movie_id', movieId);
+    else if (bookId) query = query.eq('book_id', bookId);
+    else if (gameId) query = query.eq('game_id', gameId);
+
+    const { data } = await query;
     setComments(data || []);
     setLoading(false);
-  }, [seriesId]);
+  }, [seriesId, movieId, bookId, gameId]);
 
   useEffect(() => {
     loadComments();
@@ -69,18 +78,24 @@ export function Comments({ seriesId }: CommentsProps) {
     setSubmitting(true);
     try {
       const supabase = createClient();
-      const { error: insertError } = await supabase.from('comments').insert({
-        series_id: seriesId,
+      const insertData: Record<string, string> = {
         nickname: trimmedNick,
         content: trimmedContent,
-      });
+      };
+
+      if (seriesId) insertData.series_id = seriesId;
+      if (movieId) insertData.movie_id = movieId;
+      if (bookId) insertData.book_id = bookId;
+      if (gameId) insertData.game_id = gameId;
+
+      const { error: insertError } = await supabase.from('comments').insert(insertData);
 
       if (insertError) {
         console.error('Comment insert error:', insertError);
         if (insertError.code === '42501') {
-          setError('Permissão negada. Execute a migration de correção: src/lib/supabase/comments-fix.sql');
+          setError('Permissão negada. Execute a migration de correção.');
         } else if (insertError.code === '42P01') {
-          setError('Tabela de comentários não encontrada. Execute a migration: src/lib/supabase/comments-migration.sql');
+          setError('Tabela de comentários não encontrada. Execute a migration.');
         } else {
           setError(`Erro ao enviar comentário: ${insertError.message}`);
         }

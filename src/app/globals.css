@@ -25,22 +25,22 @@
   }
 
   .light {
-    --surface-900: 248 249 250;
-    --surface-800: 240 241 243;
-    --surface-700: 229 231 235;
-    --surface-600: 209 213 219;
-    --surface-500: 156 163 175;
-    --surface-900-hex: #f8f9fa;
-    --surface-800-hex: #f0f1f3;
-    --surface-700-hex: #e5e7eb;
-    --surface-600-hex: #d1d5db;
-    --surface-500-hex: #9ca3af;
-    --text-primary: #111827;
-    --text-secondary: #4b5563;
-    --text-muted: #6b7280;
-    --border-color: #d1d5db;
-    --overlay-from: rgba(248, 249, 250, 0.6);
-    --overlay-solid: #f8f9fa;
+    --surface-900: 226 228 233;
+    --surface-800: 218 220 226;
+    --surface-700: 206 209 216;
+    --surface-600: 185 189 199;
+    --surface-500: 140 146 162;
+    --surface-900-hex: #e2e4e9;
+    --surface-800-hex: #dadce2;
+    --surface-700-hex: #ced1d8;
+    --surface-600-hex: #b9bdc7;
+    --surface-500-hex: #8c92a2;
+    --text-primary: #1a1d27;
+    --text-secondary: #3d4255;
+    --text-muted: #5a5f73;
+    --border-color: #b9bdc7;
+    --overlay-from: rgba(226, 228, 233, 0.6);
+    --overlay-solid: #e2e4e9;
   }
 
   * {

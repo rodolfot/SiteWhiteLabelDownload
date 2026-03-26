@@ -4,8 +4,8 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Menu, X } from 'lucide-react';
-import { Series } from '@/types/database';
+import { Search, Menu, X, Heart, User, LogIn } from 'lucide-react';
+import { Series, Movie, Book, Game } from '@/types/database';
 import { createClient } from '@/lib/supabase/client';
 import { siteConfig } from '@/lib/site-config';
 import { getBrandParts } from '@/lib/brand';
@@ -14,16 +14,27 @@ import { ThemeToggle } from './ThemeToggle';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { useI18n } from '@/lib/i18n/context';
 import { translateGenre } from '@/lib/genreTranslations';
+import { useAuth } from '@/lib/auth/AuthContext';
 
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<Series[]>([]);
+  const [searchResults, setSearchResults] = useState<Array<{ type: 'serie' | 'movie' | 'book' | 'game'; item: Series | Movie | Book | Game }>>([]);
   const [isSearching, setIsSearching] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const [brandFirst, brandSecond] = getBrandParts();
   const { t, locale } = useI18n();
+  const { user } = useAuth();
+
+  const getSearchUrl = (type: string, slug: string) => {
+    const routes: Record<string, string> = { serie: '/serie', movie: '/filmes', book: '/livros', game: '/jogos' };
+    return `${routes[type] || '/serie'}/${slug}`;
+  };
+  const getTypeLabel = (type: string) => {
+    const labels: Record<string, string> = { serie: t.common.seriesNav, movie: t.movies.title, book: t.books.title, game: t.games.title };
+    return labels[type] || type;
+  };
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -50,12 +61,19 @@ export function Header() {
       setIsSearching(true);
       try {
         const supabase = createClient();
-        const { data } = await supabase
-          .from('series')
-          .select('*')
-          .ilike('title', `%${searchQuery}%`)
-          .limit(5);
-        setSearchResults(data || []);
+        const [seriesRes, moviesRes, booksRes, gamesRes] = await Promise.all([
+          supabase.from('series').select('*').ilike('title', `%${searchQuery}%`).limit(3),
+          supabase.from('movies').select('*').ilike('title', `%${searchQuery}%`).limit(3),
+          supabase.from('books').select('*').ilike('title', `%${searchQuery}%`).limit(3),
+          supabase.from('games').select('*').ilike('title', `%${searchQuery}%`).limit(3),
+        ]);
+        const results: Array<{ type: 'serie' | 'movie' | 'book' | 'game'; item: Series | Movie | Book | Game }> = [
+          ...(seriesRes.data || []).map((s) => ({ type: 'serie' as const, item: s as Series })),
+          ...(moviesRes.data || []).map((m) => ({ type: 'movie' as const, item: m as Movie })),
+          ...(booksRes.data || []).map((b) => ({ type: 'book' as const, item: b as Book })),
+          ...(gamesRes.data || []).map((g) => ({ type: 'game' as const, item: g as Game })),
+        ];
+        setSearchResults(results.slice(0, 8));
       } catch (err) {
         console.error('[Search] Falha na busca:', err);
         setSearchResults([]);
@@ -106,6 +124,10 @@ export function Header() {
             <Link href="/jogos" className="text-gray-300 hover:text-neon-blue transition-colors text-sm font-medium">
               {t.games.title}
             </Link>
+            <Link href="/doar" className="flex items-center gap-1 text-pink-400 hover:text-pink-300 transition-colors text-sm font-medium">
+              <Heart className="h-3.5 w-3.5" />
+              {t.donate.navTitle}
+            </Link>
           </nav>
 
           {/* Search */}
@@ -128,19 +150,21 @@ export function Header() {
                   exit={{ opacity: 0, y: -10 }}
                   className="absolute top-full mt-2 w-full bg-surface-800 border border-surface-600 rounded-xl shadow-2xl overflow-hidden"
                 >
-                  {searchResults.map((series) => (
+                  {searchResults.map(({ type, item }) => (
                     <Link
-                      key={series.id}
-                      href={`/serie/${series.slug}`}
+                      key={`${type}-${item.id}`}
+                      href={getSearchUrl(type, item.slug)}
                       onClick={() => { setSearchQuery(''); setSearchResults([]); }}
                       className="flex items-center gap-3 p-3 hover:bg-surface-700 transition-colors"
                     >
-                      {series.poster_url && (
-                        <Image src={series.poster_url} alt={series.title} width={40} height={56} className="object-cover rounded" />
+                      {item.poster_url && (
+                        <Image src={item.poster_url} alt={item.title} width={40} height={56} className="object-cover rounded" />
                       )}
                       <div>
-                        <p className="text-sm font-medium text-white">{series.title}</p>
-                        <p className="text-xs text-gray-400">{series.year} • {series.genre ? translateGenre(series.genre, locale) : ''}</p>
+                        <p className="text-sm font-medium text-white">{item.title}</p>
+                        <p className="text-xs text-gray-400">
+                          <span className="text-neon-blue">{getTypeLabel(type)}</span> • {item.year} • {item.genre ? translateGenre(item.genre, locale) : ''}
+                        </p>
                       </div>
                     </Link>
                   ))}
@@ -156,6 +180,17 @@ export function Header() {
 
           {/* Language + Theme Toggle + Mobile Menu */}
           <div className="flex items-center gap-1">
+            <Link
+              href="/conta"
+              className="p-2 hover:bg-surface-700 rounded-lg transition-colors"
+              title={user ? t.auth.myAccount : t.auth.login}
+            >
+              {user ? (
+                <User className="h-5 w-5 text-neon-blue" />
+              ) : (
+                <LogIn className="h-5 w-5 text-gray-400 hover:text-white" />
+              )}
+            </Link>
             <LanguageSwitcher />
             <ThemeToggle />
             <button
@@ -196,19 +231,19 @@ export function Header() {
               </div>
               {searchResults.length > 0 && (
                 <div className="bg-surface-700 border border-surface-600 rounded-xl overflow-hidden">
-                  {searchResults.map((series) => (
+                  {searchResults.map(({ type, item }) => (
                     <Link
-                      key={series.id}
-                      href={`/serie/${series.slug}`}
+                      key={`${type}-${item.id}`}
+                      href={getSearchUrl(type, item.slug)}
                       onClick={() => { setSearchQuery(''); setSearchResults([]); setIsMobileMenuOpen(false); }}
                       className="flex items-center gap-3 p-3 hover:bg-surface-600 transition-colors"
                     >
-                      {series.poster_url && (
-                        <Image src={series.poster_url} alt={series.title} width={32} height={44} className="object-cover rounded" />
+                      {item.poster_url && (
+                        <Image src={item.poster_url} alt={item.title} width={32} height={44} className="object-cover rounded" />
                       )}
                       <div>
-                        <p className="text-sm font-medium text-white">{series.title}</p>
-                        <p className="text-xs text-gray-400">{series.year} — {series.genre ? translateGenre(series.genre, locale) : ''}</p>
+                        <p className="text-sm font-medium text-white">{item.title}</p>
+                        <p className="text-xs text-gray-400"><span className="text-neon-blue">{getTypeLabel(type)}</span> — {item.year} • {item.genre ? translateGenre(item.genre, locale) : ''}</p>
                       </div>
                     </Link>
                   ))}
@@ -219,6 +254,14 @@ export function Header() {
               <Link href="/filmes" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-gray-300 hover:text-white">{t.movies.title}</Link>
               <Link href="/livros" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-gray-300 hover:text-white">{t.books.title}</Link>
               <Link href="/jogos" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-gray-300 hover:text-white">{t.games.title}</Link>
+              <Link href="/doar" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-1.5 py-2 text-pink-400 hover:text-pink-300">
+                <Heart className="h-4 w-4" />
+                {t.donate.navTitle}
+              </Link>
+              <Link href="/conta" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-1.5 py-2 text-neon-blue hover:text-white">
+                {user ? <User className="h-4 w-4" /> : <LogIn className="h-4 w-4" />}
+                {user ? t.auth.myAccount : t.auth.login}
+              </Link>
             </div>
           </motion.div>
         )}

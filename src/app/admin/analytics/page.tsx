@@ -21,6 +21,8 @@ export default async function AnalyticsPage() {
     { data: recentComments },
     { data: recentRequests },
     { data: topMovieViews },
+    { data: topBookViews },
+    { data: topGameViews },
   ] = await Promise.all([
     // All views últimos 30 dias (para agregar por dia)
     supabase
@@ -68,6 +70,22 @@ export default async function AnalyticsPage() {
       .gte('created_at', thirtyDaysAgo.toISOString())
       .order('created_at', { ascending: false })
       .limit(500),
+    // Top livros por views
+    supabase
+      .from('page_views')
+      .select('book_id, books:book_id(title, slug)')
+      .not('book_id', 'is', null)
+      .gte('created_at', thirtyDaysAgo.toISOString())
+      .order('created_at', { ascending: false })
+      .limit(500),
+    // Top jogos por views
+    supabase
+      .from('page_views')
+      .select('game_id, games:game_id(title, slug)')
+      .not('game_id', 'is', null)
+      .gte('created_at', thirtyDaysAgo.toISOString())
+      .order('created_at', { ascending: false })
+      .limit(500),
   ]);
 
   // Agregar top páginas
@@ -110,15 +128,33 @@ export default async function AnalyticsPage() {
     .sort((a, b) => b.count - a.count)
     .slice(0, 10);
 
-  // Agregar top páginas de filmes (a partir dos dados já buscados)
-  const moviePageCount: Record<string, number> = {};
-  (topPages || []).forEach((v) => {
-    if (v.page_path.startsWith('/filmes/')) {
-      moviePageCount[v.page_path] = (moviePageCount[v.page_path] || 0) + 1;
+  // Agregar top livros
+  const booksCount: Record<string, { title: string; slug: string; count: number }> = {};
+  (topBookViews || []).forEach((v) => {
+    const b = v.books as unknown as { title: string; slug: string } | null;
+    if (b && v.book_id) {
+      if (!booksCount[v.book_id]) {
+        booksCount[v.book_id] = { title: b.title, slug: b.slug, count: 0 };
+      }
+      booksCount[v.book_id].count++;
     }
   });
-  const topMoviePagesAgg = Object.entries(moviePageCount)
-    .map(([path, count]) => ({ path, count }))
+  const topBooksAgg = Object.values(booksCount)
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 10);
+
+  // Agregar top jogos
+  const gamesCount: Record<string, { title: string; slug: string; count: number }> = {};
+  (topGameViews || []).forEach((v) => {
+    const g = v.games as unknown as { title: string; slug: string } | null;
+    if (g && v.game_id) {
+      if (!gamesCount[v.game_id]) {
+        gamesCount[v.game_id] = { title: g.title, slug: g.slug, count: 0 };
+      }
+      gamesCount[v.game_id].count++;
+    }
+  });
+  const topGamesAgg = Object.values(gamesCount)
     .sort((a, b) => b.count - a.count)
     .slice(0, 10);
 
@@ -144,7 +180,8 @@ export default async function AnalyticsPage() {
       topPages={topPagesAgg}
       topSeries={topSeriesAgg}
       topMovies={topMoviesAgg}
-      topMoviePages={topMoviePagesAgg}
+      topBooks={topBooksAgg}
+      topGames={topGamesAgg}
       recentComments={recentComments || []}
       recentRequests={recentRequests || []}
     />

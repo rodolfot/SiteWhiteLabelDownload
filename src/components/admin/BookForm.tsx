@@ -32,7 +32,7 @@ interface BookFormProps {
   };
 }
 
-const DEFAULT_CATEGORIES = ['Ação', 'Aventura', 'Comédia', 'Drama', 'Ficção Científica', 'Terror', 'Romance', 'Anime', 'Documentário', 'Geral'];
+const DEFAULT_CATEGORIES = ['Ação', 'Aventura', 'Comédia', 'Drama', 'Ficção Científica', 'Terror', 'Romance', 'Anime', 'Documentário', 'Adulto', 'Geral'];
 const FORMATS = ['PDF', 'EPUB', 'MOBI', 'AZW3', 'CBR', 'CBZ', 'DJVU'];
 
 function slugify(text: string): string {

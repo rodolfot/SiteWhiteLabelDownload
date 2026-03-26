@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import {
   ArrowLeft, Eye, TrendingUp, MessageCircle, FileQuestion,
-  Check, X, Trash2, ExternalLink
+  Check, X, Trash2, ExternalLink, Download
 } from 'lucide-react';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -16,22 +16,26 @@ import { Comment, SeriesRequest } from '@/types/database';
 
 interface AnalyticsDashboardProps {
   totalViews: number;
+  totalDownloads?: number;
   dailyViews: { date: string; count: number }[];
   topPages: { path: string; count: number }[];
   topSeries: { title: string; slug: string; count: number }[];
   topMovies: { title: string; slug: string; count: number }[];
-  topMoviePages: { path: string; count: number }[];
+  topBooks: { title: string; slug: string; count: number }[];
+  topGames: { title: string; slug: string; count: number }[];
   recentComments: (Comment & { series: { title: string; slug: string } | null })[];
   recentRequests: SeriesRequest[];
 }
 
 export function AnalyticsDashboard({
   totalViews,
+  totalDownloads,
   dailyViews,
   topPages,
   topSeries,
   topMovies,
-  topMoviePages,
+  topBooks,
+  topGames,
   recentComments,
   recentRequests,
 }: AnalyticsDashboardProps) {
@@ -95,6 +99,75 @@ export function AnalyticsDashboard({
     completed: 'Concluída',
   };
 
+  function TopContentChart({ data, title, color }: { data: { title: string; slug: string; count: number }[]; title: string; color: string }) {
+    if (data.length === 0) return null;
+    return (
+      <div className="bg-surface-800 border border-surface-600 rounded-xl p-5">
+        <h3 className="text-white font-semibold flex items-center gap-2 mb-4">
+          <Eye className="h-4 w-4 text-neon-purple" />
+          {title}
+        </h3>
+        <div className="h-64">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={data.slice(0, 10)} layout="vertical">
+              <CartesianGrid strokeDasharray="3 3" stroke="#2a2a3e" />
+              <XAxis type="number" stroke="#6b7280" fontSize={12} />
+              <YAxis
+                type="category"
+                dataKey="title"
+                stroke="#6b7280"
+                fontSize={11}
+                width={120}
+                tickFormatter={(v) => v.length > 18 ? v.slice(0, 18) + '...' : v}
+              />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: '#1e1e2e',
+                  border: '1px solid #374151',
+                  borderRadius: '8px',
+                  color: '#fff',
+                  fontSize: '12px',
+                }}
+                formatter={(value: unknown) => [String(value), 'Views']}
+              />
+              <Bar dataKey="count" fill={color} radius={[0, 4, 4, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+    );
+  }
+
+  function TopContentList({ data, title, basePath }: { data: { title: string; slug: string; count: number }[]; title: string; basePath: string }) {
+    return (
+      <div className="bg-surface-800 border border-surface-600 rounded-xl overflow-hidden">
+        <div className="p-4 border-b border-surface-600">
+          <h3 className="text-white font-semibold flex items-center gap-2">
+            <Eye className="h-4 w-4 text-neon-purple" />
+            {title}
+          </h3>
+        </div>
+        <div className="divide-y divide-surface-600">
+          {data.length === 0 ? (
+            <p className="p-4 text-gray-500 text-sm text-center">Nenhuma visualização</p>
+          ) : (
+            data.map((item, i) => (
+              <div key={item.slug} className="flex items-center justify-between p-3 px-4">
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="text-gray-500 text-xs w-5">{i + 1}.</span>
+                  <Link href={`${basePath}/${item.slug}`} className="text-gray-300 text-sm truncate hover:text-neon-blue transition-colors">
+                    {item.title}
+                  </Link>
+                </div>
+                <span className="text-neon-purple text-sm font-medium shrink-0">{item.count} views</span>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header */}
@@ -135,13 +208,21 @@ export function AnalyticsDashboard({
         <div className="bg-surface-800 border border-surface-600 rounded-xl p-5">
           <div className="flex items-center gap-3">
             <div className="bg-yellow-500/10 p-2 rounded-lg">
-              <FileQuestion className="h-5 w-5 text-yellow-400" />
+              {totalDownloads !== undefined ? (
+                <Download className="h-5 w-5 text-yellow-400" />
+              ) : (
+                <FileQuestion className="h-5 w-5 text-yellow-400" />
+              )}
             </div>
             <div>
               <p className="text-2xl font-bold text-white">
-                {requests.filter((r) => r.status === 'pending').length}
+                {totalDownloads !== undefined
+                  ? totalDownloads.toLocaleString('pt-BR')
+                  : requests.filter((r) => r.status === 'pending').length}
               </p>
-              <p className="text-gray-400 text-sm">Requisições Pendentes</p>
+              <p className="text-gray-400 text-sm">
+                {totalDownloads !== undefined ? 'Downloads' : 'Requisições Pendentes'}
+              </p>
             </div>
           </div>
         </div>
@@ -219,79 +300,11 @@ export function AnalyticsDashboard({
             </div>
           )}
 
-          {/* Top Series Bar Chart */}
-          {topSeries.length > 0 && (
-            <div className="bg-surface-800 border border-surface-600 rounded-xl p-5">
-              <h3 className="text-white font-semibold flex items-center gap-2 mb-4">
-                <Eye className="h-4 w-4 text-neon-purple" />
-                Top Séries por Views
-              </h3>
-              <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={topSeries.slice(0, 10)} layout="vertical">
-                    <CartesianGrid strokeDasharray="3 3" stroke="#2a2a3e" />
-                    <XAxis type="number" stroke="#6b7280" fontSize={12} />
-                    <YAxis
-                      type="category"
-                      dataKey="title"
-                      stroke="#6b7280"
-                      fontSize={11}
-                      width={120}
-                      tickFormatter={(v) => v.length > 18 ? v.slice(0, 18) + '...' : v}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: '#1e1e2e',
-                        border: '1px solid #374151',
-                        borderRadius: '8px',
-                        color: '#fff',
-                        fontSize: '12px',
-                      }}
-                      formatter={(value: unknown) => [String(value), 'Views']}
-                    />
-                    <Bar dataKey="count" fill="#a855f7" radius={[0, 4, 4, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          )}
-
-          {/* Top Movies Bar Chart */}
-          {topMovies.length > 0 && (
-            <div className="bg-surface-800 border border-surface-600 rounded-xl p-5">
-              <h3 className="text-white font-semibold flex items-center gap-2 mb-4">
-                <Eye className="h-4 w-4 text-neon-purple" />
-                Top Filmes por Views
-              </h3>
-              <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={topMovies.slice(0, 10)} layout="vertical">
-                    <CartesianGrid strokeDasharray="3 3" stroke="#2a2a3e" />
-                    <XAxis type="number" stroke="#6b7280" fontSize={12} />
-                    <YAxis
-                      type="category"
-                      dataKey="title"
-                      stroke="#6b7280"
-                      fontSize={11}
-                      width={120}
-                      tickFormatter={(v) => v.length > 18 ? v.slice(0, 18) + '...' : v}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: '#1e1e2e',
-                        border: '1px solid #374151',
-                        borderRadius: '8px',
-                        color: '#fff',
-                        fontSize: '12px',
-                      }}
-                      formatter={(value: unknown) => [String(value), 'Views']}
-                    />
-                    <Bar dataKey="count" fill="#a855f7" radius={[0, 4, 4, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          )}
+          {/* Top Content Charts */}
+          <TopContentChart data={topSeries} title="Top Séries por Views" color="#a855f7" />
+          <TopContentChart data={topMovies} title="Top Filmes por Views" color="#f97316" />
+          <TopContentChart data={topBooks} title="Top Livros por Views" color="#22c55e" />
+          <TopContentChart data={topGames} title="Top Jogos por Views" color="#3b82f6" />
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Top Páginas */}
@@ -319,86 +332,16 @@ export function AnalyticsDashboard({
               </div>
             </div>
 
-            {/* Top Séries */}
-            <div className="bg-surface-800 border border-surface-600 rounded-xl overflow-hidden">
-              <div className="p-4 border-b border-surface-600">
-                <h3 className="text-white font-semibold flex items-center gap-2">
-                  <Eye className="h-4 w-4 text-neon-purple" />
-                  Séries Mais Vistas (30 dias)
-                </h3>
-              </div>
-              <div className="divide-y divide-surface-600">
-                {topSeries.length === 0 ? (
-                  <p className="p-4 text-gray-500 text-sm text-center">Nenhuma visualização de série</p>
-                ) : (
-                  topSeries.map((s, i) => (
-                    <div key={s.slug} className="flex items-center justify-between p-3 px-4">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <span className="text-gray-500 text-xs w-5">{i + 1}.</span>
-                        <Link href={`/serie/${s.slug}`} className="text-gray-300 text-sm truncate hover:text-neon-blue transition-colors">
-                          {s.title}
-                        </Link>
-                      </div>
-                      <span className="text-neon-purple text-sm font-medium shrink-0">{s.count} views</span>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
+            <TopContentList data={topSeries} title="Séries Mais Vistas (30 dias)" basePath="/serie" />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Top Páginas de Filmes */}
-            <div className="bg-surface-800 border border-surface-600 rounded-xl overflow-hidden">
-              <div className="p-4 border-b border-surface-600">
-                <h3 className="text-white font-semibold flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4 text-neon-blue" />
-                  Top Páginas de Filmes (30 dias)
-                </h3>
-              </div>
-              <div className="divide-y divide-surface-600">
-                {topMoviePages.length === 0 ? (
-                  <p className="p-4 text-gray-500 text-sm text-center">Nenhuma visualização registrada</p>
-                ) : (
-                  topMoviePages.map((page, i) => (
-                    <div key={page.path} className="flex items-center justify-between p-3 px-4">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <span className="text-gray-500 text-xs w-5">{i + 1}.</span>
-                        <span className="text-gray-300 text-sm truncate">{page.path}</span>
-                      </div>
-                      <span className="text-neon-blue text-sm font-medium shrink-0">{page.count}</span>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
+            <TopContentList data={topMovies} title="Filmes Mais Vistos (30 dias)" basePath="/filmes" />
+            <TopContentList data={topBooks} title="Livros Mais Vistos (30 dias)" basePath="/livros" />
+          </div>
 
-            {/* Filmes Mais Vistos */}
-            <div className="bg-surface-800 border border-surface-600 rounded-xl overflow-hidden">
-              <div className="p-4 border-b border-surface-600">
-                <h3 className="text-white font-semibold flex items-center gap-2">
-                  <Eye className="h-4 w-4 text-neon-purple" />
-                  Filmes Mais Vistos (30 dias)
-                </h3>
-              </div>
-              <div className="divide-y divide-surface-600">
-                {topMovies.length === 0 ? (
-                  <p className="p-4 text-gray-500 text-sm text-center">Nenhuma visualização de filme</p>
-                ) : (
-                  topMovies.map((m, i) => (
-                    <div key={m.slug} className="flex items-center justify-between p-3 px-4">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <span className="text-gray-500 text-xs w-5">{i + 1}.</span>
-                        <Link href={`/filmes/${m.slug}`} className="text-gray-300 text-sm truncate hover:text-neon-blue transition-colors">
-                          {m.title}
-                        </Link>
-                      </div>
-                      <span className="text-neon-purple text-sm font-medium shrink-0">{m.count} views</span>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <TopContentList data={topGames} title="Jogos Mais Vistos (30 dias)" basePath="/jogos" />
           </div>
         </div>
       )}

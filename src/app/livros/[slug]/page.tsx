@@ -6,7 +6,7 @@ import { SiteShell } from '@/components/ui/SiteShell';
 import { BookDetail } from '@/components/ui/BookDetail';
 import { PageViewTracker } from '@/components/ui/PageViewTracker';
 import { AgeVerificationGate } from '@/components/ui/AgeVerificationGate';
-import { Book } from '@/types/database';
+import { Book, DownloadLink } from '@/types/database';
 
 export const revalidate = 3600;
 
@@ -14,16 +14,24 @@ interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
-async function getBookData(slug: string): Promise<Book | null> {
+async function getBookData(slug: string): Promise<{ book: Book; downloadLinks: DownloadLink[] } | null> {
   const supabase = await createServerSupabaseClient();
   const { data } = await supabase.from('books').select('*').eq('slug', slug).single();
-  return data as Book | null;
+  if (!data) return null;
+  const { data: links } = await supabase
+    .from('download_links')
+    .select('*')
+    .eq('content_type', 'book')
+    .eq('content_id', data.id)
+    .order('created_at', { ascending: true });
+  return { book: data as Book, downloadLinks: (links || []) as DownloadLink[] };
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const book = await getBookData(slug);
-  if (!book) return { title: `Livro não encontrado - ${siteConfig.name}` };
+  const data = await getBookData(slug);
+  if (!data) return { title: `Livro não encontrado - ${siteConfig.name}` };
+  const book = data.book;
 
   return {
     title: `${book.title} - Download Grátis | ${siteConfig.name}`,
@@ -65,17 +73,18 @@ function generateJsonLd(book: Book) {
 
 export default async function LivroPage({ params }: PageProps) {
   const { slug } = await params;
-  const book = await getBookData(slug);
-  if (!book) notFound();
+  const data = await getBookData(slug);
+  if (!data) notFound();
 
+  const { book, downloadLinks } = data;
   const jsonLd = generateJsonLd(book);
 
   return (
     <SiteShell>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <PageViewTracker />
+      <PageViewTracker bookId={book.id} />
       <AgeVerificationGate category={book.category}>
-        <BookDetail book={book} />
+        <BookDetail book={book} downloadLinks={downloadLinks} />
       </AgeVerificationGate>
     </SiteShell>
   );
