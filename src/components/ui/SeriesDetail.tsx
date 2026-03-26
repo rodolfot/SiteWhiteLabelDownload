@@ -225,7 +225,7 @@ export function SeriesDetail({ series, seasons }: SeriesDetailProps) {
               </div>
 
               <div className="mb-4">
-                <StarRating seriesId={series.id} initialRating={series.rating} />
+                <StarRating contentId={series.id} initialRating={series.rating} />
               </div>
 
               <p className="text-gray-300 text-sm leading-relaxed mb-6">

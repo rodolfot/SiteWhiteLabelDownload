@@ -114,7 +114,7 @@ export function GameDetail({ game, downloadLinks = [] }: GameDetailProps) {
               )}
 
               <div className="mb-4">
-                <StarRating seriesId={game.id} initialRating={game.rating} />
+                <StarRating contentId={game.id} initialRating={game.rating} />
               </div>
 
               {localizedSynopsis && (

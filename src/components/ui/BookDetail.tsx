@@ -125,7 +125,7 @@ export function BookDetail({ book, downloadLinks = [] }: BookDetailProps) {
               )}
 
               <div className="mb-4">
-                <StarRating seriesId={book.id} initialRating={book.rating} />
+                <StarRating contentId={book.id} initialRating={book.rating} />
               </div>
 
               {localizedSynopsis && (

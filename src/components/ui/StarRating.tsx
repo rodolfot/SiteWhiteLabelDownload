@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import { useI18n } from '@/lib/i18n/context';
 
 interface StarRatingProps {
-  seriesId: string;
+  contentId: string;
   initialRating?: number;
 }
 
@@ -19,7 +19,7 @@ async function hashIp(): Promise<string> {
   return uid;
 }
 
-export function StarRating({ seriesId, initialRating = 0 }: StarRatingProps) {
+export function StarRating({ contentId, initialRating = 0 }: StarRatingProps) {
   const { t } = useI18n();
   const [hovering, setHovering] = useState(0);
   const [userRating, setUserRating] = useState(0);
@@ -34,7 +34,7 @@ export function StarRating({ seriesId, initialRating = 0 }: StarRatingProps) {
     const { data: ratings } = await supabase
       .from('user_ratings')
       .select('rating, ip_hash')
-      .eq('series_id', seriesId);
+      .eq('series_id', contentId);
 
     if (ratings && ratings.length > 0) {
       const sum = ratings.reduce((acc, r) => acc + r.rating, 0);
@@ -43,7 +43,7 @@ export function StarRating({ seriesId, initialRating = 0 }: StarRatingProps) {
       const mine = ratings.find((r) => r.ip_hash === ipHash);
       if (mine) setUserRating(mine.rating);
     }
-  }, [seriesId]);
+  }, [contentId]);
 
   useEffect(() => {
     loadRatings();
@@ -59,7 +59,7 @@ export function StarRating({ seriesId, initialRating = 0 }: StarRatingProps) {
 
       // Upsert: insert or update on conflict
       const { error } = await supabase.from('user_ratings').upsert(
-        { series_id: seriesId, ip_hash: ipHash, rating: value },
+        { series_id: contentId, ip_hash: ipHash, rating: value },
         { onConflict: 'series_id,ip_hash' }
       );
 

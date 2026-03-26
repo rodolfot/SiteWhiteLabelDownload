@@ -37,7 +37,7 @@ export function AuthPage() {
             )}
             <div className="space-y-3">
               <button
-                onClick={() => router.push('/series')}
+                onClick={() => router.push('/favoritos')}
                 className="w-full bg-surface-600 hover:bg-surface-500 text-white py-2.5 rounded-lg text-sm font-medium transition-colors"
               >
                 {t.auth.myFavorites}

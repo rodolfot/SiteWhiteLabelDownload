@@ -20,15 +20,17 @@ export function SeriesRequests() {
   const [votedIds, setVotedIds] = useState<Set<string>>(new Set());
 
   const loadRequests = useCallback(async () => {
+    setLoading(true);
     const supabase = createClient();
     const { data } = await supabase
       .from('series_requests')
       .select('*')
+      .eq('type', requestType)
       .order('votes', { ascending: false })
       .limit(50);
     setRequests(data || []);
     setLoading(false);
-  }, []);
+  }, [requestType]);
 
   useEffect(() => {
     loadRequests();

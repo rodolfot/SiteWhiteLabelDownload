@@ -22,7 +22,7 @@ export function MovieBrowser({ movies, categories }: MovieBrowserProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
   const [sortBy, setSortBy] = useState<SortOption>('title');
-  const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
+  const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [yearRange, setYearRange] = useState<[number, number] | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
@@ -57,7 +57,7 @@ export function MovieBrowser({ movies, categories }: MovieBrowserProps) {
         !query ||
         m.title.toLowerCase().includes(query) ||
         (m.genre && m.genre.toLowerCase().includes(query));
-      const matchesGenre = !selectedGenre || (m.genre && m.genre.toLowerCase().includes(selectedGenre.toLowerCase()));
+      const matchesGenre = selectedGenres.length === 0 || (m.genre && selectedGenres.some((g) => m.genre.toLowerCase().includes(g.toLowerCase())));
       const matchesYear = !yearRange || (m.year >= yearRange[0] && m.year <= yearRange[1]);
       const matchesFavorites = !showFavoritesOnly || isFavorite(m.id);
       return matchesCategory && matchesSearch && matchesGenre && matchesYear && matchesFavorites;
@@ -73,7 +73,7 @@ export function MovieBrowser({ movies, categories }: MovieBrowserProps) {
     });
 
     return result;
-  }, [movies, activeCategory, searchQuery, selectedGenre, yearRange, sortBy, showFavoritesOnly, isFavorite, t.categories.general]);
+  }, [movies, activeCategory, searchQuery, selectedGenres, yearRange, sortBy, showFavoritesOnly, isFavorite, t.categories.general]);
 
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
   const paginated = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
@@ -99,17 +99,22 @@ export function MovieBrowser({ movies, categories }: MovieBrowserProps) {
     setPage(1);
   };
 
+  const toggleGenre = useCallback((g: string) => {
+    setSelectedGenres((prev) => prev.includes(g) ? prev.filter((x) => x !== g) : [...prev, g]);
+    setPage(1);
+  }, []);
+
   const resetFilters = useCallback(() => {
     setActiveCategory(null);
     setSearchQuery('');
-    setSelectedGenre(null);
+    setSelectedGenres([]);
     setYearRange(null);
     setSortBy('title');
     setShowFavoritesOnly(false);
     setPage(1);
   }, []);
 
-  const hasActiveFilters = activeCategory || searchQuery || selectedGenre || yearRange || showFavoritesOnly;
+  const hasActiveFilters = activeCategory || searchQuery || selectedGenres.length > 0 || yearRange || showFavoritesOnly;
 
   return (
     <div className="px-4 sm:px-6 lg:px-8 py-8">
@@ -171,72 +176,70 @@ export function MovieBrowser({ movies, categories }: MovieBrowserProps) {
 
       {/* Advanced Filters Panel */}
       {showFilters && (
-        <div className="mb-6 p-4 bg-surface-800 border border-surface-500 rounded-xl grid grid-cols-1 sm:grid-cols-3 gap-4 animate-fadeIn">
-          {/* Genre filter */}
+        <div className="mb-6 p-4 bg-surface-800 border border-surface-500 rounded-xl flex flex-col gap-4 animate-fadeIn">
+          {/* Genre pills */}
           <div>
             <label className="block text-xs font-medium text-gray-400 mb-1.5">{t.categories.genreFilter}</label>
-            <select
-              value={selectedGenre || ''}
-              onChange={(e) => { setSelectedGenre(e.target.value || null); setPage(1); }}
-              className="w-full bg-surface-700 border border-surface-500 rounded-lg py-2 px-3 text-sm text-white focus:outline-none focus:border-neon-blue transition-all"
-            >
-              <option value="">{t.categories.allGenres}</option>
+            <div className="flex flex-wrap gap-2">
               {genres.map((g) => (
-                <option key={g} value={g}>{translateGenre(g, locale)}</option>
+                <button
+                  key={g}
+                  type="button"
+                  onClick={() => toggleGenre(g)}
+                  className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
+                    selectedGenres.includes(g)
+                      ? 'bg-gradient-to-r from-neon-blue to-neon-purple text-white'
+                      : 'bg-surface-700 border border-surface-500 text-gray-300 hover:border-neon-blue hover:text-white'
+                  }`}
+                >
+                  {translateGenre(g, locale)}
+                </button>
               ))}
-            </select>
-          </div>
-
-          {/* Year filter */}
-          <div>
-            <label className="block text-xs font-medium text-gray-400 mb-1.5">
-              {t.categories.yearRange} {yearRange ? `(${yearRange[0]} - ${yearRange[1]})` : ''}
-            </label>
-            <div className="flex gap-2">
-              <input
-                type="number"
-                placeholder={String(yearBounds.min)}
-                min={yearBounds.min}
-                max={yearBounds.max}
-                value={yearRange ? yearRange[0] : ''}
-                onChange={(e) => {
-                  const v = parseInt(e.target.value);
-                  setYearRange(v ? [v, yearRange?.[1] || yearBounds.max] : null);
-                  setPage(1);
-                }}
-                className="w-full bg-surface-700 border border-surface-500 rounded-lg py-2 px-3 text-sm text-white focus:outline-none focus:border-neon-blue transition-all"
-              />
-              <input
-                type="number"
-                placeholder={String(yearBounds.max)}
-                min={yearBounds.min}
-                max={yearBounds.max}
-                value={yearRange ? yearRange[1] : ''}
-                onChange={(e) => {
-                  const v = parseInt(e.target.value);
-                  setYearRange(v ? [yearRange?.[0] || yearBounds.min, v] : null);
-                  setPage(1);
-                }}
-                className="w-full bg-surface-700 border border-surface-500 rounded-lg py-2 px-3 text-sm text-white focus:outline-none focus:border-neon-blue transition-all"
-              />
             </div>
           </div>
 
-          {/* Sort */}
-          <div>
-            <label className="block text-xs font-medium text-gray-400 mb-1.5">{t.categories.sort}</label>
-            <div className="relative">
-              <ArrowUpDown className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-              <select
-                value={sortBy}
-                onChange={(e) => { setSortBy(e.target.value as SortOption); setPage(1); }}
-                className="w-full bg-surface-700 border border-surface-500 rounded-lg py-2 pl-10 pr-3 text-sm text-white focus:outline-none focus:border-neon-blue transition-all"
-              >
-                <option value="title">{t.categories.sortTitle}</option>
-                <option value="year_desc">{t.categories.sortYearDesc}</option>
-                <option value="year_asc">{t.categories.sortYearAsc}</option>
-                <option value="rating">{t.categories.sortRating}</option>
-              </select>
+          {/* Year + Sort */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-400 mb-1.5">
+                {t.categories.yearRange} {yearRange ? `(${yearRange[0]} - ${yearRange[1]})` : ''}
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  placeholder={String(yearBounds.min)}
+                  min={yearBounds.min}
+                  max={yearBounds.max}
+                  value={yearRange ? yearRange[0] : ''}
+                  onChange={(e) => { const v = parseInt(e.target.value); setYearRange(v ? [v, yearRange?.[1] || yearBounds.max] : null); setPage(1); }}
+                  className="w-full bg-surface-700 border border-surface-500 rounded-lg py-2 px-3 text-sm text-white focus:outline-none focus:border-neon-blue transition-all"
+                />
+                <input
+                  type="number"
+                  placeholder={String(yearBounds.max)}
+                  min={yearBounds.min}
+                  max={yearBounds.max}
+                  value={yearRange ? yearRange[1] : ''}
+                  onChange={(e) => { const v = parseInt(e.target.value); setYearRange(v ? [yearRange?.[0] || yearBounds.min, v] : null); setPage(1); }}
+                  className="w-full bg-surface-700 border border-surface-500 rounded-lg py-2 px-3 text-sm text-white focus:outline-none focus:border-neon-blue transition-all"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-400 mb-1.5">{t.categories.sort}</label>
+              <div className="relative">
+                <ArrowUpDown className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                <select
+                  value={sortBy}
+                  onChange={(e) => { setSortBy(e.target.value as SortOption); setPage(1); }}
+                  className="w-full bg-surface-700 border border-surface-500 rounded-lg py-2 pl-10 pr-3 text-sm text-white focus:outline-none focus:border-neon-blue transition-all"
+                >
+                  <option value="title">{t.categories.sortTitle}</option>
+                  <option value="year_desc">{t.categories.sortYearDesc}</option>
+                  <option value="year_asc">{t.categories.sortYearAsc}</option>
+                  <option value="rating">{t.categories.sortRating}</option>
+                </select>
+              </div>
             </div>
           </div>
         </div>
@@ -279,7 +282,7 @@ export function MovieBrowser({ movies, categories }: MovieBrowserProps) {
           <p className="text-gray-400 text-xs mb-4">
             {filtered.length} {t.categories.results}
             {activeCategory && <> — <span className="text-neon-blue">{translateGenre(activeCategory, locale)}</span></>}
-            {selectedGenre && <> • <span className="text-neon-blue">{translateGenre(selectedGenre, locale)}</span></>}
+            {selectedGenres.length > 0 && <> • <span className="text-neon-blue">{selectedGenres.map((g) => translateGenre(g, locale)).join(', ')}</span></>}
             {totalPages > 1 && <> — {t.categories.pageOf.replace('{page}', String(page)).replace('{total}', String(totalPages))}</>}
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">

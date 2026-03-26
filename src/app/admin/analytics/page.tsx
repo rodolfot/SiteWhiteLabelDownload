@@ -53,7 +53,7 @@ export default async function AnalyticsPage() {
     // Comentários recentes
     supabase
       .from('comments')
-      .select('*, series:series_id(title, slug)')
+      .select('*, series:series_id(title, slug), movie:movie_id(title, slug), book:book_id(title, slug), game:game_id(title, slug)')
       .order('created_at', { ascending: false })
       .limit(20),
     // Requisições recentes

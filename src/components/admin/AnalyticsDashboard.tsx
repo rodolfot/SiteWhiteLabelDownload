@@ -23,7 +23,12 @@ interface AnalyticsDashboardProps {
   topMovies: { title: string; slug: string; count: number }[];
   topBooks: { title: string; slug: string; count: number }[];
   topGames: { title: string; slug: string; count: number }[];
-  recentComments: (Comment & { series: { title: string; slug: string } | null })[];
+  recentComments: (Comment & {
+    series: { title: string; slug: string } | null;
+    movie: { title: string; slug: string } | null;
+    book: { title: string; slug: string } | null;
+    game: { title: string; slug: string } | null;
+  })[];
   recentRequests: SeriesRequest[];
 }
 
@@ -43,6 +48,9 @@ export function AnalyticsDashboard({
   const [activeTab, setActiveTab] = useState<'overview' | 'comments' | 'requests'>('overview');
   const [comments, setComments] = useState(recentComments);
   const [requests, setRequests] = useState(recentRequests);
+  const [requestTypeFilter, setRequestTypeFilter] = useState<'serie' | 'movie' | 'book' | 'game'>('serie');
+  const [overviewFilter, setOverviewFilter] = useState<'series' | 'movies' | 'books' | 'games'>('series');
+  const [commentTypeFilter, setCommentTypeFilter] = useState<'series' | 'movies' | 'books' | 'games'>('series');
 
   const handleDeleteComment = async (id: string) => {
     if (!confirm('Excluir este comentário?')) return;
@@ -287,61 +295,62 @@ export function AnalyticsDashboard({
                       labelFormatter={(v) => new Date(v).toLocaleDateString('pt-BR')}
                       formatter={(value: unknown) => [String(value), 'Views']}
                     />
-                    <Area
-                      type="monotone"
-                      dataKey="count"
-                      stroke="#00d4ff"
-                      strokeWidth={2}
-                      fill="url(#viewsGradient)"
-                    />
+                    <Area type="monotone" dataKey="count" stroke="#00d4ff" strokeWidth={2} fill="url(#viewsGradient)" />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
             </div>
           )}
 
-          {/* Top Content Charts */}
-          <TopContentChart data={topSeries} title="Top Séries por Views" color="#a855f7" />
-          <TopContentChart data={topMovies} title="Top Filmes por Views" color="#f97316" />
-          <TopContentChart data={topBooks} title="Top Livros por Views" color="#22c55e" />
-          <TopContentChart data={topGames} title="Top Jogos por Views" color="#3b82f6" />
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Top Páginas */}
-            <div className="bg-surface-800 border border-surface-600 rounded-xl overflow-hidden">
-              <div className="p-4 border-b border-surface-600">
-                <h3 className="text-white font-semibold flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4 text-neon-blue" />
-                  Top Páginas (30 dias)
-                </h3>
-              </div>
-              <div className="divide-y divide-surface-600">
-                {topPages.length === 0 ? (
-                  <p className="p-4 text-gray-500 text-sm text-center">Nenhuma visualização registrada</p>
-                ) : (
-                  topPages.map((page, i) => (
-                    <div key={page.path} className="flex items-center justify-between p-3 px-4">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <span className="text-gray-500 text-xs w-5">{i + 1}.</span>
-                        <span className="text-gray-300 text-sm truncate">{page.path}</span>
-                      </div>
-                      <span className="text-neon-blue text-sm font-medium shrink-0">{page.count}</span>
-                    </div>
-                  ))
-                )}
-              </div>
+          {/* Sub-abas por tipo de conteúdo */}
+          <div className="bg-surface-800 border border-surface-600 rounded-xl overflow-hidden">
+            <div className="flex border-b border-surface-600">
+              {([
+                { key: 'series' as const, label: 'Séries', color: 'text-purple-400' },
+                { key: 'movies' as const, label: 'Filmes', color: 'text-orange-400' },
+                { key: 'books' as const, label: 'Livros', color: 'text-green-400' },
+                { key: 'games' as const, label: 'Jogos', color: 'text-blue-400' },
+              ]).map(({ key, label, color }) => (
+                <button
+                  key={key}
+                  onClick={() => setOverviewFilter(key)}
+                  className={`flex-1 py-3 text-sm font-medium transition-all border-b-2 ${
+                    overviewFilter === key
+                      ? `${color} border-current`
+                      : 'text-gray-400 border-transparent hover:text-gray-200'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
             </div>
 
-            <TopContentList data={topSeries} title="Séries Mais Vistas (30 dias)" basePath="/serie" />
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <TopContentList data={topMovies} title="Filmes Mais Vistos (30 dias)" basePath="/filmes" />
-            <TopContentList data={topBooks} title="Livros Mais Vistos (30 dias)" basePath="/livros" />
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <TopContentList data={topGames} title="Jogos Mais Vistos (30 dias)" basePath="/jogos" />
+            <div className="p-5 space-y-6">
+              {overviewFilter === 'series' && (
+                <>
+                  <TopContentChart data={topSeries} title="Top Séries por Views" color="#a855f7" />
+                  <TopContentList data={topSeries} title="Séries Mais Vistas (30 dias)" basePath="/serie" />
+                </>
+              )}
+              {overviewFilter === 'movies' && (
+                <>
+                  <TopContentChart data={topMovies} title="Top Filmes por Views" color="#f97316" />
+                  <TopContentList data={topMovies} title="Filmes Mais Vistos (30 dias)" basePath="/filmes" />
+                </>
+              )}
+              {overviewFilter === 'books' && (
+                <>
+                  <TopContentChart data={topBooks} title="Top Livros por Views" color="#22c55e" />
+                  <TopContentList data={topBooks} title="Livros Mais Vistos (30 dias)" basePath="/livros" />
+                </>
+              )}
+              {overviewFilter === 'games' && (
+                <>
+                  <TopContentChart data={topGames} title="Top Jogos por Views" color="#3b82f6" />
+                  <TopContentList data={topGames} title="Jogos Mais Vistos (30 dias)" basePath="/jogos" />
+                </>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -349,22 +358,71 @@ export function AnalyticsDashboard({
       {/* Comments Tab */}
       {activeTab === 'comments' && (
         <div className="bg-surface-800 border border-surface-600 rounded-xl overflow-hidden">
+          {/* Sub-abas por tipo */}
+          <div className="flex border-b border-surface-600">
+            {([
+              { key: 'series' as const, label: 'Séries', color: 'text-purple-400', filter: (c: typeof comments[0]) => !!c.series },
+              { key: 'movies' as const, label: 'Filmes', color: 'text-orange-400', filter: (c: typeof comments[0]) => !!c.movie },
+              { key: 'books' as const, label: 'Livros', color: 'text-green-400', filter: (c: typeof comments[0]) => !!c.book },
+              { key: 'games' as const, label: 'Jogos', color: 'text-blue-400', filter: (c: typeof comments[0]) => !!c.game },
+            ]).map(({ key, label, color, filter }) => {
+              const count = comments.filter(filter).length;
+              return (
+                <button
+                  key={key}
+                  onClick={() => setCommentTypeFilter(key)}
+                  className={`flex-1 py-3 text-sm font-medium transition-all border-b-2 ${
+                    commentTypeFilter === key
+                      ? `${color} border-current`
+                      : 'text-gray-400 border-transparent hover:text-gray-200'
+                  }`}
+                >
+                  {label} <span className="text-xs opacity-70">({count})</span>
+                </button>
+              );
+            })}
+          </div>
           <div className="divide-y divide-surface-600">
-            {comments.length === 0 ? (
+            {comments.filter((c) =>
+              commentTypeFilter === 'series' ? !!c.series :
+              commentTypeFilter === 'movies' ? !!c.movie :
+              commentTypeFilter === 'books' ? !!c.book :
+              !!c.game
+            ).length === 0 ? (
               <p className="p-8 text-gray-500 text-sm text-center">Nenhum comentário</p>
             ) : (
-              comments.map((comment) => (
+              comments.filter((c) =>
+                commentTypeFilter === 'series' ? !!c.series :
+                commentTypeFilter === 'movies' ? !!c.movie :
+                commentTypeFilter === 'books' ? !!c.book :
+                !!c.game
+              ).map((comment) => (
                 <div key={comment.id} className="p-4">
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <span className="text-neon-blue text-sm font-medium">{comment.nickname}</span>
                         {comment.series && (
-                          <Link
-                            href={`/serie/${comment.series.slug}`}
-                            className="text-gray-500 text-xs hover:text-gray-300 flex items-center gap-1"
-                          >
+                          <Link href={`/serie/${comment.series.slug}`} className="text-gray-500 text-xs hover:text-gray-300 flex items-center gap-1">
                             em {comment.series.title}
+                            <ExternalLink className="h-3 w-3" />
+                          </Link>
+                        )}
+                        {comment.movie && (
+                          <Link href={`/filmes/${comment.movie.slug}`} className="text-gray-500 text-xs hover:text-gray-300 flex items-center gap-1">
+                            em {comment.movie.title}
+                            <ExternalLink className="h-3 w-3" />
+                          </Link>
+                        )}
+                        {comment.book && (
+                          <Link href={`/livros/${comment.book.slug}`} className="text-gray-500 text-xs hover:text-gray-300 flex items-center gap-1">
+                            em {comment.book.title}
+                            <ExternalLink className="h-3 w-3" />
+                          </Link>
+                        )}
+                        {comment.game && (
+                          <Link href={`/jogos/${comment.game.slug}`} className="text-gray-500 text-xs hover:text-gray-300 flex items-center gap-1">
+                            em {comment.game.title}
                             <ExternalLink className="h-3 w-3" />
                           </Link>
                         )}
@@ -410,15 +468,39 @@ export function AnalyticsDashboard({
       {/* Requests Tab */}
       {activeTab === 'requests' && (
         <div className="bg-surface-800 border border-surface-600 rounded-xl overflow-hidden">
+          {/* Sub-tabs por tipo */}
+          <div className="flex border-b border-surface-600">
+            {([
+              { key: 'serie' as const, label: 'Séries', color: 'text-neon-blue' },
+              { key: 'movie' as const, label: 'Filmes', color: 'text-purple-400' },
+              { key: 'book' as const, label: 'Livros', color: 'text-green-400' },
+              { key: 'game' as const, label: 'Jogos', color: 'text-orange-400' },
+            ]).map(({ key, label, color }) => {
+              const count = requests.filter((r) => r.type === key).length;
+              return (
+                <button
+                  key={key}
+                  onClick={() => setRequestTypeFilter(key)}
+                  className={`flex-1 py-3 text-sm font-medium transition-all border-b-2 ${
+                    requestTypeFilter === key
+                      ? `${color} border-current`
+                      : 'text-gray-400 border-transparent hover:text-gray-200'
+                  }`}
+                >
+                  {label} <span className="text-xs opacity-70">({count})</span>
+                </button>
+              );
+            })}
+          </div>
           <div className="divide-y divide-surface-600">
-            {requests.length === 0 ? (
+            {requests.filter((r) => r.type === requestTypeFilter).length === 0 ? (
               <p className="p-8 text-gray-500 text-sm text-center">Nenhuma requisição</p>
             ) : (
-              requests.map((req) => (
+              requests.filter((r) => r.type === requestTypeFilter).map((req) => (
                 <div key={req.id} className="p-4">
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <h4 className="text-white text-sm font-medium">{req.title}</h4>
                         <span className={`text-xs px-1.5 py-0.5 rounded ${statusColors[req.status]}`}>
                           {statusLabels[req.status]}

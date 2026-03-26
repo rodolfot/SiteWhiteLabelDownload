@@ -3,7 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { requireAdmin } from '@/lib/supabase/admin';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
-import { Plus, Edit, Film, BarChart3, Star, ArrowLeft, Tv, Tag } from 'lucide-react';
+import { Plus, Edit, Film, BarChart3, Star, ArrowLeft, Tv, Tag, BookOpen, Gamepad2 } from 'lucide-react';
 import { MovieDeleteButton } from '@/components/admin/MovieDeleteButton';
 
 export default async function AdminMoviesPage() {
@@ -37,6 +37,14 @@ export default async function AdminMoviesPage() {
           <Link href="/admin" className="btn-secondary flex items-center gap-2 text-sm">
             <Tv className="h-4 w-4" />
             Séries
+          </Link>
+          <Link href="/admin/books" className="btn-secondary flex items-center gap-2 text-sm">
+            <BookOpen className="h-4 w-4" />
+            Livros
+          </Link>
+          <Link href="/admin/games" className="btn-secondary flex items-center gap-2 text-sm">
+            <Gamepad2 className="h-4 w-4" />
+            Jogos
           </Link>
           <Link href="/admin/categories" className="btn-secondary flex items-center gap-2 text-sm">
             <Tag className="h-4 w-4" />

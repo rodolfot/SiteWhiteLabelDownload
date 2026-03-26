@@ -119,7 +119,7 @@ export function MovieDetail({ movie, downloadLinks = [] }: MovieDetailProps) {
               </div>
 
               <div className="mb-4">
-                <StarRating seriesId={movie.id} initialRating={movie.rating} />
+                <StarRating contentId={movie.id} initialRating={movie.rating} />
               </div>
 
               {localizedSynopsis && (
